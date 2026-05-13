@@ -1,0 +1,17 @@
+node_modules/
+.next/
+.vercel/
+.env
+.env.local
+.env*.local
+.env.*.local
+*.pem
+.DS_Store
+coverage/
+dist/
+build/
+out/
+*.tsbuildinfo
+next-env.d.ts
+.agents/
+learning/
