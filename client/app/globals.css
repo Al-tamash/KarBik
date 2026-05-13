@@ -1,0 +1,39 @@
+@import "tailwindcss";
+
+/**
+ * @theme inline — Tailwind CSS v4 custom theme tokens
+ *
+ * Instead of tailwind.config.js, v4 uses CSS-first configuration.
+ * We define our color palette, fonts, and spacing here.
+ *
+ * OKLCH colors give us more vibrant, perceptually uniform colors
+ * than hex or HSL. The format is: oklch(lightness chroma hue)
+ */
+@theme inline {
+  --color-background: #ffffff;
+  --color-foreground: #0f172a;
+  --color-primary: oklch(0.55 0.2 250);
+  --color-primary-foreground: #ffffff;
+  --color-muted: #64748b;
+  --color-muted-foreground: #94a3b8;
+  --color-border: #e2e8f0;
+  --color-card: #ffffff;
+  --color-card-foreground: #0f172a;
+  --color-destructive: oklch(0.55 0.2 25);
+  --color-success: oklch(0.6 0.18 145);
+  --font-sans: "Inter", "Geist", system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono);
+}
+
+/**
+ * Base styles applied to the entire page.
+ * We set strong, dark foreground text (#0f172a = slate-900)
+ * so everything is readable by default — no more washed-out text.
+ */
+body {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
