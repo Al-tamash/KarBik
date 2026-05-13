@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: autobazar-api
+    runtime: node
+    buildCommand: cd server && npm install
+    startCommand: cd server && npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: MONGO_URI
+        sync: false
+      - key: BETTER_AUTH_SECRET
+        sync: false
+      - key: CLIENT_URL
+        value: https://autobazar.vercel.app
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
+        sync: false
