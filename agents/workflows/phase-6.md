@@ -6,13 +6,13 @@
 > **Execution Log:**
 > - ✅ Git repo initialized, all files committed to `main`
 > - ✅ Code pushed to `https://github.com/Al-tamash/autobazaar.git`
-> - ✅ `server/package.json` — added `start` script and `node >=20` engine constraint
-> - ✅ `server/render.yaml` — Render deployment config created
+> - ✅ `server/package.json` — added `start` script and Node >=20 engine constraint
+> - ✅ `server/render.yaml` — Render deployment config (moved to repo root with `rootDirectory: server`)
 > - ✅ `client/next.config.mjs` — Cloudinary RemotePatterns added
 > - ✅ Client build verified — all 9 routes compiled successfully
 > - ✅ Server syntax verified — `node --check` passed
-> - ✅ `.gitignore` — secured secrets (`.env`, `server/.env`, `.vercel`, `node_modules`)
-> - ⏳ Render backend deployment — requires dashboard setup (env vars + connect GitHub)
+> - ✅ `render.yaml` fixed — was inside `server/`, moved to root so Render can auto-detect and deploy
+> - 🔄 **Re-trigger Render deployment** — push triggers auto-deploy; or click "Manual Deploy" in Render dashboard
 > - ⏳ Vercel frontend deployment — requires dashboard setup (env vars + connect GitHub)
 > - ⏳ MongoDB Atlas — user confirmed setup complete
 
@@ -118,25 +118,25 @@ services:
 ```
 
 ### 3.2 Deploy to Render
-1. Go to [render.com](https://render.com) → **New Web Service**
-2. Connect GitHub repo (or push using Render CLI)
-3. Select the `server/` directory as the root (or configure build to navigate into it)
-4. Set:
-   - **Build command:** `npm install`
-   - **Start command:** `npm start`
-   - **Instance type:** Free (or Starter for reliability)
-5. Add all environment variables in Render dashboard:
-   - `MONGO_URI` — from MongoDB Atlas
-   - `BETTER_AUTH_SECRET` — a secure 32+ char random string (must match `.env` value)
-   - `CLIENT_URL` — `https://autobazaar.vercel.app` (or your Vercel URL)
-   - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET`
-6. Deploy and verify: visit `https://<render-app-url>/api/health`
 
-### 3.3 Verify backend on Render
-```bash
-curl https://<your-render-app>.onrender.com/api/health
-# Expected: {"status":"ok"}
-```
+Render will **auto-detect** the deploy because `render.yaml` is now at the repo root with `rootDirectory: server`.
+
+1. Go to [render.com](https://render.com) → **New Web Service** → connect `Al-tamash/autobazaar`
+2. Render auto-detects: **Framework: Node**, root directory: `server/`
+3. Add environment variables in Render dashboard:
+
+| Key | Value |
+|-----|-------|
+| `NODE_ENV` | `production` |
+| `MONGO_URI` | `mongodb+srv://<user>:<pass>@cluster.mongodb.net/autobazaar` |
+| `BETTER_AUTH_SECRET` | `<your-32-char-secret>` (must match local `.env`) |
+| `CLIENT_URL` | `https://<your-vercel-app>.vercel.app` |
+| `CLOUDINARY_CLOUD_NAME` | `dlmwc4qnt` |
+| `CLOUDINARY_API_KEY` | `993821957988186` |
+| `CLOUDINARY_API_SECRET` | `qZ874eBxbjQU0Dh-ax-V524qtkk` |
+
+4. Click **Deploy** — auto-build runs `npm install` then `npm start`
+5. Verify: visit `https://<your-app>.onrender.com/api/health` → should return `{"status":"ok"}`
 
 ---
 
