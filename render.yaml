@@ -2,8 +2,9 @@ services:
   - type: web
     name: autobazar-api
     runtime: node
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
+    rootDirectory: server
+    buildCommand: npm install
+    startCommand: npm start
     envVars:
       - key: NODE_ENV
         value: production
