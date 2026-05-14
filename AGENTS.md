@@ -70,6 +70,18 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - POST /api/inquiries — buyer sends inquiry (Phase 5+)
 - GET  /api/inquiries/mine — dealer views inquiries (Phase 5+)
 - GET  /api/inquiries/sent — buyer views sent inquiries (Phase 5+)
+- POST /api/subscriptions — create subscription (Phase 7+)
+- GET  /api/subscriptions/plans — list all plans (Phase 7+)
+- GET  /api/subscriptions/my-plan — dealer's active plan (Phase 7+)
+- POST /api/payments/create-order — Razorpay order (Phase 7+)
+- POST /api/payments/verify — verify payment (Phase 7+)
+- POST /api/cars/:id/boost — boost a listing (Phase 8+)
+- GET  /api/analytics/dashboard — dealer analytics (Phase 9+)
+- GET  /api/analytics/listing/:id — per-listing stats (Phase 9+)
+- POST /api/reviews — buyer leaves dealer review (Phase 10+)
+- GET  /api/reviews/dealer/:id — dealer's reviews (Phase 10+)
+- POST /api/dealers/verify — submit verification docs (Phase 10+)
+- GET  /api/dealers/:slug — dealer micro-website public page (Phase 12+)
 
 ## Build phases
 | Phase | Feature | Status |
@@ -80,5 +92,13 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 | 4 | Dealer dashboard + role-based access | ✅ Done |
 | 5 | Buyer inquiry system | ✅ Done |
 | 6 | Deploy to Vercel + Render + MongoDB Atlas | 🔲 |
+| 7 | Dealer subscription plans + Razorpay payment gateway | 🔲 |
+| 8 | Featured/Boost listings (pay-per-use) | 🔲 |
+| 9 | Advanced dealer analytics dashboard | 🔲 |
+| 10 | Car inspection + trust system (reviews, verification) | 🔲 |
+| 11 | WhatsApp integration + CRM | 🔲 |
+| 12 | Dealer micro-website + QR code | 🔲 |
+| 13 | AI-powered features (price suggestion, auto-description) | 🔲 |
+| 14 | Mobile PWA (push notifications, offline mode) | 🔲 |
 
 Update 🔲 to ✅ when a phase is complete and tested.
