@@ -13,9 +13,36 @@ export function createAuth(db) {
       enabled: true,
     },
 
+    /**
+     * baseURL tells Better Auth what the server's public URL is.
+     * In production (Render), this is the onrender.com URL.
+     * Locally, it defaults to http://localhost:5000.
+     */
+    baseURL: process.env.BETTER_AUTH_URL,
+
     // trustedOrigins tells Better Auth which frontend URLs are allowed
     // to make auth requests (prevents CSRF from unknown origins)
     trustedOrigins: [process.env.CLIENT_URL],
+
+    /**
+     * advanced — Cross-Domain Cookie Configuration
+     * 
+     * WHY THIS IS NEEDED:
+     * Our frontend (Vercel) and backend (Render) are on DIFFERENT domains.
+     * By default, browsers BLOCK cookies from a different domain (security feature).
+     * 
+     * SameSite: "none" — tells the browser "allow this cookie even on cross-domain requests"
+     * Secure: true — required when SameSite is "none" (only works on HTTPS)
+     * 
+     * Think of it like a VIP pass — normally you can't enter another building,
+     * but with a VIP pass (SameSite=none + Secure), the security lets you through.
+     */
+    advanced: {
+      defaultCookieAttributes: {
+        sameSite: "none",
+        secure: true,
+      },
+    },
 
     /**
      * additionalFields — extending the User model
@@ -79,3 +106,4 @@ export function createAuth(db) {
     },
   });
 }
+
