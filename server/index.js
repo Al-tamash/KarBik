@@ -23,11 +23,24 @@ const app = express();
 const PORT = env.PORT; // Safe validated port from Zod
 
 // 1. CORS must be set up BEFORE any other middleware or route handlers
-// This ensures that all preflight OPTIONS requests are handled instantly and CORS headers
-// are appended to every single response (even 429 rate limit blocks or 500 server crashes).
-// credentials: true allows the browser to send/receive HTTP-only cookies
+// We use a dynamic origin function to support both your main CLIENT_URL
+// and any Vercel preview/deployment subdomains (ending in .vercel.app).
 app.use(cors({
-  origin: env.CLIENT_URL,
+  origin: (origin, callback) => {
+    // Allow requests with no origin (like mobile apps, postman, or server-to-server)
+    if (!origin) return callback(null, true);
+    
+    // Check if the origin matches CLIENT_URL, localhost, or is a Vercel preview/deployment domain
+    const isAllowed = origin === env.CLIENT_URL || 
+                      origin === "http://localhost:3000" ||
+                      (origin.startsWith("https://autobazaar-") && origin.endsWith(".vercel.app"));
+                      
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS policy blocked access from origin: ${origin}`));
+    }
+  },
   credentials: true,
 }));
 
