@@ -1,21 +1,32 @@
 "use client";
 
 /**
- * Navbar — Shared navigation bar across all pages
+ * Navbar — CarDekho-style sticky top navigation
  *
- * Shows AutoBazaar logo, navigation links, and auth buttons.
- * When logged in: shows Dashboard link, role badge, and Sign Out.
- * When not logged in: shows Sign In and Get Started buttons.
+ * WHAT: A clean, professional header that sticks to the top of every page.
+ * WHY: The navbar is the first thing users see. A clean, trustworthy navbar
+ *      signals quality — just like CarDekho and Spinny have.
+ *
+ * Key features:
+ * - Sticky top with white background + subtle border + shadow
+ * - Logo on the left, nav links in center, auth actions on right
+ * - Mobile hamburger menu with slide-down drawer
+ * - Active link highlighting via usePathname
  */
+import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { LayoutDashboard, LogOut, Car, Menu, X, Star, Search } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { data: session } = authClient.useSession();
+  const [isOpen, setIsOpen] = useState(false);
 
+  // Check if a given path matches the current URL
   const isActive = (path) => pathname === path;
 
   const handleSignOut = async () => {
@@ -23,66 +34,179 @@ export default function Navbar() {
     router.push("/login");
   };
 
+  // Navigation links shown to everyone
+  const navLinks = [
+    { name: "Browse Cars", href: "/cars", icon: Car },
+    { name: "Pricing", href: "/pricing", icon: Star },
+  ];
+
   return (
-    <header className="sticky top-0 z-50 border-b border-border bg-white/80 backdrop-blur-md">
-      <div className="mx-auto flex max-w-6xl items-center justify-between px-4 py-3 sm:px-6">
-        {/* Logo */}
-        <Link href="/" className="text-xl font-bold tracking-tight text-foreground">
-          Auto<span className="text-primary">Bazaar</span>
+    <header className="sticky top-0 z-50 bg-white border-b border-neutral-200 shadow-sm">
+      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 h-16">
+
+        {/* ─── Logo ─── */}
+        <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-neutral-900">
+          <span className="text-2xl">🚗</span>
+          Auto<span className="text-primary-600">Bazaar</span>
         </Link>
 
-        {/* Navigation Links */}
-        <nav className="hidden sm:flex items-center gap-6">
-          <Link
-            href="/cars"
-            className={`text-sm font-medium transition-colors ${
-              isActive("/cars") ? "text-primary" : "text-muted hover:text-foreground"
-            }`}
-          >
-            Browse Cars
-          </Link>
+        {/* ─── Desktop Nav Links (center) ─── */}
+        <nav className="hidden md:flex items-center gap-8">
+          {navLinks.map((link) => (
+            <Link
+              key={link.name}
+              href={link.href}
+              className={`text-sm font-medium transition-colors ${
+                isActive(link.href)
+                  ? "text-primary-600 font-semibold"
+                  : "text-neutral-600 hover:text-primary-600"
+              }`}
+            >
+              {link.name}
+            </Link>
+          ))}
+
+          {/* Show "Sell Car" link only for dealers */}
+          {session?.user?.role === "dealer" && (
+            <Link
+              href="/dashboard/new"
+              className={`text-sm font-medium transition-colors ${
+                pathname === "/dashboard/new"
+                  ? "text-primary-600 font-semibold"
+                  : "text-neutral-600 hover:text-primary-600"
+              }`}
+            >
+              Sell Car
+            </Link>
+          )}
         </nav>
 
-        {/* Auth Buttons */}
+        {/* ─── Right Actions ─── */}
         <div className="flex items-center gap-3">
-          {session ? (
-            <>
-              <Link
-                href="/dashboard"
-                className={`text-sm font-medium transition-colors ${
-                  pathname.startsWith("/dashboard") ? "text-primary" : "text-muted hover:text-foreground"
-                }`}
-              >
-                Dashboard
-              </Link>
-              <span className="text-xs font-semibold text-primary bg-primary/10 px-2.5 py-1 rounded-full capitalize">
-                {session.user.role || "buyer"}
-              </span>
-              <button
-                onClick={handleSignOut}
-                className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-slate-50 transition-colors cursor-pointer"
-              >
-                Sign Out
-              </button>
-            </>
-          ) : (
-            <>
-              <Link
-                href="/login"
-                className="text-sm font-medium text-muted hover:text-foreground transition-colors"
-              >
-                Sign In
-              </Link>
-              <Link
-                href="/register"
-                className="rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
-              >
-                Get Started
-              </Link>
-            </>
-          )}
+          <div className="hidden md:flex items-center gap-3">
+            {session ? (
+              <>
+                <Link
+                  href="/dashboard"
+                  className={`flex items-center gap-2 text-sm font-medium transition-colors ${
+                    pathname.startsWith("/dashboard")
+                      ? "text-primary-600"
+                      : "text-neutral-600 hover:text-primary-600"
+                  }`}
+                >
+                  <LayoutDashboard className="h-4 w-4" />
+                  Dashboard
+                </Link>
+                <button
+                  onClick={handleSignOut}
+                  className="flex items-center gap-2 rounded-lg bg-neutral-100 px-3 py-2 text-sm font-medium text-neutral-600 hover:bg-danger-50 hover:text-danger-600 transition-colors"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </button>
+              </>
+            ) : (
+              <>
+                <Link
+                  href="/login"
+                  className="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors"
+                >
+                  Login
+                </Link>
+                <Link
+                  href="/register"
+                  className="rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-800 transition-colors shadow-sm"
+                >
+                  Register
+                </Link>
+              </>
+            )}
+          </div>
+
+          {/* ─── Mobile Menu Toggle ─── */}
+          <button
+            onClick={() => setIsOpen(!isOpen)}
+            className="flex md:hidden p-2 text-neutral-700 hover:bg-neutral-100 rounded-lg transition-colors"
+            aria-label="Toggle menu"
+          >
+            {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+          </button>
         </div>
       </div>
+
+      {/* ─── Mobile Menu Drawer ─── */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="md:hidden border-t border-neutral-100 bg-white overflow-hidden"
+          >
+            <nav className="px-4 py-4 space-y-1">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.name}
+                  href={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                    isActive(link.href)
+                      ? "bg-primary-50 text-primary-600"
+                      : "text-neutral-700 hover:bg-neutral-50"
+                  }`}
+                >
+                  <link.icon className="h-5 w-5" />
+                  {link.name}
+                </Link>
+              ))}
+
+              <div className="h-px bg-neutral-100 my-2" />
+
+              {session ? (
+                <>
+                  <Link
+                    href="/dashboard"
+                    onClick={() => setIsOpen(false)}
+                    className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                      pathname.startsWith("/dashboard")
+                        ? "bg-primary-50 text-primary-600"
+                        : "text-neutral-700 hover:bg-neutral-50"
+                    }`}
+                  >
+                    <LayoutDashboard className="h-5 w-5" />
+                    Dashboard
+                  </Link>
+                  <button
+                    onClick={() => { handleSignOut(); setIsOpen(false); }}
+                    className="flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium text-danger-600 hover:bg-danger-50 transition-colors"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    Logout
+                  </button>
+                </>
+              ) : (
+                <div className="space-y-2 pt-2">
+                  <Link
+                    href="/login"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center rounded-xl bg-neutral-100 py-3 text-sm font-semibold text-neutral-900 hover:bg-neutral-200 transition-colors"
+                  >
+                    Login
+                  </Link>
+                  <Link
+                    href="/register"
+                    onClick={() => setIsOpen(false)}
+                    className="flex items-center justify-center rounded-xl bg-primary-600 py-3 text-sm font-semibold text-white hover:bg-primary-800 transition-colors"
+                  >
+                    Register Free
+                  </Link>
+                </div>
+              )}
+            </nav>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </header>
   );
 }

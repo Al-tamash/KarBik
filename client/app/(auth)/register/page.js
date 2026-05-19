@@ -33,19 +33,19 @@ export default function RegisterPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm">
         {/* Logo / Brand */}
-        <h2 className="text-center text-2xl font-bold tracking-tight text-foreground mb-8">
+        <h2 className="text-center text-2xl font-bold tracking-tight text-neutral-900 mb-8">
           Auto<span className="text-primary">Bazaar</span>
         </h2>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-5 rounded-2xl border border-border bg-white p-8 shadow-sm"
+          className="space-y-5 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm"
         >
-          <h1 className="text-xl font-bold text-foreground text-center">Create Account</h1>
-          <p className="text-sm text-muted text-center -mt-2">
+          <h1 className="text-xl font-bold text-neutral-900 text-center">Create Account</h1>
+          <p className="text-sm text-neutral-500 text-center -mt-2">
             Join AutoBazaar as a buyer or dealer
           </p>
 
@@ -57,44 +57,44 @@ export default function RegisterPage() {
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">Name</label>
+            <label className="block text-sm font-semibold text-neutral-900 mb-1.5">Name</label>
             <input
               type="text"
               required
               value={form.name}
               onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder-muted-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
               placeholder="Your full name"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">Email</label>
+            <label className="block text-sm font-semibold text-neutral-900 mb-1.5">Email</label>
             <input
               type="email"
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder-muted-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">Password</label>
+            <label className="block text-sm font-semibold text-neutral-900 mb-1.5">Password</label>
             <input
               type="password"
               required
               minLength={8}
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder-muted-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
               placeholder="At least 8 characters"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">I am a...</label>
+            <label className="block text-sm font-semibold text-neutral-900 mb-1.5">I am a...</label>
             <div className="grid grid-cols-2 gap-3">
               {/* Buyer option */}
               <button
@@ -103,7 +103,7 @@ export default function RegisterPage() {
                 className={`rounded-lg border-2 px-4 py-3 text-sm font-semibold transition-all cursor-pointer ${
                   form.role === "buyer"
                     ? "border-primary bg-primary/5 text-primary"
-                    : "border-border bg-white text-muted hover:border-slate-300"
+                    : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300"
                 }`}
               >
                 🛒 Buyer
@@ -115,7 +115,7 @@ export default function RegisterPage() {
                 className={`rounded-lg border-2 px-4 py-3 text-sm font-semibold transition-all cursor-pointer ${
                   form.role === "dealer"
                     ? "border-primary bg-primary/5 text-primary"
-                    : "border-border bg-white text-muted hover:border-slate-300"
+                    : "border-neutral-200 bg-white text-neutral-500 hover:border-neutral-300"
                 }`}
               >
                 🏪 Dealer
@@ -126,12 +126,12 @@ export default function RegisterPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-neutral-900 hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
             {loading ? "Creating account..." : "Create Account"}
           </button>
 
-          <p className="text-center text-sm text-muted">
+          <p className="text-center text-sm text-neutral-500">
             Already have an account?{" "}
             <a href="/login" className="font-semibold text-primary hover:underline">
               Sign in

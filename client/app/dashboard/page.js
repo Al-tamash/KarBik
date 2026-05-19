@@ -1,47 +1,191 @@
 "use client";
 
-/**
- * Dashboard Page — Role-based view with tabs
- *
- * Dealer: Stats + [My Listings | Inquiries] tabs + New Listing button
- * Buyer: Profile info + sent inquiries list + Browse Cars CTA
- */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { useToast } from "@/components/ToastProvider";
+import {
+  Bell, Menu, X, Plus, LayoutDashboard, Car, MessageSquare,
+  TrendingUp, Award, LogOut
+} from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import BoostModal from "@/components/BoostModal";
+import QRCodeCard from "@/components/QRCodeCard";
+import ListingsTab from "./ListingsTab";
+import InquiriesTab from "./InquiriesTab";
+import AnalyticsTab from "./AnalyticsTab";
+import ProfileTab from "./ProfileTab";
+import BuyerDashboard from "./BuyerDashboard";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
+const CRM_STATUSES = [
+  { value: "new", label: "New" },
+  { value: "contacted", label: "Contacted" },
+  { value: "interested", label: "Interested" },
+  { value: "test_drive", label: "Test Drive" },
+  { value: "closed", label: "Closed" },
+  { value: "lost", label: "Lost" },
+  { value: "fake", label: "Fake Lead" },
+];
+
+const CRM_PRIORITIES = [
+  { value: "low", label: "Low" },
+  { value: "medium", label: "Medium" },
+  { value: "high", label: "High" },
+];
+
 export default function DashboardPage() {
   const router = useRouter();
+  const { addToast } = useToast();
   const { data: session, isPending } = authClient.useSession();
+
   const [cars, setCars] = useState([]);
   const [inquiries, setInquiries] = useState([]);
   const [loadingCars, setLoadingCars] = useState(false);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
   const [activeTab, setActiveTab] = useState("listings");
+  const [selectedBoostCar, setSelectedBoostCar] = useState(null);
+  const [analyticsData, setAnalyticsData] = useState(null);
+  const [loadingAnalytics, setLoadingAnalytics] = useState(false);
+  const [dealerProfile, setDealerProfile] = useState(null);
+  const [businessName, setBusinessName] = useState("");
+  const [verificationDoc, setVerificationDoc] = useState(null);
+  const [uploadingDoc, setUploadingDoc] = useState(false);
+  const [profileSlug, setProfileSlug] = useState("");
+  const [profileAbout, setProfileAbout] = useState("");
+  const [profilePhone, setProfilePhone] = useState("");
+  const [profileAddress, setProfileAddress] = useState("");
+  const [profileCity, setProfileCity] = useState("");
+  const [profileSocial, setProfileSocial] = useState({ whatsapp: "", instagram: "", facebook: "" });
+  const [bannerFile, setBannerFile] = useState(null);
+  const [savingProfile, setSavingProfile] = useState(false);
+  const [slugStatus, setSlugStatus] = useState("");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isPending && !session) router.push("/login");
   }, [isPending, session, router]);
 
-  // Fetch dealer's listings + inquiries
   useEffect(() => {
     if (session?.user?.role === "dealer") {
       fetchMyCars();
       fetchMyInquiries();
+      fetchAnalytics();
+      fetchDealerProfile();
     } else if (session?.user?.role === "buyer" || (session && !session.user.role)) {
       fetchSentInquiries();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [session]);
+
+  async function fetchDealerProfile() {
+    try {
+      const res = await fetch(`${API}/api/trust/profile/${session.user.id}`);
+      if (res.ok) {
+        const data = await res.json();
+        setDealerProfile(data);
+        if (data.businessName) setBusinessName(data.businessName);
+        if (data.slug) setProfileSlug(data.slug);
+        if (data.about) setProfileAbout(data.about);
+        if (data.phone) setProfilePhone(data.phone);
+        if (data.address) setProfileAddress(data.address);
+        if (data.city) setProfileCity(data.city);
+        if (data.socialLinks) setProfileSocial({
+          whatsapp: data.socialLinks.whatsapp || "",
+          instagram: data.socialLinks.instagram || "",
+          facebook: data.socialLinks.facebook || "",
+        });
+      }
+    } catch (err) { console.error("Error fetching dealer profile:", err); }
+  }
+
+  async function handleVerificationSubmit(e) {
+    e.preventDefault();
+    setUploadingDoc(true);
+    try {
+      const formData = new FormData();
+      if (businessName) formData.append("businessName", businessName);
+      if (verificationDoc) formData.append("verificationDoc", verificationDoc);
+
+      const res = await fetch(`${API}/api/trust/verify`, {
+        method: "POST",
+        credentials: "include",
+        body: formData,
+      });
+
+      if (res.ok) {
+        addToast("Verification submitted successfully.", "success");
+        fetchDealerProfile();
+      } else {
+        addToast("Failed to submit verification.", "error");
+      }
+    } catch (err) {
+      addToast("Network error. Please try again.", "error");
+    }
+    setUploadingDoc(false);
+  }
+
+  async function handleMicroWebsiteSave(e) {
+    e.preventDefault();
+    setSavingProfile(true);
+    try {
+      const formData = new FormData();
+      if (profileSlug) formData.append("slug", profileSlug);
+      formData.append("about", profileAbout);
+      formData.append("phone", profilePhone);
+      formData.append("address", profileAddress);
+      formData.append("city", profileCity);
+      formData.append("socialLinks", JSON.stringify(profileSocial));
+      if (bannerFile) formData.append("bannerImage", bannerFile);
+
+      const res = await fetch(`${API}/api/dealers/profile`, {
+        method: "PATCH",
+        credentials: "include",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (res.ok) {
+        addToast("Micro-website updated.", "success");
+        fetchDealerProfile();
+      } else {
+        addToast(data.message || "Failed to save profile.", "error");
+      }
+    } catch (err) {
+      addToast("Network error. Please try again.", "error");
+    }
+    setSavingProfile(false);
+  }
+
+  async function checkSlug(value) {
+    const slug = value.toLowerCase().replace(/[^a-z0-9-]/g, "-").replace(/-+/g, "-").replace(/^-|-$/g, "");
+    setProfileSlug(slug);
+    setSlugStatus("");
+    if (slug.length < 3) return;
+    try {
+      const res = await fetch(`${API}/api/dealers/check-slug/${slug}?userId=${session.user.id}`);
+      const data = await res.json();
+      setSlugStatus(data.available ? "available" : "taken");
+    } catch (err) { setSlugStatus(""); }
+  }
+
+  async function fetchAnalytics() {
+    setLoadingAnalytics(true);
+    try {
+      const res = await fetch(`${API}/api/analytics/dashboard`, { credentials: "include" });
+      if (res.ok) setAnalyticsData(await res.json());
+    } catch (err) { console.error("Error fetching analytics:", err); }
+    setLoadingAnalytics(false);
+  }
 
   async function fetchMyCars() {
     setLoadingCars(true);
     try {
       const res = await fetch(`${API}/api/cars/mine`, { credentials: "include" });
       setCars(await res.json());
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Error fetching cars:", err); }
     setLoadingCars(false);
   }
 
@@ -50,7 +194,7 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API}/api/inquiries/mine`, { credentials: "include" });
       setInquiries(await res.json());
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Error fetching inquiries:", err); }
     setLoadingInquiries(false);
   }
 
@@ -59,39 +203,136 @@ export default function DashboardPage() {
     try {
       const res = await fetch(`${API}/api/inquiries/sent`, { credentials: "include" });
       setInquiries(await res.json());
-    } catch (err) { console.error(err); }
+    } catch (err) { console.error("Error fetching sent inquiries:", err); }
     setLoadingInquiries(false);
   }
 
   async function handleDelete(carId) {
-    if (!confirm("Are you sure you want to delete this listing?")) return;
+    if (!confirm("Delete this listing?")) return;
     try {
       const res = await fetch(`${API}/api/cars/${carId}`, {
         method: "DELETE", credentials: "include",
       });
-      if (res.ok) setCars((prev) => prev.filter((c) => c._id !== carId));
+      if (res.ok) {
+        setCars((prev) => prev.filter((c) => c._id !== carId));
+        addToast("Listing deleted.", "success");
+      }
+    } catch (err) { console.error("Error deleting car:", err); }
+  }
+
+  function handleBoostSuccess() {
+    setSelectedBoostCar(null);
+    addToast("Listing boosted.", "success");
+    fetchMyCars();
+  }
+
+  function updateInquiryLocal(updatedInquiry) {
+    setInquiries((prev) => prev.map((inq) => (
+      inq._id === updatedInquiry._id ? updatedInquiry : inq
+    )));
+  }
+
+  async function patchInquiry(inquiryId, path, body = {}) {
+    const res = await fetch(`${API}/api/inquiries/${inquiryId}/${path}`, {
+      method: "PATCH",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      throw new Error(data.message || "Failed to update inquiry");
+    }
+
+    const updatedInquiry = await res.json();
+    updateInquiryLocal(updatedInquiry);
+    return updatedInquiry;
+  }
+
+  const handleInquiryStatusChange = useCallback(async (inquiryId, status) => {
+    try {
+      await patchInquiry(inquiryId, "status", { status });
+    } catch (err) { addToast(err.message, "error"); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addToast]);
+
+  const handleInquiryPriorityChange = useCallback(async (inquiryId, priority) => {
+    const inquiry = inquiries.find((inq) => inq._id === inquiryId);
+    try {
+      await patchInquiry(inquiryId, "status", {
+        status: inquiry?.status || "new",
+        priority,
+      });
+    } catch (err) { addToast(err.message, "error"); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [inquiries, addToast]);
+
+  const handleInquiryNotesSave = useCallback(async (inquiryId, notes) => {
+    try {
+      await patchInquiry(inquiryId, "notes", { notes });
+    } catch (err) { addToast(err.message, "error"); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addToast]);
+
+  const handleInquiryFollowUpChange = useCallback(async (inquiryId, followUpAt) => {
+    try {
+      await patchInquiry(inquiryId, "follow-up", { followUpAt: followUpAt || null });
+    } catch (err) { addToast(err.message, "error"); }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [addToast]);
+
+  function normalizeWhatsAppPhone(phone) {
+    const digits = String(phone || "").replace(/\D/g, "");
+    if (digits.length === 10) return `91${digits}`;
+    if (digits.length === 12 && digits.startsWith("91")) return digits;
+    return digits;
+  }
+
+  function getWhatsAppHref(inquiry) {
+    const phone = normalizeWhatsAppPhone(inquiry.phone);
+    if (!/^91[6-9]\d{9}$/.test(phone)) return null;
+    const carTitle = inquiry.car?.title || "your car inquiry";
+    const message = `Hi ${inquiry.name}, thanks for your inquiry on AutoBazaar about ${carTitle}. Is this car still of interest to you?`;
+    return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  }
+
+  async function handleWhatsAppClick(e, inquiry) {
+    if (!getWhatsAppHref(inquiry)) {
+      e.preventDefault();
+      addToast("No valid phone number for this inquiry.", "error");
+      return;
+    }
+    try {
+      await patchInquiry(inquiry._id, "whatsapp");
     } catch (err) { console.error(err); }
   }
 
-  // Helper: format relative time (e.g., "2 hours ago")
-  function timeAgo(dateStr) {
-    const diff = Date.now() - new Date(dateStr).getTime();
-    const mins = Math.floor(diff / 60000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return `${mins}m ago`;
-    const hours = Math.floor(mins / 60);
-    if (hours < 24) return `${hours}h ago`;
-    const days = Math.floor(hours / 24);
-    if (days < 30) return `${days}d ago`;
-    return new Date(dateStr).toLocaleDateString("en-IN", { month: "short", day: "numeric" });
+  async function handleMarkSpam(inquiryId) {
+    try {
+      await patchInquiry(inquiryId, "status", { status: "fake" });
+      addToast("Lead marked as spam.", "info");
+    } catch (err) { addToast(err.message, "error"); }
+  }
+
+  function dateInputValue(dateStr) {
+    if (!dateStr) return "";
+    return new Date(dateStr).toISOString().slice(0, 10);
+  }
+
+  async function handleLogout() {
+    if (confirm("Log out?")) {
+      await authClient.signOut();
+      router.push("/login");
+    }
   }
 
   if (isPending || !session) {
     return (
-      <div className="flex min-h-[calc(100vh-57px)] items-center justify-center bg-slate-50">
-        <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-          <p className="text-sm font-medium text-muted">Loading dashboard...</p>
+      <div className="flex min-h-screen items-center justify-center bg-neutral-50">
+        <div className="flex flex-col items-center gap-3">
+          <div className="h-8 w-8 rounded-full border-2 border-primary-600 border-t-transparent animate-spin" />
+          <p className="text-sm text-neutral-500">Loading...</p>
         </div>
       </div>
     );
@@ -99,241 +340,275 @@ export default function DashboardPage() {
 
   const isDealer = session.user.role === "dealer";
 
-  return (
-    <div className="min-h-[calc(100vh-57px)] bg-slate-50">
-      <div className="mx-auto max-w-5xl px-4 py-8 sm:px-6">
+  const sidebarLinks = isDealer ? [
+    { id: "listings", label: "Listings", icon: LayoutDashboard },
+    { id: "inquiries", label: "Inquiries", icon: MessageSquare },
+    { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "profile", label: "Profile", icon: Award },
+  ] : [];
 
-        {/* ─── Welcome Header ─── */}
-        <div className="flex items-start justify-between mb-8">
-          <div>
-            <p className="text-sm font-medium text-muted mb-1">Welcome back,</p>
-            <h1 className="text-2xl font-bold text-foreground">{session.user.name}</h1>
-          </div>
-          {isDealer && (
-            <Link
-              href="/dashboard/new"
-              className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
-            >
-              + New Listing
-            </Link>
-          )}
+  return (
+    <div className="min-h-screen bg-neutral-50 font-sans flex flex-col antialiased">
+
+      {/* ─── Top Navbar ─── */}
+      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-neutral-200 flex items-center justify-between px-4 md:px-6 py-3 shrink-0">
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setIsMobileMenuOpen(true)}
+            className="p-1.5 rounded-lg text-neutral-500 hover:bg-neutral-100 transition-colors lg:hidden"
+            aria-label="Open menu"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
+          <Link href="/dashboard" className="flex items-center gap-2">
+            <span className="p-1.5 rounded-lg bg-primary-600 text-white">
+              <Car className="w-4.5 h-4.5" />
+            </span>
+            <span className="font-display font-bold text-lg tracking-tight text-neutral-900">
+              AutoBazaar
+            </span>
+          </Link>
         </div>
 
-        {isDealer ? (
-          /* ─── DEALER VIEW ─── */
-          <>
-            {/* Stats Row */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-6">
-              <div className="rounded-xl border border-border bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Total Listings</p>
-                <p className="text-2xl font-bold text-foreground">{cars.length}</p>
-              </div>
-              <div className="rounded-xl border border-border bg-white p-5">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Total Value</p>
-                <p className="text-2xl font-bold text-foreground">
-                  ₹{cars.reduce((sum, c) => sum + c.price, 0).toLocaleString("en-IN")}
-                </p>
-              </div>
-              <div className="rounded-xl border border-border bg-white p-5 hidden sm:block">
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Inquiries</p>
-                <p className="text-2xl font-bold text-foreground">{inquiries.length}</p>
-              </div>
+        <div className="flex items-center gap-3">
+          <button className="relative p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 rounded-lg transition-colors">
+            <Bell className="w-5 h-5" />
+          </button>
+
+          <div className="w-px h-5 bg-neutral-200" />
+
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-full bg-primary-600 text-white font-semibold text-sm flex items-center justify-center">
+              {session.user.name ? session.user.name[0].toUpperCase() : "A"}
             </div>
-
-            {/* Tab Navigation */}
-            <div className="flex gap-1 mb-6 border-b border-border">
-              <button
-                onClick={() => setActiveTab("listings")}
-                className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-                  activeTab === "listings"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted hover:text-foreground"
-                }`}
-              >
-                My Listings
-              </button>
-              <button
-                onClick={() => setActiveTab("inquiries")}
-                className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors cursor-pointer ${
-                  activeTab === "inquiries"
-                    ? "border-primary text-primary"
-                    : "border-transparent text-muted hover:text-foreground"
-                }`}
-              >
-                Inquiries {inquiries.length > 0 && (
-                  <span className="ml-1.5 inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary text-[10px] font-bold text-primary-foreground">
-                    {inquiries.length}
-                  </span>
-                )}
-              </button>
+            <div className="hidden sm:block">
+              <p className="text-sm font-semibold text-neutral-800 leading-none">{session.user.name}</p>
+              <p className="text-[10px] text-neutral-400 capitalize">{session.user.role || "buyer"}</p>
             </div>
+          </div>
+        </div>
+      </header>
 
-            {/* Tab Content: Listings */}
-            {activeTab === "listings" && (
-              <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden">
-                {loadingCars ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-                    <p className="text-sm text-muted ml-2">Loading...</p>
-                  </div>
-                ) : cars.length === 0 ? (
-                  <div className="text-center py-12">
-                    <span className="text-4xl mb-3 block">🚗</span>
-                    <p className="text-sm font-semibold text-foreground mb-1">No listings yet</p>
-                    <p className="text-xs text-muted mb-4">Create your first car listing.</p>
-                    <Link href="/dashboard/new" className="text-sm font-semibold text-primary hover:underline">
-                      + Create Listing
-                    </Link>
-                  </div>
-                ) : (
-                  <div className="divide-y divide-border">
-                    {cars.map((car) => (
-                      <div key={car._id} className="flex items-center gap-4 px-6 py-4 hover:bg-slate-50 transition-colors">
-                        <div className="h-14 w-20 flex-shrink-0 overflow-hidden rounded-lg bg-slate-100 border border-border">
-                          {car.images?.[0] ? (
-                            <img src={car.images[0].url} alt={car.title} className="h-full w-full object-cover" />
-                          ) : (
-                            <div className="flex h-full w-full items-center justify-center text-lg">🚗</div>
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-bold text-foreground truncate">{car.title}</p>
-                          <p className="text-xs text-muted">{car.brand} · {car.year} · ₹{car.price.toLocaleString("en-IN")}</p>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <Link
-                            href={`/dashboard/edit/${car._id}`}
-                            className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-muted hover:text-foreground hover:bg-slate-50 transition-colors"
-                          >
-                            Edit
-                          </Link>
-                          <button
-                            onClick={() => handleDelete(car._id)}
-                            className="rounded-lg border border-red-200 px-3 py-1.5 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors cursor-pointer"
-                          >
-                            Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
+      {/* ─── Layout ─── */}
+      <div className="flex-1 flex relative">
 
-            {/* Tab Content: Inquiries */}
-            {activeTab === "inquiries" && (
-              <div className="space-y-3">
-                {loadingInquiries ? (
-                  <div className="flex items-center justify-center py-12">
-                    <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
-                    <p className="text-sm text-muted ml-2">Loading inquiries...</p>
-                  </div>
-                ) : inquiries.length === 0 ? (
-                  <div className="text-center py-12 rounded-2xl border border-border bg-white">
-                    <span className="text-4xl mb-3 block">📩</span>
-                    <p className="text-sm font-semibold text-foreground mb-1">No inquiries yet</p>
-                    <p className="text-xs text-muted">When buyers inquire about your listings, they'll appear here.</p>
-                  </div>
-                ) : (
-                  inquiries.map((inq) => (
-                    <div key={inq._id} className="rounded-xl border border-border bg-white p-5 shadow-sm">
-                      <div className="flex items-start justify-between mb-3">
-                        <div>
-                          <p className="text-sm font-bold text-foreground">{inq.name}</p>
-                          <p className="text-xs text-muted">📞 {inq.phone}</p>
-                        </div>
-                        <span className="text-xs text-muted-foreground">{timeAgo(inq.createdAt)}</span>
-                      </div>
-                      {inq.car && (
-                        <Link
-                          href={`/cars/${inq.car._id}`}
-                          className="inline-block mb-2 text-xs font-semibold text-primary hover:underline"
-                        >
-                          🚗 {inq.car.title} — ₹{inq.car.price?.toLocaleString("en-IN")}
-                        </Link>
-                      )}
-                      <p className="text-sm text-muted leading-relaxed">{inq.message}</p>
-                    </div>
-                  ))
-                )}
-              </div>
-            )}
-          </>
-        ) : (
-          /* ─── BUYER VIEW ─── */
-          <>
-            {/* Profile Card */}
-            <div className="rounded-2xl border border-border bg-white p-8 shadow-sm mb-6">
-              <h2 className="text-lg font-bold text-foreground mb-4">Your Profile</h2>
-              <dl className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Email</dt>
-                  <dd className="text-sm font-medium text-foreground">{session.user.email}</dd>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Account Role</dt>
-                  <dd className="text-sm font-medium text-foreground capitalize">{session.user.role || "buyer"}</dd>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Member Since</dt>
-                  <dd className="text-sm font-medium text-foreground">
-                    {new Date(session.user.createdAt).toLocaleDateString("en-IN", {
-                      year: "numeric", month: "long", day: "numeric",
-                    })}
-                  </dd>
-                </div>
-                <div className="rounded-xl bg-slate-50 p-4">
-                  <dt className="text-xs font-semibold uppercase tracking-wider text-muted mb-1">Inquiries Sent</dt>
-                  <dd className="text-sm font-medium text-foreground">{inquiries.length}</dd>
-                </div>
-              </dl>
-            </div>
+        {/* ─── Sidebar (desktop) ─── */}
+        {isDealer && (
+          <aside className="hidden lg:flex w-56 border-r border-neutral-200 bg-white flex-col justify-between shrink-0 p-4 sticky top-[57px] h-[calc(100vh-57px)]">
+            <nav className="space-y-0.5">
+              {sidebarLinks.map((link) => {
+                const IconComponent = link.icon;
+                const isActive = activeTab === link.id;
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => setActiveTab(link.id)}
+                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      isActive
+                        ? "bg-primary-50 text-primary-700"
+                        : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800"
+                    }`}
+                  >
+                    <IconComponent className={`w-4 h-4 ${isActive ? "text-primary-600" : "text-neutral-400"}`} />
+                    {link.label}
+                  </button>
+                );
+              })}
+            </nav>
 
-            {/* Sent Inquiries */}
-            {inquiries.length > 0 && (
-              <div className="rounded-2xl border border-border bg-white shadow-sm overflow-hidden mb-6">
-                <div className="px-6 py-4 border-b border-border">
-                  <h2 className="text-lg font-bold text-foreground">Your Inquiries</h2>
-                </div>
-                <div className="divide-y divide-border">
-                  {inquiries.map((inq) => (
-                    <div key={inq._id} className="px-6 py-4">
-                      <div className="flex items-start justify-between mb-1">
-                        {inq.car ? (
-                          <Link
-                            href={`/cars/${inq.car._id}`}
-                            className="text-sm font-bold text-primary hover:underline"
-                          >
-                            🚗 {inq.car.title}
-                          </Link>
-                        ) : (
-                          <span className="text-sm font-bold text-muted">(Listing removed)</span>
-                        )}
-                        <span className="text-xs text-muted-foreground">{timeAgo(inq.createdAt)}</span>
-                      </div>
-                      <p className="text-sm text-muted">{inq.message}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Browse CTA */}
-            <div className="rounded-2xl border border-border bg-white p-8 shadow-sm text-center">
-              <span className="text-4xl mb-3 block">🚗</span>
-              <h3 className="text-lg font-bold text-foreground mb-1">Ready to find your next car?</h3>
-              <p className="text-sm text-muted mb-4">Browse listings from trusted dealers.</p>
+            <div className="space-y-2">
               <Link
-                href="/cars"
-                className="inline-block rounded-lg bg-primary px-6 py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 transition-opacity"
+                href="/dashboard/new"
+                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm"
               >
-                Browse Cars →
+                <Plus className="w-4 h-4" /> New listing
               </Link>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+              >
+                <LogOut className="w-4 h-4" /> Sign out
+              </button>
             </div>
-          </>
+          </aside>
         )}
+
+        {/* ─── Mobile drawer ─── */}
+        <AnimatePresence>
+          {isMobileMenuOpen && (
+            <>
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 0.4 }}
+                exit={{ opacity: 0 }}
+                onClick={() => setIsMobileMenuOpen(false)}
+                className="fixed inset-0 z-50 bg-black lg:hidden"
+              />
+              <motion.div
+                initial={{ x: "-100%" }}
+                animate={{ x: 0 }}
+                exit={{ x: "-100%" }}
+                transition={{ type: "spring", damping: 25, stiffness: 220 }}
+                className="fixed inset-y-0 left-0 z-50 w-64 bg-white p-5 shadow-xl flex flex-col justify-between lg:hidden"
+              >
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
+                    <span className="font-display font-bold text-neutral-900">Menu</span>
+                    <button
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="p-1 rounded-lg text-neutral-400 hover:bg-neutral-100 transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                  {isDealer && (
+                    <nav className="space-y-0.5">
+                      {sidebarLinks.map((link) => {
+                        const IconComponent = link.icon;
+                        const isActive = activeTab === link.id;
+                        return (
+                          <button
+                            key={link.id}
+                            onClick={() => {
+                              setActiveTab(link.id);
+                              setIsMobileMenuOpen(false);
+                            }}
+                            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                              isActive
+                                ? "bg-primary-50 text-primary-700"
+                                : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800"
+                            }`}
+                          >
+                            <IconComponent className={`w-4 h-4 ${isActive ? "text-primary-600" : "text-neutral-400"}`} />
+                            {link.label}
+                          </button>
+                        );
+                      })}
+                    </nav>
+                  )}
+                </div>
+
+                <div className="space-y-2">
+                  {isDealer && (
+                    <Link
+                      href="/dashboard/new"
+                      onClick={() => setIsMobileMenuOpen(false)}
+                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg transition-colors"
+                    >
+                      <Plus className="w-4 h-4" /> New listing
+                    </Link>
+                  )}
+                  <button
+                    onClick={() => {
+                      setIsMobileMenuOpen(false);
+                      handleLogout();
+                    }}
+                    className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
+                  >
+                    <LogOut className="w-4 h-4" /> Sign out
+                  </button>
+                </div>
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+
+        {/* ─── Main content ─── */}
+        <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
+
+          {/* Page header */}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-display font-bold text-neutral-900 tracking-tight">
+                {isDealer ? "Dashboard" : "My Account"}
+              </h1>
+              <p className="text-sm text-neutral-500 mt-0.5">
+                {isDealer ? `Welcome back, ${session.user.name}` : session.user.name}
+              </p>
+            </div>
+          </div>
+
+          {isDealer ? (
+            <>
+              {activeTab === "listings" && (
+                <ListingsTab
+                  cars={cars}
+                  loadingCars={loadingCars}
+                  analyticsData={analyticsData}
+                  inquiries={inquiries}
+                  onNewListing={() => router.push("/dashboard/new")}
+                  onEdit={(carId) => router.push(`/dashboard/edit/${carId}`)}
+                  onDelete={handleDelete}
+                  onBoost={setSelectedBoostCar}
+                />
+              )}
+
+              {activeTab === "inquiries" && (
+                <InquiriesTab
+                  inquiries={inquiries}
+                  loadingInquiries={loadingInquiries}
+                  onStatusChange={handleInquiryStatusChange}
+                  onPriorityChange={handleInquiryPriorityChange}
+                  onNotesSave={handleInquiryNotesSave}
+                  onFollowUpChange={handleInquiryFollowUpChange}
+                  onWhatsAppClick={handleWhatsAppClick}
+                  onMarkSpam={handleMarkSpam}
+                />
+              )}
+
+              {activeTab === "analytics" && (
+                <AnalyticsTab
+                  cars={cars}
+                  inquiries={inquiries}
+                  analyticsData={analyticsData}
+                  loadingAnalytics={loadingAnalytics}
+                />
+              )}
+
+              {activeTab === "profile" && (
+                <ProfileTab
+                  dealerProfile={dealerProfile}
+                  businessName={businessName}
+                  onBusinessNameChange={(e) => setBusinessName(e.target.value)}
+                  verificationDoc={verificationDoc}
+                  onVerificationDocChange={(e) => setVerificationDoc(e.target.files?.[0])}
+                  uploadingDoc={uploadingDoc}
+                  onVerificationSubmit={handleVerificationSubmit}
+                  profileSlug={profileSlug}
+                  onProfileSlugChange={(e) => checkSlug(e.target.value)}
+                  profileAbout={profileAbout}
+                  onProfileAboutChange={(e) => setProfileAbout(e.target.value)}
+                  profilePhone={profilePhone}
+                  onProfilePhoneChange={(e) => setProfilePhone(e.target.value)}
+                  profileAddress={profileAddress}
+                  onProfileAddressChange={(e) => setProfileAddress(e.target.value)}
+                  profileCity={profileCity}
+                  onProfileCityChange={(e) => setProfileCity(e.target.value)}
+                  profileSocial={profileSocial}
+                  onProfileSocialChange={(platform, value) => setProfileSocial({ ...profileSocial, [platform]: value })}
+                  bannerFile={bannerFile}
+                  onBannerFileChange={(e) => setBannerFile(e.target.files?.[0])}
+                  savingProfile={savingProfile}
+                  onMicroWebsiteSave={handleMicroWebsiteSave}
+                  slugStatus={slugStatus}
+                />
+              )}
+            </>
+          ) : (
+            <BuyerDashboard session={session} inquiries={inquiries} />
+          )}
+        </main>
       </div>
+
+      {selectedBoostCar && (
+        <BoostModal
+          car={selectedBoostCar}
+          user={session.user}
+          onClose={() => setSelectedBoostCar(null)}
+          onBoostSuccess={handleBoostSuccess}
+        />
+      )}
     </div>
   );
 }

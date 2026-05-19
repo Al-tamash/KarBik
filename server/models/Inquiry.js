@@ -74,6 +74,64 @@ const inquirySchema = new mongoose.Schema(
       ref: "user",
       required: true,
     },
+
+    status: {
+      type: String,
+      enum: ["new", "contacted", "interested", "test_drive", "closed", "lost", "fake"],
+      default: "new",
+    },
+
+    priority: {
+      type: String,
+      enum: ["low", "medium", "high"],
+      default: "medium",
+    },
+
+    notes: {
+      type: String,
+      default: "",
+      trim: true,
+      maxlength: [2000, "Notes cannot exceed 2000 characters"],
+    },
+
+    lastContactedAt: {
+      type: Date,
+      default: null,
+    },
+
+    followUpAt: {
+      type: Date,
+      default: null,
+    },
+
+    whatsappMessageCount: {
+      type: Number,
+      default: 0,
+      min: 0,
+    },
+
+    leadScore: {
+      type: Number,
+      default: 50,
+      min: 0,
+      max: 100,
+    },
+
+    leadQuality: {
+      type: String,
+      enum: ["new", "good", "high_intent", "suspicious"],
+      default: "new",
+    },
+
+    leadSignals: {
+      type: [String],
+      default: [],
+    },
+
+    markedFakeAt: {
+      type: Date,
+      default: null,
+    },
   },
   {
     // createdAt = when the inquiry was sent

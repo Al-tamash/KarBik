@@ -13,6 +13,11 @@ import {
   createInquiry,
   getMyInquiries,
   getBuyerInquiries,
+  checkDealerInquiry,
+  updateInquiryStatus,
+  updateInquiryNotes,
+  updateInquiryFollowUp,
+  trackWhatsAppContact,
 } from "../controllers/inquiryController.js";
 
 export default function inquiryRoutes(auth) {
@@ -26,6 +31,21 @@ export default function inquiryRoutes(auth) {
 
   // GET /api/inquiries/sent — buyer views their sent inquiries
   router.get("/sent", protect(auth), getBuyerInquiries);
+
+  // GET /api/inquiries/check/:dealerId — check if user has sent inquiry to this dealer
+  router.get("/check/:dealerId", protect(auth), checkDealerInquiry);
+
+  // PATCH /api/inquiries/:id/status - dealer updates CRM status and priority
+  router.patch("/:id/status", protect(auth), updateInquiryStatus);
+
+  // PATCH /api/inquiries/:id/notes - dealer saves private CRM notes
+  router.patch("/:id/notes", protect(auth), updateInquiryNotes);
+
+  // PATCH /api/inquiries/:id/follow-up - dealer sets or clears a follow-up date
+  router.patch("/:id/follow-up", protect(auth), updateInquiryFollowUp);
+
+  // PATCH /api/inquiries/:id/whatsapp - dealer tracks WhatsApp contact clicks
+  router.patch("/:id/whatsapp", protect(auth), trackWhatsAppContact);
 
   return router;
 }

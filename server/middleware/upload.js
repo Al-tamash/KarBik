@@ -28,14 +28,14 @@ const upload = multer({
   limits: { fileSize: 5 * 1024 * 1024 },
 
   // fileFilter runs for each uploaded file to check if it's allowed
-  // We only accept image files (image/jpeg, image/png, image/webp, etc.)
+  // We accept image files (image/jpeg, image/png, image/webp) and PDFs
   fileFilter: (req, file, cb) => {
-    if (file.mimetype.startsWith("image/")) {
+    if (file.mimetype.startsWith("image/") || file.mimetype === "application/pdf") {
       // cb(null, true) means "accept this file"
       cb(null, true);
     } else {
       // cb(error, false) means "reject this file with an error"
-      cb(new Error("Only image files are allowed"), false);
+      cb(new Error("Only image files and PDFs are allowed"), false);
     }
   },
 });

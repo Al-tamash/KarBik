@@ -81,7 +81,9 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 - POST /api/reviews — buyer leaves dealer review (Phase 10+)
 - GET  /api/reviews/dealer/:id — dealer's reviews (Phase 10+)
 - POST /api/dealers/verify — submit verification docs (Phase 10+)
+- GET  /api/dealers/check-slug/:slug — check slug availability (Phase 12+)
 - GET  /api/dealers/:slug — dealer micro-website public page (Phase 12+)
+- PATCH /api/dealers/profile — dealer updates micro-website settings (Phase 12+)
 
 ## Build phases
 | Phase | Feature | Status |
@@ -91,14 +93,14 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000
 | 3 | Public browse + search + filters | ✅ Done |
 | 4 | Dealer dashboard + role-based access | ✅ Done |
 | 5 | Buyer inquiry system | ✅ Done |
-| 6 | Deploy to Vercel + Render + MongoDB Atlas | 🔲 |
-| 7 | Dealer subscription plans + Razorpay payment gateway | 🔲 |
-| 8 | Featured/Boost listings (pay-per-use) | 🔲 |
-| 9 | Advanced dealer analytics dashboard | 🔲 |
-| 10 | Car inspection + trust system (reviews, verification) | 🔲 |
-| 11 | WhatsApp integration + CRM | 🔲 |
-| 12 | Dealer micro-website + QR code | 🔲 |
-| 13 | AI-powered features (price suggestion, auto-description) | 🔲 |
-| 14 | Mobile PWA (push notifications, offline mode) | 🔲 |
+| 6 | Deploy to Vercel + Render + MongoDB Atlas | ✅ Done |
+| 7 | Dealer subscription plans + Razorpay payment gateway | ✅ Done |
+| 8 | Featured/Boost listings (pay-per-use) | ✅ Done |
+| 9 | Advanced dealer analytics dashboard | ✅ Done |
+| 10 | Car inspection + trust system (reviews, verification) | ✅ Done |
+| 11 | WhatsApp integration + CRM | ✅ Done |
+| 12 | Dealer micro-website + QR code | ✅ Done |
+| 13 | AI-powered features (price suggestion, auto-description) | ✅ Done |
+| 14 | Mobile PWA (push notifications, offline mode) | ✅ Done |
 
 Update 🔲 to ✅ when a phase is complete and tested.

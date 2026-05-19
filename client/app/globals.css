@@ -1,39 +1,334 @@
+/**
+ * AutoBazaar Design System — globals.css
+ *
+ * WHAT: The single source of truth for ALL visual tokens and reusable component classes.
+ * WHY: By centralizing colors, fonts, shadows, buttons, badges, cards, and inputs here,
+ *      we ensure consistency across every page without hardcoding hex values in components.
+ *
+ * Tailwind CSS v4 uses CSS-first configuration via @theme instead of tailwind.config.js.
+ * Every color scale, font, shadow, and spacing token is registered below so you can use
+ * them as Tailwind utilities like `bg-primary-600`, `text-neutral-500`, `shadow-card`, etc.
+ */
 @import "tailwindcss";
 
-/**
- * @theme inline — Tailwind CSS v4 custom theme tokens
- *
- * Instead of tailwind.config.js, v4 uses CSS-first configuration.
- * We define our color palette, fonts, and spacing here.
- *
- * OKLCH colors give us more vibrant, perceptually uniform colors
- * than hex or HSL. The format is: oklch(lightness chroma hue)
- */
+/* ─── Google Fonts are loaded optimally via next/font in layout.js ─── */
+
+/* ════════════════════════════════════════════════════════════════════════════
+   THEME TOKENS — Tailwind v4 CSS-first config
+   These register as Tailwind utilities: bg-primary-600, text-neutral-800, etc.
+   ════════════════════════════════════════════════════════════════════════════ */
 @theme inline {
-  --color-background: #ffffff;
-  --color-foreground: #0f172a;
-  --color-primary: oklch(0.55 0.2 250);
-  --color-primary-foreground: #ffffff;
-  --color-muted: #64748b;
-  --color-muted-foreground: #94a3b8;
-  --color-border: #e2e8f0;
-  --color-card: #ffffff;
-  --color-card-foreground: #0f172a;
-  --color-destructive: oklch(0.55 0.2 25);
-  --color-success: oklch(0.6 0.18 145);
-  --font-sans: "Inter", "Geist", system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono);
+  /* ─── Primary (Indigo) ─── brand identity, links, active states */
+  --color-primary-50:  #EEF0FF;
+  --color-primary-100: #E0E3FF;
+  --color-primary-200: #C7CCFE;
+  --color-primary-300: #A5ACFC;
+  --color-primary-400: #818DF8;
+  --color-primary-500: #6366F1;
+  --color-primary-600: #4F46E5;   /* ← main brand color */
+  --color-primary-650: #4842D8;
+  --color-primary-700: #4338CA;
+  --color-primary-800: #3730A3;
+  --color-primary-900: #312E81;
+
+  /* ─── Accent (Orange) ─── CTAs, price highlights, attention-grabbers */
+  --color-accent-50:  #FFF7ED;
+  --color-accent-100: #FFEDD5;
+  --color-accent-200: #FED7AA;
+  --color-accent-300: #FDBA74;
+  --color-accent-400: #FB923C;
+  --color-accent-500: #F97316;   /* ← main CTA color */
+  --color-accent-600: #EA580C;
+  --color-accent-700: #C2410C;
+
+  /* ─── Success (Green) ─── available, verified, passed */
+  --color-success-50:  #F0FDF4;
+  --color-success-100: #DCFCE7;
+  --color-success-500: #22C55E;
+  --color-success-600: #16A34A;
+  --color-success-700: #15803D;
+  --color-success-800: #166534;
+
+  /* ─── Warning (Amber) ─── featured, boosted */
+  --color-warning-50:  #FFFBEB;
+  --color-warning-100: #FEF3C7;
+  --color-warning-500: #F59E0B;
+  --color-warning-600: #D97706;
+
+  /* ─── Danger (Rose) ─── errors, delete actions */
+  --color-danger-50:  #FFF1F2;
+  --color-danger-100: #FFE4E6;
+  --color-danger-200: #FECDD3;
+  --color-danger-300: #FDA4AF;
+  --color-danger-500: #F43F5E;
+  --color-danger-600: #E11D48;
+  --color-danger-700: #BE123C;
+
+  /* ─── Neutral (Slate tinted toward indigo, chroma ~0.008) ─── text, borders, backgrounds */
+  --color-neutral-0:   #FEFEFF;
+  --color-neutral-50:  #F8F9FC;
+  --color-neutral-100: #F0F1F7;
+  --color-neutral-150: #E8E9F1;
+  --color-neutral-200: #DCDDE8;
+  --color-neutral-250: #D0D1DF;
+  --color-neutral-300: #B8B9CC;
+  --color-neutral-400: #8A8BA5;
+  --color-neutral-450: #747596;
+  --color-neutral-500: #5C5D78;
+  --color-neutral-600: #42435C;
+  --color-neutral-700: #2E2F45;
+  --color-neutral-800: #1A1B30;
+  --color-neutral-850: #121326;
+  --color-neutral-900: #0C0D1A;
+
+  /* ─── Fonts ─── */
+  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+  --font-display: "Plus Jakarta Sans", sans-serif;
+  --font-mono: "JetBrains Mono", monospace;
+
+  /* ─── Shadows ─── */
+  --shadow-xs:   0 1px 2px 0 rgb(0 0 0 / 0.05);
+  --shadow-sm:   0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
+  --shadow-md:   0 4px 6px -1px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06);
+  --shadow-lg:   0 10px 15px -3px rgb(0 0 0 / 0.08), 0 4px 6px -4px rgb(0 0 0 / 0.05);
+  --shadow-xl:   0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.05);
+  --shadow-card: 0 2px 8px rgb(0 0 0 / 0.06), 0 0 1px rgb(0 0 0 / 0.1);
+  --shadow-card-hover: 0 8px 24px rgb(0 0 0 / 0.10), 0 0 1px rgb(0 0 0 / 0.1);
+
+  /* ─── Animations ─── */
+  --animate-fade-in:    fadeIn 0.2s ease-out;
+  --animate-slide-up:   slideUp 0.3s ease-out;
+  --animate-slide-down: slideDown 0.3s ease-out;
+  --animate-scale-in:   scaleIn 0.15s ease-out;
+  --animate-shimmer:    shimmer 1.5s infinite;
 }
 
-/**
- * Base styles applied to the entire page.
- * We set strong, dark foreground text (#0f172a = slate-900)
- * so everything is readable by default — no more washed-out text.
- */
-body {
-  background: var(--color-background);
-  color: var(--color-foreground);
-  font-family: var(--font-sans);
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+/* ─── Keyframes ─── */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { transform: translateY(8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes slideDown {
+  from { transform: translateY(-8px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+@keyframes scaleIn {
+  from { transform: scale(0.96); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+@keyframes shimmer {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   BASE LAYER — global resets and body defaults
+   ════════════════════════════════════════════════════════════════════════════ */
+@layer base {
+  *, *::before, *::after {
+    box-sizing: border-box;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    font-size: 16px;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-neutral-800);
+    background-color: var(--color-neutral-50);
+    font-feature-settings: 'kern' 1, 'liga' 1, 'cv11' 1;
+    line-height: 1.6;
+  }
+
+  /* Make buttons clickable by default */
+  button { cursor: pointer; }
+
+  /* Consistent focus ring — accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-primary-500);
+    outline-offset: 2px;
+  }
+
+  /* Scrollbar styling */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--color-neutral-100); }
+  ::-webkit-scrollbar-thumb { background: var(--color-neutral-300); border-radius: 99px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--color-neutral-400); }
+
+  /* Selection color */
+  ::selection {
+    background: var(--color-primary-100);
+    color: var(--color-primary-900);
+  }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   COMPONENT LAYER — reusable UI classes
+   Use these in JSX instead of hardcoding colors:
+     <button className="btn-md btn-primary">Save</button>
+     <div className="card card-body">...</div>
+     <span className="badge-success">Available</span>
+   ════════════════════════════════════════════════════════════════════════════ */
+@layer components {
+
+  /* ─── BUTTONS ──────────────────────────────────────────────────────────── */
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-semibold
+           transition-all duration-200 select-none whitespace-nowrap
+           disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  /* Sizes */
+  .btn-sm  { @apply px-3.5 py-2 text-sm rounded-[0.625rem]; }
+  .btn-md  { @apply px-5 py-2.5 text-sm rounded-[0.625rem]; }
+  .btn-lg  { @apply px-6 py-3 text-base rounded-lg; }
+  .btn-xl  { @apply px-8 py-4 text-base font-bold rounded-xl; }
+
+  /* Variants */
+  .btn-primary {
+    @apply bg-primary-600 text-white hover:bg-primary-700
+           active:bg-primary-800 shadow-sm hover:shadow-md;
+  }
+  .btn-accent {
+    @apply bg-accent-500 text-white hover:bg-accent-600
+           active:bg-accent-700 shadow-sm hover:shadow-md;
+  }
+  .btn-outline {
+    @apply border border-neutral-300 text-neutral-700 bg-white
+           hover:bg-neutral-50 hover:border-neutral-400 active:bg-neutral-100;
+  }
+  .btn-outline-primary {
+    @apply border border-primary-300 text-primary-700 bg-white
+           hover:bg-primary-50 hover:border-primary-400;
+  }
+  .btn-ghost {
+    @apply text-neutral-600 hover:bg-neutral-100 active:bg-neutral-200;
+  }
+  .btn-ghost-primary {
+    @apply text-primary-600 hover:bg-primary-50 active:bg-primary-100;
+  }
+  .btn-danger {
+    @apply bg-danger-600 text-white hover:bg-danger-500
+           active:bg-danger-700 shadow-sm;
+  }
+  .btn-success {
+    @apply bg-success-600 text-white hover:bg-success-700 shadow-sm;
+  }
+  .btn-whatsapp {
+    @apply bg-[#25D366] text-white hover:bg-[#20BD5A] shadow-sm;
+  }
+
+  /* Full width */
+  .btn-full { @apply w-full; }
+
+
+  /* ─── BADGES / PILLS ───────────────────────────────────────────────────── */
+
+  .badge {
+    @apply inline-flex items-center gap-1 font-medium rounded-full
+           text-xs px-2.5 py-0.5;
+  }
+  .badge-sm { @apply text-[0.65rem] px-2 py-px; }
+  .badge-lg { @apply text-sm px-3 py-1; }
+
+  .badge-primary  { @apply bg-primary-50 text-primary-700 border border-primary-200; }
+  .badge-accent   { @apply bg-accent-100 text-accent-700 border border-accent-200; }
+  .badge-success  { @apply bg-success-50 text-success-700 border border-success-100; }
+  .badge-warning  { @apply bg-warning-50 text-warning-600 border border-warning-100; }
+  .badge-danger   { @apply bg-danger-50 text-danger-600 border border-danger-100; }
+  .badge-neutral  { @apply bg-neutral-100 text-neutral-600 border border-neutral-200; }
+
+  /* Semantic aliases for car listings */
+  .badge-available { @apply bg-success-50 text-success-700 border border-success-100; }
+  .badge-sold      { @apply bg-neutral-100 text-neutral-600 border border-neutral-200; }
+  .badge-featured  { @apply bg-accent-100 text-accent-700 border border-accent-200; }
+  .badge-verified  { @apply bg-primary-50 text-primary-700 border border-primary-200; }
+
+
+  /* ─── CARDS ────────────────────────────────────────────────────────────── */
+
+  .card {
+    @apply bg-white rounded-2xl shadow-card border border-neutral-200/60;
+  }
+  .card-hover {
+    @apply transition-all duration-300
+           hover:shadow-card-hover hover:-translate-y-0.5;
+  }
+  .card-flat {
+    @apply bg-white rounded-2xl border border-neutral-200;
+  }
+  .card-body    { @apply p-5; }
+  .card-body-sm { @apply p-4; }
+  .card-body-lg { @apply p-6; }
+
+
+  /* ─── INPUTS ───────────────────────────────────────────────────────────── */
+
+  .input {
+    @apply w-full px-4 py-2.5 bg-white border border-neutral-300 rounded-lg
+           text-base text-neutral-900 placeholder:text-neutral-400
+           transition-all duration-200
+           focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100
+           disabled:bg-neutral-50 disabled:text-neutral-400 disabled:cursor-not-allowed;
+  }
+  .input-lg { @apply py-3; }
+  .input-sm { @apply py-2 text-sm; }
+  .input-error {
+    @apply border-danger-500 focus:border-danger-500 focus:ring-danger-100;
+  }
+
+  .select {
+    @apply appearance-none cursor-pointer
+           bg-[url("data:image/svg+xml;charset=utf-8,%3Csvg%20xmlns%3D'http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg'%20fill%3D'none'%20viewBox%3D'0%200%2020%2020'%3E%3Cpath%20stroke%3D'%236b7280'%20stroke-linecap%3D'round'%20stroke-linejoin%3D'round'%20stroke-width%3D'1.5'%20d%3D'M6%208l4%204%204-4'%2F%3E%3C%2Fsvg%3E")]
+           bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat pr-10;
+  }
+
+  .label {
+    @apply block text-sm font-medium text-neutral-700 mb-1.5;
+  }
+  .helper-text {
+    @apply text-xs text-neutral-500 mt-1;
+  }
+  .error-text {
+    @apply text-xs text-danger-600 mt-1;
+  }
+
+
+  /* ─── TYPOGRAPHY ───────────────────────────────────────────────────────── */
+
+  .heading-page    { @apply text-4xl font-display font-bold text-neutral-900 tracking-tight; }
+  .heading-section { @apply text-2xl font-display font-bold text-neutral-900; }
+  .heading-card    { @apply text-lg font-semibold text-neutral-900; }
+  .heading-sm      { @apply text-base font-semibold text-neutral-800; }
+  .text-muted      { @apply text-sm text-neutral-500; }
+  .text-caption    { @apply text-xs text-neutral-400; }
+
+
+  /* ─── DIVIDERS ─────────────────────────────────────────────────────────── */
+
+  .divider { @apply border-t border-neutral-200; }
+}
+
+
+/* ════════════════════════════════════════════════════════════════════════════
+   UTILITY LAYER — small helpers
+   ════════════════════════════════════════════════════════════════════════════ */
+@layer utilities {
+  /* Hide scrollbar but keep scrolling */
+  .scrollbar-hide::-webkit-scrollbar { display: none; }
+  .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+
+  /* Text balance for headings */
+  .text-balance { text-wrap: balance; }
 }

@@ -19,6 +19,7 @@
  */
 import { Router } from "express";
 import { protect, dealerOnly } from "../middleware/protect.js";
+import { checkListingLimit } from "../middleware/checkSubscription.js";
 import upload from "../middleware/upload.js";
 import {
   getAllCars,
@@ -45,13 +46,24 @@ export default function carRoutes(auth) {
   // /brands and /mine MUST come before /:id — otherwise Express thinks them as car IDs
   router.get("/brands", getBrands);
   router.get("/mine", protect(auth), getMyCars);
-  router.get("/:id", getCarById);
+  router.get("/:id", (req, res) => getCarById(req, res, auth));
 
   // PROTECTED routes — dealer only
   // upload.array("images", 10) accepts up to 10 image files
   // The field name "images" must match what the frontend form sends
-  router.post("/", protect(auth), dealerOnly, upload.array("images", 10), createCar);
-  router.put("/:id", protect(auth), dealerOnly, upload.array("images", 10), updateCar);
+  // checkListingLimit() runs BEFORE upload — no point uploading images
+  // if the dealer has hit their plan limit (saves bandwidth + Cloudinary storage)
+  router.post("/", protect(auth), dealerOnly, checkListingLimit(), upload.array("images", 10), createCar);
+  router.put(
+    "/:id", 
+    protect(auth), 
+    dealerOnly, 
+    upload.fields([
+      { name: "images", maxCount: 10 },
+      { name: "inspectionReport", maxCount: 1 }
+    ]), 
+    updateCar
+  );
   router.delete("/:id", protect(auth), dealerOnly, deleteCar);
 
   return router;

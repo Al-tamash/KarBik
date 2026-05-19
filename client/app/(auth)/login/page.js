@@ -31,19 +31,19 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 px-4">
+    <div className="flex min-h-screen items-center justify-center bg-neutral-50 px-4">
       <div className="w-full max-w-sm">
         {/* Logo / Brand */}
-        <h2 className="text-center text-2xl font-bold tracking-tight text-foreground mb-8">
+        <h2 className="text-center text-2xl font-bold tracking-tight text-neutral-900 mb-8">
           Auto<span className="text-primary">Bazaar</span>
         </h2>
 
         <form
           onSubmit={handleSubmit}
-          className="space-y-5 rounded-2xl border border-border bg-white p-8 shadow-sm"
+          className="space-y-5 rounded-2xl border border-neutral-200 bg-white p-8 shadow-sm"
         >
-          <h1 className="text-xl font-bold text-foreground text-center">Sign In</h1>
-          <p className="text-sm text-muted text-center -mt-2">
+          <h1 className="text-xl font-bold text-neutral-900 text-center">Sign In</h1>
+          <p className="text-sm text-neutral-500 text-center -mt-2">
             Welcome back — enter your credentials
           </p>
 
@@ -55,7 +55,7 @@ export default function LoginPage() {
           )}
 
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">
+            <label className="block text-sm font-semibold text-neutral-900 mb-1.5">
               Email
             </label>
             <input
@@ -63,13 +63,13 @@ export default function LoginPage() {
               required
               value={form.email}
               onChange={(e) => setForm({ ...form, email: e.target.value })}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder-muted-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
               placeholder="you@example.com"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-foreground mb-1.5">
+            <label className="block text-sm font-semibold text-neutral-900 mb-1.5">
               Password
             </label>
             <input
@@ -77,7 +77,7 @@ export default function LoginPage() {
               required
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              className="w-full rounded-lg border border-border bg-white px-3 py-2.5 text-sm text-foreground placeholder-muted-foreground focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
+              className="w-full rounded-lg border border-neutral-200 bg-white px-3 py-2.5 text-sm text-neutral-900 placeholder-muted-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20 transition-shadow"
               placeholder="Your password"
             />
           </div>
@@ -85,12 +85,12 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-foreground hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
+            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-neutral-900 hover:opacity-90 active:opacity-80 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
           >
             {loading ? "Signing in..." : "Sign In"}
           </button>
 
-          <p className="text-center text-sm text-muted">
+          <p className="text-center text-sm text-neutral-500">
             Don&apos;t have an account?{" "}
             <a href="/register" className="font-semibold text-primary hover:underline">
               Register

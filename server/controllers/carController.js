@@ -12,24 +12,31 @@
  * - Model = the recipe book (knows the data structure)
  * - Database = the pantry (stores the ingredients)
  */
+import mongoose from "mongoose";
 import Car from "../models/Car.js";
+import Boost from "../models/Boost.js";
 import cloudinary from "../config/cloudinary.js";
+import { searchCarsSchema, createCarSchema, updateCarSchema } from "../utils/validation.js";
 
 /**
- * Helper: Upload a single image buffer to Cloudinary
+ * Helper: Upload a single image buffer to Cloudinary with Optimization
  *
- * Cloudinary's upload_stream expects a readable stream, but Multer
- * gives us a Buffer (raw bytes in memory). We wrap the upload in a
- * Promise so we can use async/await instead of callbacks.
- *
- * folder: "autobazaar/cars" organizes images in Cloudinary's media library
+ * We add transformations to:
+ * 1. Resize images if they are too large (max 1200px width)
+ * 2. q_auto: automatically compress for best quality/size ratio
+ * 3. f_auto: automatically serve in modern formats (WebP/AVIF)
  */
 function uploadToCloudinary(fileBuffer) {
   return new Promise((resolve, reject) => {
     const stream = cloudinary.uploader.upload_stream(
       {
         folder: "autobazaar/cars",
-        resource_type: "image",
+        resource_type: "auto",
+        transformation: [
+          { width: 1200, crop: "limit" },
+          { quality: "auto" },
+          { fetch_format: "auto" },
+        ],
       },
       (error, result) => {
         if (error) reject(error);
@@ -37,9 +44,52 @@ function uploadToCloudinary(fileBuffer) {
       }
     );
 
-    // Write the buffer to the stream and close it
     stream.end(fileBuffer);
   });
+}
+
+/**
+ * Helper: Escape special regex characters
+ * Prevents NoSQL injection and Regular Expression Denial of Service (ReDoS)
+ */
+function escapeRegex(string) {
+  return string.replace(/[/\-\\^$*+?.()|[\]{}]/g, "\\$&");
+}
+
+function normalizeSearchQuery(query) {
+  const normalized = { ...query };
+
+  if (normalized.maxKm && !normalized.maxMileage) {
+    normalized.maxMileage = normalized.maxKm;
+  }
+
+  if (normalized.ownerCount && !normalized.owners) {
+    const ownerMap = {
+      1: "1st owner",
+      2: "2nd owner",
+      3: "3rd owner",
+    };
+    normalized.owners = ownerMap[normalized.ownerCount] || normalized.ownerCount;
+  }
+
+  const lowerCaseKeys = ["fuelType", "transmission", "bodyType"];
+  lowerCaseKeys.forEach((key) => {
+    if (typeof normalized[key] === "string") {
+      normalized[key] = normalized[key].toLowerCase();
+    }
+  });
+
+  if (normalized.fuelType === "ev") {
+    normalized.fuelType = "electric";
+  }
+
+  delete normalized.maxKm;
+  delete normalized.ownerCount;
+  return normalized;
+}
+
+function exactText(value) {
+  return { $regex: `^${escapeRegex(value)}$`, $options: "i" };
 }
 
 /**
@@ -64,46 +114,76 @@ async function deleteFromCloudinary(publicId) {
 // ─────────────────────────────────────────────
 export async function getAllCars(req, res) {
   try {
+    // Validate query parameters with Zod
+    const validated = searchCarsSchema.parse(normalizeSearchQuery(req.query));
+
     const {
-      search,    // text search across title and brand
-      brand,     // filter by exact brand name
-      minYear, maxYear,   // year range
-      minPrice, maxPrice, // price range
-      sort: sortParam,    // sorting option
-      page = 1,           // current page (default: 1)
-      limit = 12,         // items per page (default: 12)
-    } = req.query;
+      search,
+      brand,
+      fuelType,
+      transmission,
+      bodyType,
+      owners,
+      minYear, maxYear,
+      minPrice, maxPrice,
+      maxMileage,
+      sort: sortParam,
+      page,
+      limit,
+    } = validated;
 
-    // Build a MongoDB filter object dynamically
-    // Only add conditions that the user actually sent
     const filter = {};
+    const andFilters = [];
 
-    // Text search — matches title OR brand using case-insensitive regex
-    // "i" flag means case-insensitive: "honda" matches "Honda"
     if (search) {
-      filter.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { brand: { $regex: search, $options: "i" } },
-      ];
+      const escapedSearch = escapeRegex(search);
+      andFilters.push({
+        $or: [
+          { title: { $regex: escapedSearch, $options: "i" } },
+          { brand: { $regex: escapedSearch, $options: "i" } },
+          { model: { $regex: escapedSearch, $options: "i" } },
+        ],
+      });
     }
 
-    // Brand filter — exact match (case-insensitive)
-    if (brand) {
-      filter.brand = { $regex: `^${brand}$`, $options: "i" };
+    if (brand) filter.brand = exactText(brand);
+    if (fuelType) filter.fuelType = exactText(fuelType);
+    if (transmission) filter.transmission = exactText(transmission);
+    if (bodyType) filter.bodyType = exactText(bodyType);
+    if (owners) {
+      const legacyOwnerCount = Number.parseInt(owners, 10);
+      andFilters.push({
+        $or: [
+          { owners: exactText(owners) },
+          ...(Number.isNaN(legacyOwnerCount) ? [] : [{ ownerCount: legacyOwnerCount }]),
+        ],
+      });
     }
 
-    // Year range filter
     if (minYear || maxYear) {
       filter.year = {};
-      if (minYear) filter.year.$gte = Number(minYear); // greater than or equal
-      if (maxYear) filter.year.$lte = Number(maxYear); // less than or equal
+      if (minYear) filter.year.$gte = Number(minYear);
+      if (maxYear) filter.year.$lte = Number(maxYear);
     }
 
-    // Price range filter
     if (minPrice || maxPrice) {
       filter.price = {};
       if (minPrice) filter.price.$gte = Number(minPrice);
       if (maxPrice) filter.price.$lte = Number(maxPrice);
+    }
+
+    if (maxMileage) {
+      const mileageLimit = Number(maxMileage);
+      andFilters.push({
+        $or: [
+          { mileage: { $lte: mileageLimit } },
+          { kmDriven: { $lte: mileageLimit } },
+        ],
+      });
+    }
+
+    if (andFilters.length > 0) {
+      filter.$and = andFilters;
     }
 
     // Sorting options
@@ -117,9 +197,38 @@ export async function getAllCars(req, res) {
     const limitNum = Math.min(50, Math.max(1, Number(limit)));
     const skip = (pageNum - 1) * limitNum;
 
-    // Execute query with filters, sorting, and pagination
+    // Find all active boosts
+    const activeBoostedIds = await Boost.find({
+      status: "active",
+      endDate: { $gt: new Date() }
+    }).distinct("car");
+
+    // Execute query with filters, sorting (boosted first), and pagination
     const [cars, total] = await Promise.all([
-      Car.find(filter).sort(sortObj).skip(skip).limit(limitNum).lean(),
+      Car.aggregate([
+        { $match: filter },
+        { 
+          $addFields: {
+            isBoosted: { $in: ["$_id", activeBoostedIds] }
+          }
+        },
+        { $sort: { isBoosted: -1, ...sortObj } },
+        { $skip: skip },
+        { $limit: limitNum },
+        {
+          $lookup: {
+            from: "dealerprofiles",
+            localField: "dealer",
+            foreignField: "user",
+            as: "dealerProfile"
+          }
+        },
+        {
+          $addFields: {
+            dealerProfile: { $arrayElemAt: ["$dealerProfile", 0] }
+          }
+        }
+      ]),
       Car.countDocuments(filter),
     ]);
 
@@ -153,10 +262,24 @@ export async function getBrands(req, res) {
 export async function getMyCars(req, res) {
   try {
     // req.user.id is set by the protect middleware after session verification
-    // We filter by dealer field to get only THIS dealer's cars
-    const cars = await Car.find({ dealer: req.user.id })
-      .sort({ createdAt: -1 })
-      .lean();
+    
+    // Find all active boosts for this dealer
+    const activeBoostedIds = await Boost.find({
+      dealer: req.user.id,
+      status: "active",
+      endDate: { $gt: new Date() }
+    }).distinct("car");
+
+    // Fetch this dealer's cars and add isBoosted flag
+    const cars = await Car.aggregate([
+      { $match: { dealer: new mongoose.Types.ObjectId(req.user.id) } }, // Cast to ObjectId for aggregation
+      { 
+        $addFields: {
+          isBoosted: { $in: ["$_id", activeBoostedIds] }
+        }
+      },
+      { $sort: { createdAt: -1 } }
+    ]);
 
     res.status(200).json(cars);
   } catch (error) {
@@ -167,16 +290,32 @@ export async function getMyCars(req, res) {
 // ─────────────────────────────────────────────
 // GET /api/cars/:id — Public: fetch a single car
 // ─────────────────────────────────────────────
-export async function getCarById(req, res) {
+export async function getCarById(req, res, auth) {
   try {
-    const car = await Car.findById(req.params.id).lean();
+    let car = await Car.findById(req.params.id);
 
     if (!car) {
       // 404 = "Not Found" — the car with this ID doesn't exist
       return res.status(404).json({ message: "Car not found" });
     }
 
-    res.status(200).json(car);
+    // Check if the current user is the owner (dealer)
+    let isOwner = false;
+    if (auth) {
+      const session = await auth.api.getSession({ headers: req.headers });
+      if (session?.user?.id === car.dealer.toString()) {
+        isOwner = true;
+      }
+    }
+
+    // Only increment views if the user is NOT the owner
+    // We use updateOne with $inc to bypass full document validation (avoids crash on legacy seed documents)
+    if (!isOwner) {
+      await Car.updateOne({ _id: car._id }, { $inc: { views: 1 } });
+      car.views = (car.views || 0) + 1;
+    }
+
+    res.status(200).json(car.toObject ? car.toObject() : car);
   } catch (error) {
     res.status(500).json({ message: "Failed to fetch car", error: error.message });
   }
@@ -187,7 +326,14 @@ export async function getCarById(req, res) {
 // ─────────────────────────────────────────────
 export async function createCar(req, res) {
   try {
-    const { title, brand, year, price, description } = req.body;
+    // Validate request body with Zod
+    const { 
+      title, brand, model, variant, year, price, 
+      fuelType, transmission, bodyType, owners, mileage, 
+      color, city, registrationNumber, insuranceValid, 
+      rcVerified, accidentHistory, serviceHistory,
+      description 
+    } = createCarSchema.parse(req.body);
 
     // Upload each image file to Cloudinary
     // req.files is an array populated by Multer's upload.array() middleware
@@ -211,8 +357,22 @@ export async function createCar(req, res) {
     const car = await Car.create({
       title,
       brand,
+      model,
+      variant,
       year: Number(year),
       price: Number(price),
+      fuelType,
+      transmission,
+      bodyType,
+      owners,
+      mileage: Number(mileage),
+      color,
+      city,
+      registrationNumber,
+      insuranceValid,
+      rcVerified,
+      accidentHistory,
+      serviceHistory,
       description: description || "",
       images,
       dealer: req.user.id,
@@ -243,16 +403,12 @@ export async function updateCar(req, res) {
       return res.status(403).json({ message: "Forbidden — this is not your listing" });
     }
 
-    // Update text fields (only if they're provided in the request)
-    const { title, brand, year, price, description } = req.body;
-    if (title) car.title = title;
-    if (brand) car.brand = brand;
-    if (year) car.year = Number(year);
-    if (price) car.price = Number(price);
-    if (description !== undefined) car.description = description;
+    // Validate and update text fields
+    const parsedBody = updateCarSchema.parse(req.body);
+    Object.assign(car, parsedBody);
 
     // If new images were uploaded, replace the old ones
-    if (req.files && req.files.length > 0) {
+    if (req.files && req.files.images && req.files.images.length > 0) {
       // Step 1: Delete old images from Cloudinary
       for (const oldImage of car.images) {
         await deleteFromCloudinary(oldImage.publicId);
@@ -260,7 +416,7 @@ export async function updateCar(req, res) {
 
       // Step 2: Upload new images
       const newImages = [];
-      for (const file of req.files) {
+      for (const file of req.files.images) {
         const result = await uploadToCloudinary(file.buffer);
         newImages.push({
           url: result.secure_url,
@@ -269,6 +425,23 @@ export async function updateCar(req, res) {
       }
 
       car.images = newImages;
+    }
+
+    // Process inspection report if uploaded
+    if (req.files && req.files.inspectionReport && req.files.inspectionReport.length > 0) {
+      const file = req.files.inspectionReport[0];
+      
+      // Delete old report if it exists
+      if (car.inspectionReport && car.inspectionReport.publicId) {
+        await deleteFromCloudinary(car.inspectionReport.publicId);
+      }
+
+      const result = await uploadToCloudinary(file.buffer);
+      car.inspectionReport = {
+        url: result.secure_url,
+        publicId: result.public_id,
+      };
+      car.isInspected = true;
     }
 
     // .save() persists the changes to MongoDB
