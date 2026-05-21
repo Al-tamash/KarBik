@@ -6,17 +6,18 @@ import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
 import { useToast } from "@/components/ToastProvider";
 import {
-  Bell, Menu, X, Plus, LayoutDashboard, Car, MessageSquare,
-  TrendingUp, Award, LogOut
+  Menu, X, Car,
+  TrendingUp, Award, LogOut, Users, Calendar, Settings,
+  CircleHelp, CirclePlus
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import BoostModal from "@/components/BoostModal";
-import QRCodeCard from "@/components/QRCodeCard";
 import ListingsTab from "./ListingsTab";
 import InquiriesTab from "./InquiriesTab";
 import AnalyticsTab from "./AnalyticsTab";
 import ProfileTab from "./ProfileTab";
 import BuyerDashboard from "./BuyerDashboard";
+import ScheduleTab from "./ScheduleTab";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -45,7 +46,7 @@ export default function DashboardPage() {
   const [inquiries, setInquiries] = useState([]);
   const [loadingCars, setLoadingCars] = useState(false);
   const [loadingInquiries, setLoadingInquiries] = useState(false);
-  const [activeTab, setActiveTab] = useState("listings");
+  const [activeTab, setActiveTab] = useState("inventory");
   const [selectedBoostCar, setSelectedBoostCar] = useState(null);
   const [analyticsData, setAnalyticsData] = useState(null);
   const [loadingAnalytics, setLoadingAnalytics] = useState(false);
@@ -341,26 +342,93 @@ export default function DashboardPage() {
   const isDealer = session.user.role === "dealer";
 
   const sidebarLinks = isDealer ? [
-    { id: "listings", label: "Listings", icon: LayoutDashboard },
-    { id: "inquiries", label: "Inquiries", icon: MessageSquare },
+    { id: "inventory", label: "Inventory", icon: Car },
+    { id: "leads", label: "Leads", icon: Users },
     { id: "analytics", label: "Analytics", icon: TrendingUp },
+    { id: "schedule", label: "Schedule", icon: Calendar },
     { id: "profile", label: "Profile", icon: Award },
   ] : [];
 
   return (
-    <div className="min-h-screen bg-neutral-50 font-sans flex flex-col antialiased">
+    <div className="min-h-screen bg-neutral-50 font-sans flex antialiased">
 
-      {/* ─── Top Navbar ─── */}
-      <header className="sticky top-0 z-40 bg-white/80 backdrop-blur-md border-b border-neutral-200 flex items-center justify-between px-4 md:px-6 py-3 shrink-0">
+      {/* ─── Sidebar (desktop) ─── */}
+      {isDealer && (
+        <aside className="hidden lg:flex wizard-sidebar">
+          <div>
+            {/* Dealer info */}
+            <div className="mb-6">
+              <h2 className="text-lg font-bold text-primary-900">
+                {dealerProfile?.businessName || session.user.name}
+              </h2>
+              <p className="text-xs text-neutral-500 mt-0.5">
+                {dealerProfile?.isVerified ? "Premium Verified Partner" : "Dealer"}
+              </p>
+            </div>
+
+            {/* Add New Car button */}
+            <Link
+              href="/dashboard/new"
+              className="wizard-add-btn mb-6"
+            >
+              <CirclePlus className="w-4 h-4" /> Add New Car
+            </Link>
+
+            {/* Navigation */}
+            <nav className="space-y-1">
+              {sidebarLinks.map((link) => {
+                const IconComponent = link.icon;
+                const isActive = activeTab === link.id;
+                return (
+                  <button
+                    key={link.id}
+                    onClick={() => setActiveTab(link.id)}
+                    className={`wizard-nav-item ${
+                      isActive ? "wizard-nav-item-active" : "wizard-nav-item-inactive"
+                    }`}
+                  >
+                    <IconComponent className="w-4 h-4" />
+                    {link.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          {/* Bottom: Settings, Support, Log Out */}
+          <div className="space-y-1 pt-4 border-t border-primary-100">
+            <Link
+              href="/dashboard/settings"
+              className="wizard-nav-item wizard-nav-item-inactive"
+            >
+              <Settings className="w-4 h-4" /> Settings
+            </Link>
+            <Link
+              href="/dashboard/support"
+              className="wizard-nav-item wizard-nav-item-inactive"
+            >
+              <CircleHelp className="w-4 h-4" /> Support
+            </Link>
+            <button
+              onClick={handleLogout}
+              className="wizard-nav-item text-danger-600 hover:bg-danger-50 hover:text-danger-700"
+            >
+              <LogOut className="w-4 h-4" /> Log Out
+            </button>
+          </div>
+        </aside>
+      )}
+
+      {/* ─── Mobile header ─── */}
+      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-neutral-200 flex items-center justify-between px-4 py-3">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(true)}
-            className="p-1.5 rounded-lg text-neutral-500 hover:bg-neutral-100 transition-colors lg:hidden"
+            className="p-1.5 rounded-lg text-neutral-500 hover:bg-neutral-100 transition-colors"
             aria-label="Open menu"
           >
             <Menu className="w-5 h-5" />
           </button>
-
           <Link href="/dashboard" className="flex items-center gap-2">
             <span className="p-1.5 rounded-lg bg-primary-600 text-white">
               <Car className="w-4.5 h-4.5" />
@@ -370,236 +438,204 @@ export default function DashboardPage() {
             </span>
           </Link>
         </div>
-
-        <div className="flex items-center gap-3">
-          <button className="relative p-2 text-neutral-400 hover:text-neutral-600 hover:bg-neutral-50 rounded-lg transition-colors">
-            <Bell className="w-5 h-5" />
-          </button>
-
-          <div className="w-px h-5 bg-neutral-200" />
-
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-full bg-primary-600 text-white font-semibold text-sm flex items-center justify-center">
-              {session.user.name ? session.user.name[0].toUpperCase() : "A"}
-            </div>
-            <div className="hidden sm:block">
-              <p className="text-sm font-semibold text-neutral-800 leading-none">{session.user.name}</p>
-              <p className="text-[10px] text-neutral-400 capitalize">{session.user.role || "buyer"}</p>
-            </div>
+        <div className="flex items-center gap-2">
+          <div className="w-8 h-8 rounded-full bg-primary-600 text-white font-semibold text-sm flex items-center justify-center">
+            {session.user.name ? session.user.name[0].toUpperCase() : "A"}
           </div>
         </div>
-      </header>
-
-      {/* ─── Layout ─── */}
-      <div className="flex-1 flex relative">
-
-        {/* ─── Sidebar (desktop) ─── */}
-        {isDealer && (
-          <aside className="hidden lg:flex w-56 border-r border-neutral-200 bg-white flex-col justify-between shrink-0 p-4 sticky top-[57px] h-[calc(100vh-57px)]">
-            <nav className="space-y-0.5">
-              {sidebarLinks.map((link) => {
-                const IconComponent = link.icon;
-                const isActive = activeTab === link.id;
-                return (
-                  <button
-                    key={link.id}
-                    onClick={() => setActiveTab(link.id)}
-                    className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      isActive
-                        ? "bg-primary-50 text-primary-700"
-                        : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800"
-                    }`}
-                  >
-                    <IconComponent className={`w-4 h-4 ${isActive ? "text-primary-600" : "text-neutral-400"}`} />
-                    {link.label}
-                  </button>
-                );
-              })}
-            </nav>
-
-            <div className="space-y-2">
-              <Link
-                href="/dashboard/new"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary-600 hover:bg-primary-700 rounded-lg transition-colors shadow-sm"
-              >
-                <Plus className="w-4 h-4" /> New listing
-              </Link>
-              <button
-                onClick={handleLogout}
-                className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-              >
-                <LogOut className="w-4 h-4" /> Sign out
-              </button>
-            </div>
-          </aside>
-        )}
-
-        {/* ─── Mobile drawer ─── */}
-        <AnimatePresence>
-          {isMobileMenuOpen && (
-            <>
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 0.4 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsMobileMenuOpen(false)}
-                className="fixed inset-0 z-50 bg-black lg:hidden"
-              />
-              <motion.div
-                initial={{ x: "-100%" }}
-                animate={{ x: 0 }}
-                exit={{ x: "-100%" }}
-                transition={{ type: "spring", damping: 25, stiffness: 220 }}
-                className="fixed inset-y-0 left-0 z-50 w-64 bg-white p-5 shadow-xl flex flex-col justify-between lg:hidden"
-              >
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between pb-3 border-b border-neutral-100">
-                    <span className="font-display font-bold text-neutral-900">Menu</span>
-                    <button
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="p-1 rounded-lg text-neutral-400 hover:bg-neutral-100 transition-colors"
-                    >
-                      <X className="w-5 h-5" />
-                    </button>
-                  </div>
-                  {isDealer && (
-                    <nav className="space-y-0.5">
-                      {sidebarLinks.map((link) => {
-                        const IconComponent = link.icon;
-                        const isActive = activeTab === link.id;
-                        return (
-                          <button
-                            key={link.id}
-                            onClick={() => {
-                              setActiveTab(link.id);
-                              setIsMobileMenuOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                              isActive
-                                ? "bg-primary-50 text-primary-700"
-                                : "text-neutral-500 hover:bg-neutral-50 hover:text-neutral-800"
-                            }`}
-                          >
-                            <IconComponent className={`w-4 h-4 ${isActive ? "text-primary-600" : "text-neutral-400"}`} />
-                            {link.label}
-                          </button>
-                        );
-                      })}
-                    </nav>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  {isDealer && (
-                    <Link
-                      href="/dashboard/new"
-                      onClick={() => setIsMobileMenuOpen(false)}
-                      className="w-full inline-flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-semibold text-white bg-primary-600 rounded-lg transition-colors"
-                    >
-                      <Plus className="w-4 h-4" /> New listing
-                    </Link>
-                  )}
-                  <button
-                    onClick={() => {
-                      setIsMobileMenuOpen(false);
-                      handleLogout();
-                    }}
-                    className="w-full flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-lg text-neutral-400 hover:bg-rose-50 hover:text-rose-600 transition-colors"
-                  >
-                    <LogOut className="w-4 h-4" /> Sign out
-                  </button>
-                </div>
-              </motion.div>
-            </>
-          )}
-        </AnimatePresence>
-
-        {/* ─── Main content ─── */}
-        <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
-
-          {/* Page header */}
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
-            <div>
-              <h1 className="text-2xl md:text-3xl font-display font-bold text-neutral-900 tracking-tight">
-                {isDealer ? "Dashboard" : "My Account"}
-              </h1>
-              <p className="text-sm text-neutral-500 mt-0.5">
-                {isDealer ? `Welcome back, ${session.user.name}` : session.user.name}
-              </p>
-            </div>
-          </div>
-
-          {isDealer ? (
-            <>
-              {activeTab === "listings" && (
-                <ListingsTab
-                  cars={cars}
-                  loadingCars={loadingCars}
-                  analyticsData={analyticsData}
-                  inquiries={inquiries}
-                  onNewListing={() => router.push("/dashboard/new")}
-                  onEdit={(carId) => router.push(`/dashboard/edit/${carId}`)}
-                  onDelete={handleDelete}
-                  onBoost={setSelectedBoostCar}
-                />
-              )}
-
-              {activeTab === "inquiries" && (
-                <InquiriesTab
-                  inquiries={inquiries}
-                  loadingInquiries={loadingInquiries}
-                  onStatusChange={handleInquiryStatusChange}
-                  onPriorityChange={handleInquiryPriorityChange}
-                  onNotesSave={handleInquiryNotesSave}
-                  onFollowUpChange={handleInquiryFollowUpChange}
-                  onWhatsAppClick={handleWhatsAppClick}
-                  onMarkSpam={handleMarkSpam}
-                />
-              )}
-
-              {activeTab === "analytics" && (
-                <AnalyticsTab
-                  cars={cars}
-                  inquiries={inquiries}
-                  analyticsData={analyticsData}
-                  loadingAnalytics={loadingAnalytics}
-                />
-              )}
-
-              {activeTab === "profile" && (
-                <ProfileTab
-                  dealerProfile={dealerProfile}
-                  businessName={businessName}
-                  onBusinessNameChange={(e) => setBusinessName(e.target.value)}
-                  verificationDoc={verificationDoc}
-                  onVerificationDocChange={(e) => setVerificationDoc(e.target.files?.[0])}
-                  uploadingDoc={uploadingDoc}
-                  onVerificationSubmit={handleVerificationSubmit}
-                  profileSlug={profileSlug}
-                  onProfileSlugChange={(e) => checkSlug(e.target.value)}
-                  profileAbout={profileAbout}
-                  onProfileAboutChange={(e) => setProfileAbout(e.target.value)}
-                  profilePhone={profilePhone}
-                  onProfilePhoneChange={(e) => setProfilePhone(e.target.value)}
-                  profileAddress={profileAddress}
-                  onProfileAddressChange={(e) => setProfileAddress(e.target.value)}
-                  profileCity={profileCity}
-                  onProfileCityChange={(e) => setProfileCity(e.target.value)}
-                  profileSocial={profileSocial}
-                  onProfileSocialChange={(platform, value) => setProfileSocial({ ...profileSocial, [platform]: value })}
-                  bannerFile={bannerFile}
-                  onBannerFileChange={(e) => setBannerFile(e.target.files?.[0])}
-                  savingProfile={savingProfile}
-                  onMicroWebsiteSave={handleMicroWebsiteSave}
-                  slugStatus={slugStatus}
-                />
-              )}
-            </>
-          ) : (
-            <BuyerDashboard session={session} inquiries={inquiries} />
-          )}
-        </main>
       </div>
+
+      {/* ─── Mobile drawer ─── */}
+      <AnimatePresence>
+        {isMobileMenuOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 0.4 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsMobileMenuOpen(false)}
+              className="fixed inset-0 z-50 bg-black lg:hidden"
+            />
+            <motion.div
+              initial={{ x: "-100%" }}
+              animate={{ x: 0 }}
+              exit={{ x: "-100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 220 }}
+              className="fixed inset-y-0 left-0 z-50 w-64 bg-primary-50 p-5 shadow-xl flex flex-col justify-between lg:hidden"
+            >
+              <div className="space-y-4">
+                <div className="flex items-center justify-between pb-3 border-b border-primary-100">
+                  <span className="font-display font-bold text-primary-900">Menu</span>
+                  <button
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    className="p-1 rounded-lg text-neutral-400 hover:bg-primary-100 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+
+                {/* Dealer info */}
+                <div>
+                  <h3 className="text-sm font-bold text-primary-900">
+                    {dealerProfile?.businessName || session.user.name}
+                  </h3>
+                  <p className="text-xs text-neutral-500 mt-0.5">
+                    {dealerProfile?.isVerified ? "Premium Verified Partner" : "Dealer"}
+                  </p>
+                </div>
+
+                <Link
+                  href="/dashboard/new"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="wizard-add-btn"
+                >
+                  <CirclePlus className="w-4 h-4" /> Add New Car
+                </Link>
+
+                {isDealer && (
+                  <nav className="space-y-1">
+                    {sidebarLinks.map((link) => {
+                      const IconComponent = link.icon;
+                      const isActive = activeTab === link.id;
+                      return (
+                        <button
+                          key={link.id}
+                          onClick={() => {
+                            setActiveTab(link.id);
+                            setIsMobileMenuOpen(false);
+                          }}
+                          className={`wizard-nav-item ${
+                            isActive ? "wizard-nav-item-active" : "wizard-nav-item-inactive"
+                          }`}
+                        >
+                          <IconComponent className="w-4 h-4" />
+                          {link.label}
+                        </button>
+                      );
+                    })}
+                  </nav>
+                )}
+              </div>
+
+              <div className="space-y-1 pt-4 border-t border-primary-100">
+                <Link
+                  href="/dashboard/settings"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="wizard-nav-item wizard-nav-item-inactive"
+                >
+                  <Settings className="w-4 h-4" /> Settings
+                </Link>
+                <Link
+                  href="/dashboard/support"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  className="wizard-nav-item wizard-nav-item-inactive"
+                >
+                  <CircleHelp className="w-4 h-4" /> Support
+                </Link>
+                <button
+                  onClick={() => {
+                    setIsMobileMenuOpen(false);
+                    handleLogout();
+                  }}
+                  className="wizard-nav-item text-danger-600 hover:bg-danger-50 hover:text-danger-700"
+                >
+                  <LogOut className="w-4 h-4" /> Log Out
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* ─── Main content ─── */}
+      <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8 lg:pt-8 pt-16">
+
+        {/* Page header */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-display font-bold text-neutral-900 tracking-tight">
+              {isDealer ? "Dashboard" : "My Account"}
+            </h1>
+            <p className="text-sm text-neutral-500 mt-0.5">
+              {isDealer ? `Welcome back, ${session.user.name}` : session.user.name}
+            </p>
+          </div>
+        </div>
+
+        {isDealer ? (
+          <>
+            {activeTab === "inventory" && (
+              <ListingsTab
+                cars={cars}
+                loadingCars={loadingCars}
+                analyticsData={analyticsData}
+                inquiries={inquiries}
+                onNewListing={() => router.push("/dashboard/new")}
+                onEdit={(carId) => router.push(`/dashboard/edit/${carId}`)}
+                onDelete={handleDelete}
+                onBoost={setSelectedBoostCar}
+              />
+            )}
+
+            {activeTab === "leads" && (
+              <InquiriesTab
+                inquiries={inquiries}
+                loadingInquiries={loadingInquiries}
+                onStatusChange={handleInquiryStatusChange}
+                onPriorityChange={handleInquiryPriorityChange}
+                onNotesSave={handleInquiryNotesSave}
+                onFollowUpChange={handleInquiryFollowUpChange}
+                onWhatsAppClick={handleWhatsAppClick}
+                onMarkSpam={handleMarkSpam}
+              />
+            )}
+
+            {activeTab === "analytics" && (
+              <AnalyticsTab
+                cars={cars}
+                inquiries={inquiries}
+                analyticsData={analyticsData}
+                loadingAnalytics={loadingAnalytics}
+              />
+            )}
+
+            {activeTab === "schedule" && (
+              <ScheduleTab inquiries={inquiries} />
+            )}
+
+            {activeTab === "profile" && (
+              <ProfileTab
+                dealerProfile={dealerProfile}
+                businessName={businessName}
+                onBusinessNameChange={(e) => setBusinessName(e.target.value)}
+                verificationDoc={verificationDoc}
+                onVerificationDocChange={(e) => setVerificationDoc(e.target.files?.[0])}
+                uploadingDoc={uploadingDoc}
+                onVerificationSubmit={handleVerificationSubmit}
+                profileSlug={profileSlug}
+                onProfileSlugChange={(e) => checkSlug(e.target.value)}
+                profileAbout={profileAbout}
+                onProfileAboutChange={(e) => setProfileAbout(e.target.value)}
+                profilePhone={profilePhone}
+                onProfilePhoneChange={(e) => setProfilePhone(e.target.value)}
+                profileAddress={profileAddress}
+                onProfileAddressChange={(e) => setProfileAddress(e.target.value)}
+                profileCity={profileCity}
+                onProfileCityChange={(e) => setProfileCity(e.target.value)}
+                profileSocial={profileSocial}
+                onProfileSocialChange={(platform, value) => setProfileSocial({ ...profileSocial, [platform]: value })}
+                bannerFile={bannerFile}
+                onBannerFileChange={(e) => setBannerFile(e.target.files?.[0])}
+                savingProfile={savingProfile}
+                onMicroWebsiteSave={handleMicroWebsiteSave}
+                slugStatus={slugStatus}
+              />
+            )}
+          </>
+        ) : (
+          <BuyerDashboard session={session} inquiries={inquiries} />
+        )}
+      </main>
 
       {selectedBoostCar && (
         <BoostModal

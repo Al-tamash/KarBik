@@ -23,22 +23,30 @@ const app = express();
 const PORT = env.PORT; // Safe validated port from Zod
 
 // 1. CORS must be set up BEFORE any other middleware or route handlers
-// We use a dynamic origin function to support both your main CLIENT_URL
-// and any Vercel preview/deployment subdomains (ending in .vercel.app).
+/**
+ * CORS origin validator — controls which domains can make API requests.
+ * 
+ * Allows:
+ * 1. The primary CLIENT_URL (production frontend)
+ * 2. An optional VERCEL_PREVIEW_URL for staging/preview deployments
+ * 3. Server-to-server requests (no origin header, e.g. sitemap fetches)
+ * 
+ * We intentionally do NOT use a wildcard subdomain match like
+ * `origin.startsWith("autobazaar-")` because an attacker could deploy
+ * `autobazaar-phishing.vercel.app` and hijack authenticated sessions.
+ */
+const allowedOrigins = [env.CLIENT_URL];
+if (process.env.VERCEL_PREVIEW_URL) {
+  allowedOrigins.push(process.env.VERCEL_PREVIEW_URL);
+}
+
 app.use(cors({
   origin: (origin, callback) => {
-    // Allow requests with no origin (like mobile apps, postman, or server-to-server)
-    if (!origin) return callback(null, true);
-    
-    // Check if the origin matches CLIENT_URL, localhost, or is a Vercel preview/deployment domain
-    const isAllowed = origin === env.CLIENT_URL || 
-                      origin === "http://localhost:3000" ||
-                      (origin.startsWith("https://autobazaar-") && origin.endsWith(".vercel.app"));
-                      
-    if (isAllowed) {
+    // Allow server-to-server (no origin) or explicitly listed origins
+    if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
-      callback(new Error(`CORS policy blocked access from origin: ${origin}`));
+      callback(new Error("Not allowed by CORS"));
     }
   },
   credentials: true,

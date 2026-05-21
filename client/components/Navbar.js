@@ -45,8 +45,8 @@ export default function Navbar() {
       <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 h-16">
 
         {/* ─── Logo ─── */}
-        <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-neutral-900">
-          <span className="text-2xl">🚗</span>
+        <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-neutral-900 group">
+          <Car className="h-6 w-6 text-primary-600 group-hover:scale-110 transition-transform duration-300" />
           Auto<span className="text-primary-600">Bazaar</span>
         </Link>
 

@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Premium Vehicle Showcase | AutoBazaar Hyderabad</title>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Google Fonts -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800;900&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    colors: {
+                        "primary-fixed": "#e2dfff",
+                        "on-tertiary-container": "#67f4b7",
+                        "error-container": "#ffdad6",
+                        "background": "#fcf8ff",
+                        "surface-dim": "#dcd8e5",
+                        "on-primary-container": "#dad7ff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "on-secondary-container": "#5c2400",
+                        "inverse-surface": "#302f39",
+                        "secondary-fixed": "#ffdbca",
+                        "on-surface": "#1b1b24",
+                        "surface-container-highest": "#e4e1ee",
+                        "tertiary": "#005338",
+                        "surface": "#fcf8ff",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#464555",
+                        "tertiary-container": "#006e4b",
+                        "surface-container-low": "#f5f2ff",
+                        "surface-container-high": "#eae6f4",
+                        "on-secondary": "#ffffff",
+                        "outline": "#777587",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#9d4300",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-container": "#fd761a",
+                        "on-secondary-fixed": "#341100",
+                        "on-primary-fixed": "#0f0069",
+                        "inverse-primary": "#c3c0ff",
+                        "surface-tint": "#4d44e3",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0ecf9",
+                        "primary": "#3525cd",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e4e1ee",
+                        "on-tertiary-fixed": "#002113",
+                        "on-background": "#1b1b24",
+                        "primary-container": "#4f46e5",
+                        "outline-variant": "#c7c4d8",
+                        "surface-bright": "#fcf8ff",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "inverse-on-surface": "#f3effc",
+                        "on-secondary-fixed-variant": "#783200"
+                    },
+                    borderRadius: {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    spacing: {
+                        "section-gap-sm": "64px",
+                        "base": "8px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "section-gap-lg": "120px"
+                    },
+                    fontFamily: {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Hanken Grotesk"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-md": ["Inter"]
+                    },
+                    fontSize: {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        
+        /* Premium Glassmorphism Utilities */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 8px 32px rgba(53, 37, 205, 0.05); /* Indigo ambient glow */
+        }
+        
+        .glass-card {
+            background: rgba(252, 248, 255, 0.8); /* surface color tinted */
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(199, 196, 216, 0.5); /* outline-variant */
+            box-shadow: 0 4px 24px rgba(0, 0, 0, 0.03);
+        }
+
+        /* Hide scrollbar for thumbnail slider */
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Range Slider Styling */
+        input[type=range] {
+            -webkit-appearance: none;
+            width: 100%;
+            background: transparent;
+        }
+        input[type=range]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            height: 20px;
+            width: 20px;
+            border-radius: 50%;
+            background: #3525cd; /* primary */
+            cursor: pointer;
+            margin-top: -8px;
+            box-shadow: 0 2px 6px rgba(53, 37, 205, 0.4);
+        }
+        input[type=range]::-webkit-slider-runnable-track {
+            width: 100%;
+            height: 4px;
+            cursor: pointer;
+            background: #c7c4d8; /* outline-variant */
+            border-radius: 2px;
+        }
+        input[type=range]:focus {
+            outline: none;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased selection:bg-primary-container selection:text-on-primary-container">
+<!-- TopNavBar -->
+<nav class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-2xl border-b border-white/40 dark:border-outline-variant/50 shadow-sm transition-all duration-300">
+<div class="flex justify-between items-center px-gutter py-4 w-full max-w-container-max mx-auto font-headline-md text-headline-md font-body-md text-body-md text-primary dark:text-primary-fixed">
+<!-- Brand Logo & Optional Search -->
+<div class="flex items-center gap-6">
+<a class="font-headline-lg text-headline-lg font-bold tracking-tight text-primary dark:text-primary-fixed hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 transition-all duration-300 rounded-lg px-2 py-1" href="#">
+                    AutoBazaar Hyderabad
+                </a>
+<!-- search_bar: "on_left" -->
+<div class="hidden md:flex items-center bg-surface-container rounded-full px-4 py-2 border border-outline-variant/30 focus-within:border-primary transition-colors">
+<span class="material-symbols-outlined text-outline mr-2 text-[20px]">search</span>
+<input class="bg-transparent border-none outline-none text-body-md font-body-md text-on-surface placeholder:text-outline w-48 focus:ring-0" placeholder="Search inventory..." type="text"/>
+</div>
+</div>
+<!-- Navigation Links -->
+<div class="hidden md:flex items-center gap-8">
+<!-- Active Navigation: Listings (Closest match for detail page origin) -->
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 scale-95 transition-transform duration-200" href="#">
+                    Listings
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 duration-300 px-3 py-1 rounded-md" href="#">
+                    Dealers
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 duration-300 px-3 py-1 rounded-md" href="#">
+                    Sell
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 duration-300 px-3 py-1 rounded-md" href="#">
+                    Dashboard
+                </a>
+</div>
+<!-- Trailing Actions -->
+<div class="flex items-center gap-4">
+<div class="hidden sm:flex items-center gap-2">
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-high/50">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="p-2 text-on-surface-variant hover:text-primary transition-colors rounded-full hover:bg-surface-container-high/50">
+<span class="material-symbols-outlined">account_circle</span>
+</button>
+</div>
+<button class="bg-secondary text-on-secondary px-6 py-2.5 rounded-full font-label-caps text-label-caps uppercase tracking-wider hover:bg-secondary-container hover:text-on-secondary-container transition-all shadow-md hover:shadow-lg">
+                    Book Test Drive
+                </button>
+<!-- Mobile Menu Toggle -->
+<button class="md:hidden p-2 text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</nav>
+<!-- Spacer for fixed nav -->
+<div class="h-[88px] w-full"></div>
+<main>
+<!-- Top: Fullscreen High-Res Gallery -->
+<section class="relative w-full h-[614px] md:h-[819px] bg-surface-container-highest overflow-hidden">
+<!-- Main Hero Image -->
+<div class="absolute inset-0 w-full h-full">
+<img alt="Vehicle Showcase Main" class="w-full h-full object-cover object-center" data-alt="A high-definition, professional automotive photograph of a sleek, dark metallic luxury sedan parked inside a pristine, modern glass-walled showroom. The lighting is cinematic and high-key, creating a bright, premium light-mode aesthetic. Soft, diffused daylight spills through the large windows, highlighting the car's aggressive curves and polished chrome accents. The background features minimalist, tech-forward architectural elements with smooth white surfaces and subtle indigo brand accents. The mood is aspirational, authoritative, and impeccably polished." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBVUqeWSXDz7inNo2jzw1uBMXXowvF339oZxNyxwq1ECuhtl4p0x1aSnp8n-6SYit9Q1v-MdQG9VkyjeDGVVZ3FBqw_BewfhDFzJS9nqext8cnq6z_yyfUMgUlrnvOuq2jD34bQ2WagPbyEoyZ8Nvk1EeZxJjgTL7UWYGcSLyoruIX_B1I2cPMg48Y719ctFCVGVPYPqr5gtwfp6yfTgFgwaCCRYhR1PCXxIKKMJcx6Sl544aERzCqAX4ETLP-_T838vZ6Sg9yT1d4"/>
+<!-- Subtle gradient overlay for better text/UI legibility at bottom -->
+<div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent"></div>
+</div>
+<!-- 360 View Placeholder Button -->
+<div class="absolute inset-0 flex items-center justify-center pointer-events-none">
+<button class="pointer-events-auto glass-panel px-6 py-3 rounded-full flex items-center gap-2 text-on-surface font-label-caps text-label-caps uppercase tracking-widest hover:scale-105 transition-transform duration-300 group cursor-pointer">
+<span class="material-symbols-outlined group-hover:rotate-180 transition-transform duration-700">360</span>
+                    Interactive View
+                </button>
+</div>
+<!-- Thumbnail Slider -->
+<div class="absolute bottom-6 left-0 w-full px-gutter">
+<div class="max-w-container-max mx-auto flex gap-4 overflow-x-auto no-scrollbar pb-2">
+<button class="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden border-2 border-primary-container relative">
+<img alt="Thumb 1" class="w-full h-full object-cover" data-alt="A close-up studio shot of the vehicle's front grille and aggressive LED headlights, highly detailed and lit with dramatic, softbox studio lighting against a clean white background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCSJR8Dju-2CGJFUMJtmK1_Zs4phPLVBgmxHwuNGsB6J-9fLXSzAut5MjX2HErQdK50XKv18GPiFqtibAmWFDtZbIC2t-HseNkB9IP06s35gTIQl1sxKC1vvRQE2luImPh7AwKIS01DelG2PTJUBsu9Z0mLnmN9RmO3ZRkJNnam_MzLOepxnpSRELnuLYf_hzjaGfzNQKxfwyCiSvpKYPe-K_tIWvJgMSApRWVyZTn_84IsHz2ZZaqJk4nsWgMfeidVtvAJUZ5ToRs"/>
+</button>
+<button class="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-white/50 transition-colors opacity-80 hover:opacity-100">
+<img alt="Thumb 2" class="w-full h-full object-cover" data-alt="A detailed wide-angle shot of the vehicle's luxurious interior dashboard. It highlights premium leather upholstery, a large central infotainment screen, and minimalist brushed metal accents, all bathed in soft, inviting ambient light." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDOd2TzoqOmPXUV5mdjlVYnNCRVCe6rw_ORzMsN4f_9PPDQ2AA8vEldWWHJFwq3FMGVJtpTJjy1pEPgCnGCWZBdpwD-zjFuiCFVuIi1Rcf-DO9Yw8K6tbtL4xvFwTCTudlyHXi_H2bYv2VzHvf21f7jhVX5Rd9AK4cxVR9R9fGzKKGk8vggPiTwrQUPSqtBv82zP480YgTSV7mU50BGnqnKcXkSM4mBoNB5T0Dd9umzVixqbQBJoyQ4J9y06gCLFGUZywYpNN3gRn8"/>
+</button>
+<button class="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-white/50 transition-colors opacity-80 hover:opacity-100">
+<img alt="Thumb 3" class="w-full h-full object-cover" data-alt="A sleek profile shot of the luxury sedan, emphasizing its elongated wheelbase and aerodynamic silhouette. The car sits on a minimalist reflective floor under bright, even studio lighting." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBYor0qUD0Nk08QZlDtqXfFHVWfItTsHbsJ5exTjlKJ-P0eEloCUbA_Q7ia45I2qTDHSCpiwfp4bC_7ytQj2U4ec2M6wK9rIQHqWmCLubslHAdNJ-s89UdohdM6G87Z2kEkrxytzYvcQ11lTVXqg1D3mPweYFHZVetWM8bK4oiDp-luMmAEeeQoQP0ZZ0U1zbIyAi7YK0G0YVcxJkNsGwJS-TqWNk7nbpkC2_QUkN1Hv9dwon6SRpR2ztyIGYicpBGIWZKvlS8Uh0Q"/>
+</button>
+<button class="flex-shrink-0 w-32 h-20 rounded-lg overflow-hidden border-2 border-transparent hover:border-white/50 transition-colors opacity-80 hover:opacity-100 relative">
+<img alt="Thumb 4" class="w-full h-full object-cover" data-alt="A striking rear-quarter perspective of the vehicle, focusing on the sophisticated LED taillight design and dual exhaust tips. The clean, bright aesthetic emphasizes modern automotive engineering." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDrptaI7BHhK7-_ILfewGrvupB45hNKLxpVKPsgwRfujwa3YeYbRLNOWOixJe5BPLl_y7qrOAQRxngmgpAdqRMLl7WttqHo--40LmPNZXAXsfCq7zTb7sWGFpZXh8-IpD0aKuXaS0JAItlSHIOFaF41ZpX7QhqnV4c9SHDH5bfb5jgfrtaG76lvnGGWyo_YwwoJGqxlwDef9zlim5Vk9KhmxsFHN-XOJs-YFzbP_JBFRE8Osp9Nmk3qmjuLMz9rKeaRtGDA8sh-JTc"/>
+<div class="absolute inset-0 bg-black/50 flex items-center justify-center text-white font-label-caps text-label-caps">+12 Photos</div>
+</button>
+</div>
+</div>
+</section>
+<!-- Main Layout: 2-Column -->
+<section class="max-w-container-max mx-auto px-gutter py-section-gap-sm md:py-section-gap-lg">
+<div class="grid grid-cols-1 md:grid-cols-12 gap-12">
+<!-- Left Column: Vehicle Overview -->
+<div class="md:col-span-8 flex flex-col gap-10">
+<!-- Header & Badges -->
+<div class="flex flex-col gap-4 border-b border-outline-variant/30 pb-8">
+<div class="flex flex-wrap items-center gap-3">
+<span class="inline-flex items-center gap-1 bg-tertiary-container/10 text-tertiary px-3 py-1 rounded-full font-label-caps text-label-caps uppercase border border-tertiary-container/20">
+<span class="material-symbols-outlined text-[16px]">verified</span>
+                                RTO Verified
+                            </span>
+<span class="bg-surface-container text-on-surface-variant px-3 py-1 rounded-full font-label-caps text-label-caps uppercase">
+                                2023 Model
+                            </span>
+<span class="bg-surface-container text-on-surface-variant px-3 py-1 rounded-full font-label-caps text-label-caps uppercase">
+                                First Owner
+                            </span>
+</div>
+<h1 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-on-surface">
+                            Mercedes-Benz C-Class 300d
+                        </h1>
+<p class="font-body-lg text-body-lg text-on-surface-variant">
+                            AMG Line • 2.0L Diesel • Automatic • 18,500 km
+                        </p>
+</div>
+<!-- Detailed Specs Bento Grid -->
+<div>
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Key Specifications</h2>
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+<!-- Spec Box 1 -->
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2 items-start">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined fill">speed</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Mileage</span>
+<span class="font-headline-md text-headline-md text-on-surface">18.5k <span class="text-body-md font-body-md text-outline">km</span></span>
+</div>
+<!-- Spec Box 2 -->
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2 items-start">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined fill">local_gas_station</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Fuel Type</span>
+<span class="font-headline-md text-headline-md text-on-surface">Diesel</span>
+</div>
+<!-- Spec Box 3 -->
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2 items-start">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined fill">settings</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Transmission</span>
+<span class="font-headline-md text-headline-md text-on-surface">Auto</span>
+</div>
+<!-- Spec Box 4 -->
+<div class="glass-card p-4 rounded-xl flex flex-col gap-2 items-start">
+<div class="p-2 bg-primary/10 rounded-lg text-primary">
+<span class="material-symbols-outlined fill">calendar_month</span>
+</div>
+<span class="font-label-caps text-label-caps text-outline uppercase tracking-wider">Registration</span>
+<span class="font-headline-md text-headline-md text-on-surface">TS-09</span>
+</div>
+</div>
+</div>
+<!-- Detailed Description -->
+<div class="prose max-w-none">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-4">Vehicle Overview</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed mb-4">
+                            Immaculately maintained Mercedes-Benz C-Class 300d AMG Line, finished in Polar White with a contrasting Anthracite leather interior. This vehicle represents the pinnacle of compact executive luxury, offering a perfect blend of exhilarating performance and supreme comfort. 
+                        </p>
+<p class="font-body-lg text-body-lg text-on-surface-variant leading-relaxed">
+                            It has been fully serviced exclusively at authorized dealerships and comes with complete service history. The cabin features ambient lighting, a panoramic sunroof, and the latest MBUX infotainment system, creating an environment that is both technologically advanced and incredibly inviting.
+                        </p>
+</div>
+<!-- Features Checklist -->
+<div class="bg-surface-container-low rounded-2xl p-8 border border-outline-variant/30">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Premium Features</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-y-4 gap-x-8">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Panoramic Sliding Sunroof</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Burmester Surround Sound</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">360-Degree Camera</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Active Parking Assist</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Wireless Device Charging</span>
+</div>
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-tertiary">check_circle</span>
+<span class="font-body-md text-body-md text-on-surface">Apple CarPlay &amp; Android Auto</span>
+</div>
+</div>
+</div>
+<!-- Similar Cars Section -->
+<div class="mt-8 pt-8 border-t border-outline-variant/30">
+<h2 class="font-headline-md text-headline-md text-on-surface mb-6">Similar Vehicles You Might Like</h2>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+<!-- Car Card 1 -->
+<a class="group block glass-card rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300" href="#">
+<div class="relative h-48 overflow-hidden bg-surface-variant">
+<img alt="Similar Car 1" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A studio-quality front-quarter shot of a blue premium compact sedan. The setting is a minimalist, brightly lit cyclorama studio, emphasizing a clean, corporate automotive aesthetic. High-contrast, softbox lighting perfectly defines the vehicle's character lines and pristine paint finish. The background is pure white, seamless, and free of distractions. The overall mood conveys trustworthiness, quality, and modern tech-forward luxury." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBCDRGfXq6Ruh7BLQZxeDEM0gpT4M_1j5_ZdUKUIuZ8a9vRiMAElestAlFat1ZY60pVT8Y8kPthp9BoUNvQXG5G4XXjst3TcVppWYm6VJkQcjVxpfE_njSkAhLi3WgECFjiI0XXPukJlthoR3578_cWGmoZlhpu1b0rPmAM8yGucr2SLWLWkYLBLavPoqENOXwVZIG6-MEb14GJkL2s6Ju2OfYVUA-1YF1J3gwfuW-V2vSnaMoTrypmOVymHL3zQG5nCz78GCJEZCU"/>
+</div>
+<div class="p-5">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">BMW 3 Series 330i M Sport</h3>
+<p class="font-body-md text-body-md text-outline mb-4">2022 • Petrol • 22,000 km</p>
+<div class="font-headline-md text-headline-md text-primary">₹ 48.5 Lakh</div>
+</div>
+</a>
+<!-- Car Card 2 -->
+<a class="group block glass-card rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300" href="#">
+<div class="relative h-48 overflow-hidden bg-surface-variant">
+<img alt="Similar Car 2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A high-fidelity photograph of a silver modern luxury sedan parked on a polished concrete floor. The lighting is bright and evenly distributed, creating a premium light-mode showroom environment. Subtle reflections on the floor and precise, crisp detailing on the car's alloy wheels emphasize a high-end corporate aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBc9GC6rZWsWgDtSev2M95OtfLA_WRT2sNK2az9DG10io_H9G7rs2tuiH-dQgbzVUA7j4dJlleEFAifmcXe7oaJqfAu_0F4tFiMutsw2P_3U51rBSiz9Lg7xYyJzBP_61CvgN1ztercS3vuKuJ_T1EfWfvDr0XQDqPaPnf4Y-MvS-KbTEwV3wHYm9BO3ybpkgVh_3Ev-OVwCSR4eS-YSsICrSPoOoy8xxbd-fvuTixJ9U-sw0LATr7juPBjEdjTvLuYSxT7XOOpqQ8"/>
+</div>
+<div class="p-5">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-1">Audi A4 Technology</h3>
+<p class="font-body-md text-body-md text-outline mb-4">2023 • Petrol • 12,000 km</p>
+<div class="font-headline-md text-headline-md text-primary">₹ 45.0 Lakh</div>
+</div>
+</a>
+</div>
+</div>
+</div>
+<!-- Right Column: Sticky Action Card -->
+<div class="md:col-span-4">
+<div class="sticky top-[120px] glass-panel rounded-2xl p-[32px] flex flex-col gap-8">
+<!-- Pricing Section -->
+<div>
+<p class="font-label-caps text-label-caps text-outline uppercase tracking-wider mb-2">Asking Price</p>
+<h2 class="font-display-lg-mobile text-display-lg-mobile text-primary font-bold">₹ 52.0 Lakh</h2>
+<p class="font-body-md text-body-md text-on-surface-variant mt-1">Ex-showroom, Hyderabad</p>
+</div>
+<hr class="border-outline-variant/30"/>
+<!-- EMI Calculator UI -->
+<div class="bg-surface-container-low rounded-xl p-5 border border-outline-variant/20">
+<div class="flex justify-between items-center mb-4">
+<h3 class="font-headline-md text-headline-md text-on-surface text-[20px]">Estimated EMI</h3>
+<span class="font-headline-md text-headline-md text-primary text-[20px] font-bold" id="emiValue">₹ 85,400</span>
+</div>
+<div class="mb-4">
+<div class="flex justify-between text-label-caps font-label-caps text-outline mb-2">
+<span>Down Payment</span>
+<span id="dpValue">₹ 10.4 Lakh (20%)</span>
+</div>
+<input class="w-full" id="dpSlider" max="50" min="10" oninput="updateEMI()" type="range" value="20"/>
+</div>
+<div>
+<div class="flex justify-between text-label-caps font-label-caps text-outline mb-2">
+<span>Tenure</span>
+<span id="tenureValue">60 Months</span>
+</div>
+<input class="w-full" id="tenureSlider" max="84" min="12" oninput="updateEMI()" step="12" type="range" value="60"/>
+</div>
+<p class="text-[11px] text-outline mt-3 text-center">Calculated at 9.5% interest. Indicative only.</p>
+</div>
+<!-- Dealer Info -->
+<div class="flex items-center gap-4 p-4 bg-white/50 rounded-xl border border-outline-variant/30">
+<div class="w-12 h-12 rounded-full bg-primary-container text-on-primary-container flex items-center justify-center flex-shrink-0 font-bold text-lg">
+                                HM
+                            </div>
+<div>
+<h4 class="font-body-lg text-body-lg font-semibold text-on-surface">Hyderabad Motors</h4>
+<div class="flex items-center gap-1 text-tertiary text-sm mt-0.5">
+<span class="material-symbols-outlined text-[16px] fill">star</span>
+<span class="font-medium">4.8</span>
+<span class="text-outline ml-1">(124 Reviews)</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant text-sm mt-1">Banjara Hills, Hyderabad</p>
+</div>
+</div>
+<!-- Actions -->
+<div class="flex flex-col gap-3">
+<button class="w-full bg-tertiary hover:bg-tertiary-container text-on-tertiary py-4 rounded-xl font-body-lg text-body-lg font-semibold flex items-center justify-center gap-2 transition-colors shadow-md hover:shadow-lg">
+<span class="material-symbols-outlined">chat</span>
+                                Connect via WhatsApp
+                            </button>
+<button class="w-full glass-panel hover:bg-white text-primary border border-primary/20 py-4 rounded-xl font-body-lg text-body-lg font-semibold transition-all">
+                                Request Call Back
+                            </button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- FAQ Section -->
+<section class="max-w-container-max mx-auto px-gutter py-section-gap-sm">
+<div class="max-w-3xl mx-auto text-center mb-10">
+<h2 class="font-display-lg-mobile text-display-lg-mobile md:font-display-lg md:text-display-lg text-on-surface mb-4">Frequently Asked Questions</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Everything you need to know about purchasing this vehicle.</p>
+</div>
+<div class="max-w-3xl mx-auto flex flex-col gap-4">
+<!-- FAQ Item 1 -->
+<div class="glass-card rounded-2xl p-6 border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Is the price negotiable?</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Our vehicles are priced competitively based on real-time market data to ensure a fair and transparent process. While there is minimal room for negotiation, we do offer excellent trade-in values and competitive financing rates.</p>
+</div>
+<!-- FAQ Item 2 -->
+<div class="glass-card rounded-2xl p-6 border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Does this car come with a warranty?</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Yes, this vehicle includes a 6-month comprehensive dealer warranty covering major mechanical and electrical components. Extended warranty options are also available at the time of purchase.</p>
+</div>
+<!-- FAQ Item 3 -->
+<div class="glass-card rounded-2xl p-6 border border-outline-variant/30">
+<h3 class="font-headline-md text-headline-md text-on-surface mb-2">Can I arrange my own financing?</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Absolutely. While we partner with leading banks to offer seamless financing at competitive rates, you are completely free to secure a loan from your preferred financial institution.</p>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer Component from JSON -->
+<footer class="bg-surface-container-highest dark:bg-inverse-surface w-full py-section-gap-sm px-gutter mt-section-gap-lg">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter max-w-container-max mx-auto font-body-md text-body-md font-label-caps text-label-caps text-on-surface dark:text-on-background">
+<!-- Brand Column -->
+<div class="col-span-1 md:col-span-1 flex flex-col gap-4">
+<div class="font-headline-md text-headline-md font-black text-primary dark:text-primary-fixed mb-2">
+                    AutoBazaar Hyderabad
+                </div>
+<p class="text-on-surface-variant dark:text-outline-variant">
+                    © 2024 AutoBazaar Hyderabad. Premium Used Car Marketplace.
+                </p>
+</div>
+<!-- Spacer for alignment based on 4 cols -->
+<div class="hidden md:block col-span-1"></div>
+<div class="hidden md:block col-span-1"></div>
+<!-- Links Column -->
+<div class="col-span-1 md:col-span-1 flex flex-col gap-3">
+<h4 class="font-label-caps text-label-caps uppercase tracking-wider text-outline mb-2">Legal &amp; Support</h4>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">
+                    Terms of Service
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">
+                    Privacy Policy
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">
+                    RTO Verification Guide
+                </a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors duration-300" href="#">
+                    Contact Us
+                </a>
+</div>
+</div>
+</footer>
+<!-- Interactive script for simple EMI mockup -->
+<script>
+        function updateEMI() {
+            const dpPercent = document.getElementById('dpSlider').value;
+            const tenure = document.getElementById('tenureSlider').value;
+            
+            const carPrice = 5200000;
+            const dpAmount = (carPrice * dpPercent) / 100;
+            const loanAmount = carPrice - dpAmount;
+            
+            // Simple mockup calculation, not actual complex formula for UI sake
+            const interestRate = 0.095;
+            const totalInterest = loanAmount * interestRate * (tenure / 12);
+            const totalPayable = loanAmount + totalInterest;
+            const emi = Math.round(totalPayable / tenure);
+            
+            document.getElementById('dpValue').innerText = `₹ ${(dpAmount/100000).toFixed(1)} Lakh (${dpPercent}%)`;
+            document.getElementById('tenureValue').innerText = `${tenure} Months`;
+            document.getElementById('emiValue').innerText = `₹ ${emi.toLocaleString('en-IN')}`;
+        }
+        
+        // Initialize
+        updateEMI();
+    </script>
+</body></html>

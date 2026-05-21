@@ -17,6 +17,89 @@ import Car from "../models/Car.js";
 import Boost from "../models/Boost.js";
 import cloudinary from "../config/cloudinary.js";
 import { searchCarsSchema, createCarSchema, updateCarSchema } from "../utils/validation.js";
+import { fetchVehicleDetails, isValidRegistrationNumber } from "../utils/vahanClient.js";
+
+/**
+ * Helper: Extract image records from the request body
+ *
+ * In AutoBazaar, when a dealer creates a new car through the dashboard wizard:
+ * 1. Images are uploaded immediately to Cloudinary in Step 2 of the wizard.
+ * 2. On the final step, they are submitted to POST /api/cars inside a FormData payload,
+ *    structured using square bracket notation, e.g. `images[0][url]` and `images[0][publicId]`.
+ *
+ * Because the backend uses Multer's multipart/form-data parser, these keys are treated
+ * as standard text fields rather than actual files, meaning they end up parsed in `req.body`.
+ * Multer does not automatically nest these keys into an array, leaving them as flat keys like
+ * `req.body["images[0][url]"]`.
+ *
+ * This helper searches for all potential formats of image submissions in `req.body`:
+ * - A structured array (if sent via JSON client).
+ * - A JSON-encoded string (if stringified on client).
+ * - Flat keys with bracket notation (sent via native FormData in dashboard).
+ *
+ * Preserving the array index sorting ensures the original upload order chosen by the dealer is respected.
+ */
+function extractImagesFromBody(body) {
+  if (!body) return [];
+  const images = [];
+
+  // Scenario A: Already parsed as a structured array (e.g. JSON requests)
+  if (Array.isArray(body.images)) {
+    return body.images
+      .map((img) => ({
+        url: img.url,
+        publicId: img.publicId || img.public_id,
+      }))
+      .filter((img) => img.url && img.publicId);
+  }
+
+  // Scenario B: Provided as a JSON-encoded string (common fallback)
+  if (typeof body.images === "string") {
+    try {
+      const parsed = JSON.parse(body.images);
+      if (Array.isArray(parsed)) {
+        return parsed
+          .map((img) => ({
+            url: img.url,
+            publicId: img.publicId || img.public_id,
+          }))
+          .filter((img) => img.url && img.publicId);
+      }
+    } catch (e) {
+      // Ignore parse errors and continue to flat key scan
+    }
+  }
+
+  // Scenario C: Flat keys with bracket notation parsed by Multer
+  // e.g. body["images[0][url]"] = "...", body["images[0][publicId]"] = "..."
+  const imageMap = {};
+  Object.keys(body).forEach((key) => {
+    const match = key.match(/^images\[(\d+)\]\[(url|publicId)\]$/);
+    if (match) {
+      const index = Number.parseInt(match[1], 10);
+      const field = match[2];
+      if (!imageMap[index]) imageMap[index] = {};
+      imageMap[index][field] = body[key];
+    }
+  });
+
+  // Sort the keys so we keep the exact order of uploads
+  const sortedIndices = Object.keys(imageMap)
+    .map(Number)
+    .sort((a, b) => a - b);
+
+  sortedIndices.forEach((index) => {
+    const img = imageMap[index];
+    if (img.url && img.publicId) {
+      images.push({
+        url: img.url,
+        publicId: img.publicId,
+      });
+    }
+  });
+
+  return images;
+}
 
 /**
  * Helper: Upload a single image buffer to Cloudinary with Optimization
@@ -124,6 +207,7 @@ export async function getAllCars(req, res) {
       transmission,
       bodyType,
       owners,
+      location,
       minYear, maxYear,
       minPrice, maxPrice,
       maxMileage,
@@ -134,6 +218,10 @@ export async function getAllCars(req, res) {
 
     const filter = {};
     const andFilters = [];
+
+    if (location) {
+      filter.city = exactText(location);
+    }
 
     if (search) {
       const escapedSearch = escapeRegex(search);
@@ -335,9 +423,9 @@ export async function createCar(req, res) {
       description 
     } = createCarSchema.parse(req.body);
 
-    // Upload each image file to Cloudinary
+    // Upload each image file to Cloudinary (for direct binary attachments)
     // req.files is an array populated by Multer's upload.array() middleware
-    const images = [];
+    let images = [];
 
     if (req.files && req.files.length > 0) {
       for (const file of req.files) {
@@ -350,6 +438,14 @@ export async function createCar(req, res) {
           publicId: result.public_id,
         });
       }
+    }
+
+    // Capture images that were already uploaded to Cloudinary in Step 2 of the Wizard
+    // and passed textually in the multipart request body
+    const bodyImages = extractImagesFromBody(req.body);
+    if (bodyImages && bodyImages.length > 0) {
+      // Merge pre-uploaded images (maintaining list order)
+      images = [...images, ...bodyImages];
     }
 
     // Create the car document in MongoDB
@@ -481,5 +577,32 @@ export async function deleteCar(req, res) {
     res.status(200).json({ message: "Car listing deleted" });
   } catch (error) {
     res.status(500).json({ message: "Failed to delete car", error: error.message });
+  }
+}
+
+// ─────────────────────────────────────────────
+// GET /api/cars/verify-vehicle/:regNo — Dealer only: Fetch mock RTO/Vahan details
+// ─────────────────────────────────────────────
+export async function verifyVehicleDetails(req, res) {
+  try {
+    const { regNo } = req.params;
+
+    if (!regNo) {
+      return res.status(400).json({ message: "Registration number is required" });
+    }
+
+    // Sanitize and validate registration number
+    const cleanReg = regNo.replace(/[\s-]/g, "").toUpperCase();
+    if (!isValidRegistrationNumber(cleanReg)) {
+      return res.status(400).json({ message: "Invalid vehicle registration number format" });
+    }
+
+    // Fetch details using mock client
+    const vehicleData = await fetchVehicleDetails(cleanReg);
+    
+    // Return verified vehicle details JSON
+    res.status(200).json(vehicleData);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to verify vehicle RTO data", error: error.message });
   }
 }

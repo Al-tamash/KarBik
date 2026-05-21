@@ -21,6 +21,7 @@ import { Router } from "express";
 import { protect, dealerOnly } from "../middleware/protect.js";
 import { checkListingLimit } from "../middleware/checkSubscription.js";
 import upload from "../middleware/upload.js";
+import carUploadRoutes from "./cars-upload.js";
 import {
   getAllCars,
   getBrands,
@@ -29,6 +30,7 @@ import {
   createCar,
   updateCar,
   deleteCar,
+  verifyVehicleDetails,
 } from "../controllers/carController.js";
 
 /**
@@ -46,6 +48,7 @@ export default function carRoutes(auth) {
   // /brands and /mine MUST come before /:id — otherwise Express thinks them as car IDs
   router.get("/brands", getBrands);
   router.get("/mine", protect(auth), getMyCars);
+  router.get("/verify-vehicle/:regNo", protect(auth), dealerOnly, verifyVehicleDetails);
   router.get("/:id", (req, res) => getCarById(req, res, auth));
 
   // PROTECTED routes — dealer only
@@ -65,6 +68,9 @@ export default function carRoutes(auth) {
     updateCar
   );
   router.delete("/:id", protect(auth), dealerOnly, deleteCar);
+
+  // Mount upload routes (for immediate image uploads in wizard)
+  router.use("/upload", carUploadRoutes(auth));
 
   return router;
 }

@@ -262,22 +262,24 @@ function CarsPageContent() {
             animate={{ opacity: 1, y: 0 }}
             className="col-span-full"
           >
-            <div className="my-2 rounded-2xl border border-neutral-200 bg-white px-4 py-4 shadow-sm select-none">
-              <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+            {/* WHAT: Flat and clean trust pillars strip wrapper. */}
+            {/* WHY: Removes inner nested gray cards (bg-neutral-50 rounded-xl) to prevent card-nesting warnings, opting for a clean borderless visual layout. */}
+            <div className="my-2 rounded-2xl border border-neutral-200 bg-white px-5 py-6 shadow-sm select-none">
+              <div className="grid grid-cols-2 gap-6 lg:grid-cols-4">
                 {[
                   { icon: ShieldCheck, title: "200-point inspected", text: "Engine, body, and papers checked" },
                   { icon: RotateCcw, title: "Refund policy", text: "Simple return support" },
                   { icon: Heart, title: "Warranty", text: "Coverage on eligible cars" },
                   { icon: BadgeCheck, title: "Fixed pricing", text: "Clear, no-surprise quotes" }
                 ].map(({ icon: Icon, title, text }) => (
-                  <div key={title} className="flex items-start gap-3 rounded-xl bg-neutral-50 px-3 py-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
-                      <Icon className="h-4 w-4" />
+                  <div key={title} className="flex items-start gap-3">
+                    <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
+                      <Icon className="h-4.5 w-4.5" />
                     </span>
-                    <span>
-                      <span className="block text-xs font-black text-neutral-900">{title}</span>
-                      <span className="mt-0.5 block text-[11px] font-medium leading-snug text-neutral-500">{text}</span>
-                    </span>
+                    <div>
+                      <span className="block text-xs font-bold text-neutral-800">{title}</span>
+                      <span className="mt-1 block text-[11px] font-medium leading-normal text-neutral-500">{text}</span>
+                    </div>
                   </div>
                 ))}
               </div>
@@ -286,187 +288,7 @@ function CarsPageContent() {
         );
       }
 
-      // Inject trust pillar banner at position 3 (end of row 1)
-      if (false && index === 3) {
-        items.push(
-          <motion.div
-            key="trust-banner-injection"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="col-span-full"
-          >
-            <div className="rounded-3xl border border-primary-900/20 bg-linear-to-br from-neutral-950 via-neutral-950 to-primary-900/15 p-6 sm:p-8 text-white shadow-2xl my-4 select-none">
-              
-              {/* Header */}
-              <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-neutral-800 pb-6">
-                <div className="space-y-2">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-primary-400 uppercase tracking-widest bg-primary-900/25 border border-primary-900/20 px-3 py-1 rounded-full">
-                    <Sparkles className="h-3 w-3 animate-spin" />
-                    AutoBazaar Assured
-                  </span>
-                  <h2 className="text-xl sm:text-2xl font-black tracking-tight text-white leading-tight font-display">
-                    Four Pillars of Used Car Trust
-                  </h2>
-                  <p className="text-xs sm:text-sm text-neutral-400 max-w-xl leading-relaxed">
-                    We buy, inspect, certify, and warranty every single car so you drive away with absolute peace of mind.
-                  </p>
-                </div>
-                               {/* Typographic status stamp to completely eliminate nested card badge on the right */}
-                <div className="flex items-center gap-2 text-xs font-black text-primary-400 tracking-widest uppercase shrink-0">
-                  <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-primary-500"></span>
-                  </span>
-                  Hyderabad Certified Guarantee
-                </div>
-              </div>
- 
-              {/* 4 Pillars List — Redesigned as cardless typographic columns to eliminate the nested cards anti-pattern */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 mt-8">
-                
-                {/* Pillar 1: Inspected */}
-                <div className="group space-y-3">
-                  <div className="text-primary-400 shrink-0 group-hover:scale-110 transition-all duration-300">
-                    <ShieldCheck className="h-7 w-7" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm sm:text-base font-black text-white tracking-tight font-display">200-Point Inspected</h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
-                      Extensive checks covering engine compression, suspension, electronics, and body panels.
-                    </p>
-                  </div>
-                </div>
 
-                {/* Pillar 2: Moneyback */}
-                <div className="group space-y-3">
-                  <div className="text-primary-400 shrink-0 group-hover:scale-110 transition-all duration-300">
-                    <RotateCcw className="h-7 w-7" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm sm:text-base font-black text-white tracking-tight font-display">5-Day Refund Policy</h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
-                      Don&apos;t love your car? Return it within 5 days for a 100% money-back refund. No questions asked.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Pillar 3: Warranty */}
-                <div className="group space-y-3">
-                  <div className="text-primary-400 shrink-0 group-hover:scale-110 transition-all duration-300">
-                    <Heart className="h-7 w-7 animate-pulse" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm sm:text-base font-black text-white tracking-tight font-display">12-Month Warranty</h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
-                      Comprehensive engine and gearbox warranty for 1 year, complete with roadside assistance.
-                    </p>
-                  </div>
-                </div>
-
-                {/* Pillar 4: Pricing */}
-                <div className="group space-y-3">
-                  <div className="text-primary-400 shrink-0 group-hover:scale-110 transition-all duration-300">
-                    <BadgeCheck className="h-7 w-7" />
-                  </div>
-                  <div className="space-y-1">
-                    <h3 className="text-sm sm:text-base font-black text-white tracking-tight font-display">Fixed Price Assurance</h3>
-                    <p className="text-xs text-neutral-400 leading-relaxed font-semibold">
-                      Transparent pricing backed by real market analytics. Zero hidden charges or fee slops.
-                    </p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </motion.div>
-        );
-      }
-
-      // Inject Lead Callback widget at position 7
-      if (false && index === 6) {
-        items.push(
-          <motion.div
-            key="callback-widget-injection"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="col-span-1"
-          >
-            <div className="rounded-2xl border border-accent-100 bg-accent-50/70 p-5 flex flex-col justify-between shadow-sm hover:shadow-md hover:border-accent-200/80 transition-all duration-300 select-none h-full min-h-[300px]">
-              <div className="space-y-2.5">
-                <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-accent-600 bg-accent-100/50 border border-accent-200/50 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                  <Clock className="h-3 w-3 shrink-0" />
-                  Assisted Buying
-                </span>
-                <h3 className="text-base font-black text-neutral-900 tracking-tight leading-snug font-display">
-                  Confused about choosing the right car?
-                </h3>
-                <p className="text-xs text-neutral-500 leading-relaxed">
-                  Let our expert car advisors help you find the absolute perfect match for your lifestyle and budget.
-                </p>
-              </div>
-
-              <CallbackForm />
-            </div>
-          </motion.div>
-        );
-      }
-
-      // Inject Buyback & Delivery banner at position 11
-      if (false && index === 9) {
-        items.push(
-          <motion.div
-            key="delivery-widget-injection"
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="col-span-1 xl:col-span-2"
-          >
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 h-full">
-              
-              {/* Buyback Card */}
-              <div className="rounded-2xl border border-primary-800/30 bg-primary-950 p-5 flex flex-col justify-between text-white shadow-sm hover:shadow-md hover:border-primary-800 transition-all duration-300 select-none h-full min-h-[300px]">
-                <div className="space-y-3">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-primary-400 bg-primary-900/20 border border-primary-800/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    <Percent className="h-3 w-3 shrink-0" />
-                    Resale Insurance
-                  </span>
-                  <h3 className="text-base font-black tracking-tight leading-snug font-display">
-                    Guaranteed 65% Buyback Value
-                  </h3>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Protect your investment. Get an assured future resale value on your car up to 3 years. We buy it back, completely hassle-free.
-                  </p>
-                </div>
-                
-                <div className="inline-flex items-center gap-2 bg-primary-900/30 border border-primary-800/30 rounded-xl px-4 py-2.5 text-xs text-primary-400 mt-4 select-none">
-                  <span className="text-sm">🛡️</span>
-                  <span className="font-semibold text-[10px] uppercase tracking-wider">Assured Buyback Projector</span>
-                </div>
-              </div>
-
-              {/* Delivery Card */}
-              <div className="rounded-2xl border border-neutral-800 bg-neutral-950 p-5 flex flex-col justify-between text-white shadow-sm hover:shadow-md hover:border-accent-800 transition-all duration-300 select-none h-full min-h-[300px]">
-                <div className="space-y-3">
-                  <span className="inline-flex items-center gap-1.5 text-[10px] font-black text-accent-400 bg-accent-700/20 border border-accent-700/30 px-2.5 py-1 rounded-full uppercase tracking-wider">
-                    <Truck className="h-3 w-3 shrink-0" />
-                    Smart Logistics
-                  </span>
-                  <h3 className="text-base font-black tracking-tight leading-snug font-display">
-                    Free Doorstep Home Delivery
-                  </h3>
-                  <p className="text-xs text-neutral-400 leading-relaxed">
-                    Complete the online verification and payment setup, and we will deliver your fully detailed car directly to your doorstep for free.
-                  </p>
-                </div>
-
-                <div className="inline-flex items-center gap-2 bg-accent-700/30 border border-accent-700/30 rounded-xl px-4 py-2.5 text-xs text-accent-400 mt-4 select-none">
-                  <span className="text-sm">🏡</span>
-                  <span className="font-semibold text-[10px] uppercase tracking-wider">100% Sanitized & Contact-Free</span>
-                </div>
-              </div>
-
-            </div>
-          </motion.div>
-        );
-      }
 
       items.push(
         <motion.div
@@ -520,7 +342,16 @@ function CarsPageContent() {
           
           {/* ─── Sidebar (Desktop Only) ─── */}
           <aside className="hidden lg:block w-[280px] shrink-0">
-            <div className="sticky top-20 rounded-2xl border border-neutral-200/80 bg-white shadow-sm overflow-hidden">
+            {/* 
+              CONCEPT: Viewport-Constrained Scroll Containers & Scroll Chaining Prevention
+              WHAT: We set the sticky parent sidebar container to a maximum height of calc(100vh - 120px) 
+                    and style it with flex-col + overscroll-contain.
+              WHY: Constraining the height allows the child FilterSidebar component's overflow-y-auto 
+                   to trigger correctly when filters overflow. The overscroll-contain utility stops the 
+                   scroll events from bubbling/chaining to the outer window, ensuring only the sidebar 
+                   scrolls while the car listing column remains perfectly stable.
+            */}
+            <div className="sticky top-24 max-h-[calc(100vh-120px)] flex flex-col rounded-2xl border border-neutral-200/80 bg-white shadow-sm overflow-hidden overscroll-contain">
               <FilterSidebar 
                 filters={filters} 
                 setFilters={setFilters} 

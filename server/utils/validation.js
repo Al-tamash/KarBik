@@ -23,6 +23,7 @@ export const searchCarsSchema = z.object({
   maxPrice: z.coerce.number().min(0).optional(),
   maxMileage: z.coerce.number().min(0).optional(),
   sort: z.enum(["price_asc", "price_desc", "year_desc", "newest"]).optional(),
+  location: z.string().optional(),
   page: z.coerce.number().min(1).default(1),
   limit: z.coerce.number().min(1).max(50).default(12),
 });

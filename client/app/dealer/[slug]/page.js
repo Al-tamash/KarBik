@@ -394,7 +394,8 @@ export default async function DealerPage({ params }) {
           
           <div className="relative aspect-square sm:aspect-auto w-full rounded-2xl bg-neutral-900 overflow-hidden ring-1 ring-neutral-200 flex items-center justify-center p-8 text-center text-white">
              {/* Dynamic Ambient Background decoration */}
-             <div className="absolute inset-0 bg-gradient-to-br from-primary-600/30 via-neutral-950 to-neutral-950"></div>
+             {/* Replacing non-existent neutral-950 with standard black gradient stops for a correct, high-contrast visual backplate */}
+             <div className="absolute inset-0 bg-gradient-to-br from-primary-600/30 via-black to-black"></div>
              <div className="absolute inset-0 opacity-[0.02]" style={{ backgroundImage: "radial-gradient(#ffffff 2px, transparent 2px)", backgroundSize: "32px 32px" }}></div>
              <div className="z-10 flex flex-col items-center">
                 <span className="text-7xl mb-4 block animate-bounce">🏪</span>

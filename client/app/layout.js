@@ -73,11 +73,18 @@ export default function RootLayout({ children }) {
       suppressHydrationWarning
     >
       <body className="min-h-full flex flex-col antialiased">
+        {/* 
+          Razorpay checkout.js — loaded lazily after page is idle.
+          "lazyOnload" is correct here: Razorpay is only needed when 
+          the user clicks a payment button, not before the page hydrates.
+          Using "beforeInteractive" caused React 19 to warn about script 
+          tags being injected during hydration of the React component tree.
+        */}
+        <Script
+          src="https://checkout.razorpay.com/v1/checkout.js"
+          strategy="lazyOnload"
+        />
         <ToastProvider>
-          <Script
-            src="https://checkout.razorpay.com/v1/checkout.js"
-            strategy="beforeInteractive"
-          />
           <Navbar />
           <CompareBar />
           <NotificationManager />

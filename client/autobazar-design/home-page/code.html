@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>AutoBazaar Hyderabad - Premium Used Cars</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;600;700;800;900&amp;family=Inter:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "primary-fixed": "#e2dfff",
+                        "on-tertiary-container": "#67f4b7",
+                        "error-container": "#ffdad6",
+                        "background": "#fcf8ff",
+                        "surface-dim": "#dcd8e5",
+                        "on-primary-container": "#dad7ff",
+                        "primary-fixed-dim": "#c3c0ff",
+                        "on-secondary-container": "#5c2400",
+                        "inverse-surface": "#302f39",
+                        "secondary-fixed": "#ffdbca",
+                        "on-surface": "#1b1b24",
+                        "surface-container-highest": "#e4e1ee",
+                        "tertiary": "#005338",
+                        "surface": "#fcf8ff",
+                        "on-error-container": "#93000a",
+                        "on-surface-variant": "#464555",
+                        "tertiary-container": "#006e4b",
+                        "surface-container-low": "#f5f2ff",
+                        "surface-container-high": "#eae6f4",
+                        "on-secondary": "#ffffff",
+                        "outline": "#777587",
+                        "surface-container-lowest": "#ffffff",
+                        "on-tertiary": "#ffffff",
+                        "secondary": "#9d4300",
+                        "tertiary-fixed": "#6ffbbe",
+                        "secondary-container": "#fd761a",
+                        "on-secondary-fixed": "#341100",
+                        "on-primary-fixed": "#0f0069",
+                        "inverse-primary": "#c3c0ff",
+                        "surface-tint": "#4d44e3",
+                        "tertiary-fixed-dim": "#4edea3",
+                        "error": "#ba1a1a",
+                        "on-primary": "#ffffff",
+                        "surface-container": "#f0ecf9",
+                        "primary": "#3525cd",
+                        "on-error": "#ffffff",
+                        "surface-variant": "#e4e1ee",
+                        "on-tertiary-fixed": "#002113",
+                        "on-background": "#1b1b24",
+                        "primary-container": "#4f46e5",
+                        "outline-variant": "#c7c4d8",
+                        "surface-bright": "#fcf8ff",
+                        "on-primary-fixed-variant": "#3323cc",
+                        "secondary-fixed-dim": "#ffb690",
+                        "on-tertiary-fixed-variant": "#005236",
+                        "inverse-on-surface": "#f3effc",
+                        "on-secondary-fixed-variant": "#783200"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "section-gap-sm": "64px",
+                        "base": "8px",
+                        "container-max": "1280px",
+                        "margin-mobile": "16px",
+                        "gutter": "24px",
+                        "section-gap-lg": "120px"
+                    },
+                    "fontFamily": {
+                        "headline-lg": ["Hanken Grotesk"],
+                        "body-lg": ["Inter"],
+                        "display-lg": ["Hanken Grotesk"],
+                        "display-lg-mobile": ["Hanken Grotesk"],
+                        "label-caps": ["Inter"],
+                        "headline-md": ["Hanken Grotesk"],
+                        "body-md": ["Inter"]
+                    },
+                    "fontSize": {
+                        "headline-lg": ["32px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "body-lg": ["18px", { "lineHeight": "28px", "fontWeight": "400" }],
+                        "display-lg": ["64px", { "lineHeight": "72px", "letterSpacing": "-0.02em", "fontWeight": "700" }],
+                        "display-lg-mobile": ["40px", { "lineHeight": "48px", "letterSpacing": "-0.01em", "fontWeight": "700" }],
+                        "label-caps": ["12px", { "lineHeight": "16px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+                        "headline-md": ["24px", { "lineHeight": "32px", "fontWeight": "600" }],
+                        "body-md": ["16px", { "lineHeight": "24px", "fontWeight": "400" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .glass-stroke {
+            box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.4);
+        }
+        .dark .glass-stroke {
+            box-shadow: inset 0 0 0 1px rgba(63, 63, 70, 0.5);
+        }
+        .ambient-glow {
+            box-shadow: 0 20px 40px -10px rgba(53, 37, 205, 0.05);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background font-body-md text-body-md antialiased overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-50 bg-surface/80 dark:bg-inverse-surface/80 backdrop-blur-2xl border-b border-white/40 dark:border-outline-variant/50 shadow-sm backdrop-blur-3xl">
+<div class="flex justify-between items-center px-gutter py-4 w-full max-w-container-max mx-auto">
+<!-- Brand -->
+<div class="font-headline-lg text-headline-lg font-bold tracking-tight text-primary dark:text-primary-fixed">
+                AutoBazaar Hyderabad
+            </div>
+<!-- Search (Left aligned as per JSON, moving nav to right) -->
+<div class="hidden md:flex items-center gap-4 bg-surface-container-low rounded-full px-4 py-2 glass-stroke">
+<span class="material-symbols-outlined text-on-surface-variant">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-on-surface w-64 placeholder-on-surface-variant/70 font-body-md text-body-md" placeholder="Search cars, dealers..." type="text"/>
+</div>
+<!-- Navigation Links -->
+<nav class="hidden lg:flex items-center gap-8">
+<a class="text-primary dark:text-primary-fixed font-bold border-b-2 border-primary dark:border-primary-fixed pb-1 font-headline-md text-headline-md font-body-md text-body-md hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 transition-all duration-300" href="#">Listings</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors font-headline-md text-headline-md font-body-md text-body-md hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 transition-all duration-300" href="#">Dealers</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors font-headline-md text-headline-md font-body-md text-body-md hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 transition-all duration-300" href="#">Sell</a>
+<a class="text-on-surface-variant dark:text-outline-variant hover:text-primary dark:hover:text-primary-fixed transition-colors font-headline-md text-headline-md font-body-md text-body-md hover:bg-surface-container-high/50 dark:hover:bg-surface-container-highest/10 transition-all duration-300" href="#">Dashboard</a>
+</nav>
+<!-- Actions -->
+<div class="flex items-center gap-4">
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">notifications</span>
+</button>
+<button class="text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined" data-weight="fill" style="font-variation-settings: 'FILL' 1;">account_circle</span>
+</button>
+<button class="hidden md:block bg-secondary-container text-on-secondary-container px-6 py-2 rounded-full font-label-caps text-label-caps hover:brightness-110 transition-all shadow-md">
+                    Book Test Drive
+                </button>
+<!-- Mobile Menu Toggle -->
+<button class="lg:hidden text-on-surface">
+<span class="material-symbols-outlined">menu</span>
+</button>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main>
+<!-- Hero Section -->
+<section class="relative w-full h-[921px] min-h-[700px] flex items-center justify-center pt-20">
+<!-- Cinematic Background -->
+<div class="absolute inset-0 z-0">
+<div class="absolute inset-0 bg-gradient-to-b from-inverse-surface/80 via-inverse-surface/60 to-background z-10"></div>
+<img alt="Hero Background" class="w-full h-full object-cover" data-alt="A cinematic, high-contrast night shot of a sleek, dark luxury car parked elegantly with the subtle silhouette of the Charminar and Hyderabad skyline in the deep background. The scene is lit by dramatic, moody streetlights creating a premium, sophisticated atmosphere consistent with a high-end modern corporate identity." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA725eW61wDKQE0vapkmdbZvSxIJpFeBoWjgoebGMwlNug6zEa8daiC0OuGZytG8Xm6A7G4Qz70XPhvWE5DVpfU1bcHxIizOPqSmf7tAIIrmGR-tzLOvEhV-j0rxz7PtbZVZfAYfaT-xe_jf4QI4zNr2XpanwG3j1F8QFNzX-J7jFHyDVnrzfNifsyXQ-_MbUsG4vARfSbNyuVW7MDRvIhemFxQ6HbUqNb0PeWryWMAZ5Pw61P1l96fBdeHwdYUFDbgDvulU3Iirxo"/>
+</div>
+<div class="relative z-20 w-full max-w-container-max mx-auto px-gutter text-center flex flex-col items-center">
+<h1 class="font-display-lg text-display-lg text-white mb-6 drop-shadow-lg max-w-4xl">
+                    Hyderabad’s Trusted<br/>Used Car Marketplace
+                </h1>
+<p class="font-body-lg text-body-lg text-surface-dim mb-12 max-w-2xl">
+                    Discover premium verified vehicles from top dealers across the city. Experience a seamless, transparent buying journey.
+                </p>
+<!-- Floating Glass Search Panel -->
+<div class="bg-surface/90 backdrop-blur-3xl rounded-2xl p-6 shadow-2xl glass-stroke w-full max-w-5xl mx-auto flex flex-col md:flex-row gap-4 items-end">
+<div class="w-full text-left">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Brand / Make</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 font-body-md text-body-md text-on-surface focus:ring-primary focus:border-primary">
+<option>Any Brand</option>
+<option>Mercedes-Benz</option>
+<option>BMW</option>
+<option>Audi</option>
+<option>Toyota</option>
+</select>
+</div>
+<div class="w-full text-left">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Budget</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 font-body-md text-body-md text-on-surface focus:ring-primary focus:border-primary">
+<option>Any Budget</option>
+<option>Under ₹10 Lakhs</option>
+<option>₹10L - ₹20L</option>
+<option>₹20L - ₹50L</option>
+<option>Above ₹50L</option>
+</select>
+</div>
+<div class="w-full text-left">
+<label class="block font-label-caps text-label-caps text-on-surface-variant mb-2">Area</label>
+<select class="w-full bg-surface-container-lowest border border-outline-variant rounded-lg p-3 font-body-md text-body-md text-on-surface focus:ring-primary focus:border-primary">
+<option>All Hyderabad</option>
+<option>Kukatpally</option>
+<option>Gachibowli</option>
+<option>Madhapur</option>
+<option>Jubilee Hills</option>
+</select>
+</div>
+<button class="w-full md:w-auto bg-primary text-on-primary px-8 py-3 rounded-lg font-headline-md text-[18px] leading-[24px] hover:bg-primary-container hover:text-on-primary-container transition-colors whitespace-nowrap">
+                        Search Cars
+                    </button>
+</div>
+<!-- Stats -->
+<div class="flex flex-wrap justify-center gap-8 mt-12">
+<div class="flex items-center gap-2 bg-surface-container-highest/20 backdrop-blur-md px-4 py-2 rounded-full glass-stroke text-white">
+<span class="material-symbols-outlined text-primary-fixed">directions_car</span>
+<span class="font-headline-md text-[18px] font-bold">1200+ Cars</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-highest/20 backdrop-blur-md px-4 py-2 rounded-full glass-stroke text-white">
+<span class="material-symbols-outlined text-primary-fixed">storefront</span>
+<span class="font-headline-md text-[18px] font-bold">150+ Dealers</span>
+</div>
+<div class="flex items-center gap-2 bg-surface-container-highest/20 backdrop-blur-md px-4 py-2 rounded-full glass-stroke text-white">
+<span class="material-symbols-outlined text-on-tertiary-container">verified</span>
+<span class="font-headline-md text-[18px] font-bold">100% Verified</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Popular Hubs -->
+<section class="py-section-gap-lg px-gutter max-w-container-max mx-auto overflow-hidden">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-8">Popular Hyderabad Car Hubs</h2>
+<div class="flex overflow-x-auto pb-8 -mx-gutter px-gutter gap-6 snap-x snap-mandatory hide-scrollbar" style="scrollbar-width: none;">
+<!-- Hub Card 1 -->
+<div class="min-w-[300px] h-[200px] relative rounded-2xl overflow-hidden snap-center group cursor-pointer ambient-glow">
+<img alt="Kukatpally" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A modern urban landscape representing Kukatpally, featuring a clean, wide road lined with modern commercial buildings and subtle automotive showroom signage, bathed in bright, optimistic daylight." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAvfYHsO0CGQTppXbbMsrZZEbDi4fRoD2ZWcpQTrik2ZjRCvrXnsBHyOr1PrP2ev9PvnTo5isZLr3hWg6W5zyzklN_-tk9laVXNiFBrC_RkRHzJqHx0o6r8Laf9DnswaDFiELTa2vsHW7MU-7_Qi07LgtcguqZIYjaKFhtXpX-UNL7SMgCfH7SxMK3kz0KlLMOKh6R5B8LtDsoFtCsfgp4oJoJz7zeK6rAHF2CDapjhvLn4xPL96Hf8-OgGyFZqJSQe4cDWEE5_fA"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/90 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-6">
+<h3 class="font-headline-md text-headline-md text-white">Kukatpally</h3>
+<p class="font-body-md text-body-md text-primary-fixed mt-1">340+ Verified Cars</p>
+</div>
+</div>
+<!-- Hub Card 2 -->
+<div class="min-w-[300px] h-[200px] relative rounded-2xl overflow-hidden snap-center group cursor-pointer ambient-glow">
+<img alt="Gachibowli" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A sleek, tech-forward urban scene representing Gachibowli, with modern glass-facade buildings reflecting the clear blue sky, wide organized streets, and a premium, clean aesthetic." src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8FFM3nizduDUGWP-YMj2Gs2Sl8an6W0GyuIb8VfrgTTh-bUfJK8Le5elberIg7e2wUTu87DbvwoqPvyJbmOM_bU6mIqn1T9EYtpxtvBaYUHRk55tpvqrs0lSiPnXgcZVHHt4gyMqow9m8sjUX0PKWCG1q9SMOCCY9kMmh_cODtJxEmpDGatcAkSKWfTt6ZSYk1YJb6MJXmIOs-lP9thEon48COOLuDuzZWZzsVxcUYAHHFCKqC70xUk3hCnPEGf1wiGv70S2lt5A"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/90 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-6">
+<h3 class="font-headline-md text-headline-md text-white">Gachibowli</h3>
+<p class="font-body-md text-body-md text-primary-fixed mt-1">210+ Premium Cars</p>
+</div>
+</div>
+<!-- Hub Card 3 -->
+<div class="min-w-[300px] h-[200px] relative rounded-2xl overflow-hidden snap-center group cursor-pointer ambient-glow">
+<img alt="Madhapur" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A bustling yet organized commercial district representing Madhapur, featuring modern architecture, smooth roads, and a dynamic yet premium atmosphere suitable for luxury car showrooms." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnKTY6eDTR_hjgETEyc3xOdJhDD7C1WC6vMW8AjXKfsViJ9ALfHhzu9fqXZOi5wdy56TP7We63pHjIoTTD05e4SwZh6l0MEZWePLiLYsD7G70sdr_dDRIe2e2CJ69RtmV3nQr9NMkOStO-wTuuSWkDDYkFW7D_9ctjjdwWRyKPQJm8w6JlYLxQNLeS8GO1cy7j_qJ6Rf5TyAWeBaKP6tNoJh861lR0C4VT1FkvLxdsNLHLAC_oFl6BaQEBC_MyI7TV52xhVoH9Zlk"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/90 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-6">
+<h3 class="font-headline-md text-headline-md text-white">Madhapur</h3>
+<p class="font-body-md text-body-md text-primary-fixed mt-1">180+ Luxury Cars</p>
+</div>
+</div>
+<!-- Hub Card 4 -->
+<div class="min-w-[300px] h-[200px] relative rounded-2xl overflow-hidden snap-center group cursor-pointer ambient-glow">
+<img alt="LB Nagar" class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" data-alt="A clean, well-lit urban highway scene representing LB Nagar, with smooth tarmac, modern street lighting, and a spacious, airy feel indicative of a premium automotive corridor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEi3ZedMlzyvI8Twe8yFzh4WJmKsbWMgrIOM30hcqKCtlXRtId8W-tCdMoBQOtc2YBtSR47Y90Ye8W_Q4x_Ihdkg6aozTMf3BWRCykxwU2AE1AS7cz8ZbrT5E61UKyZaKMLQB63b__XgcrZJjgNuyiqm_FuA0C_0e5vGYHTqxAAZ64Qd-4IDvMAMEhpy3md6fDCkFOtEziWeFxTgcSl6kePlyJtjlENZb0IqnmAM6tHqT5n80QDkREMfUWjE378mdi0xcA1xfPn54"/>
+<div class="absolute inset-0 bg-gradient-to-t from-inverse-surface/90 to-transparent"></div>
+<div class="absolute bottom-0 left-0 p-6">
+<h3 class="font-headline-md text-headline-md text-white">LB Nagar</h3>
+<p class="font-body-md text-body-md text-primary-fixed mt-1">290+ Family Cars</p>
+</div>
+</div>
+</div>
+</section>
+<!-- Featured Cars Grid -->
+<section class="bg-surface-container-low py-section-gap-lg px-gutter">
+<div class="max-w-container-max mx-auto">
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-2">Featured Collection</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant">Handpicked, inspected, and ready to drive in Hyderabad.</p>
+</div>
+<a class="hidden md:flex items-center gap-2 text-primary font-label-caps text-label-caps hover:underline" href="#">
+                        View All Listings <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+<!-- Car Card 1 -->
+<div class="bg-surface rounded-2xl overflow-hidden ambient-glow glass-stroke group flex flex-col">
+<div class="relative h-64 overflow-hidden">
+<img alt="Car 1" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A pristine, glossy white luxury SUV parked in a brightly lit, premium indoor showroom. The lighting highlights the sleek curves and polished finish of the vehicle, emphasizing its high-end status and pristine condition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCTzFzrp1z2w2ec22I5WNtXmaSI-VH01xheJ-6ygifHDrEkuKTZl6l2rhQisOLyeK3uU4SRvxjJ3TeuZbzEcS-wpUR1_fmrtpvqniawat5fIew08U5SoTc3en6tx2chcm-0vFlzNgfnTQe1q0naoOaRvlSPLmafRfVzMmyQGLKibsJYlGKdfLsZPaCyZ9H8pfh1E8hm0AXqmZUQLmKkVMKrSQLpy_6WzSc7ZHExkji3ULKJcCAQnpqE0tweDHXIzzbbFdstwuj8Iaw"/>
+<div class="absolute top-4 left-4 bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 backdrop-blur-md">
+<span class="material-symbols-outlined text-[14px]">verified</span> RTO Verified
+                            </div>
+<button class="absolute top-4 right-4 bg-surface/50 backdrop-blur-md p-2 rounded-full text-on-surface hover:text-primary hover:bg-surface transition-colors glass-stroke">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-[20px] font-bold text-on-surface">2021 BMW X5 xDrive40i</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Gachibowli Auto Hub</p>
+<div class="flex gap-2 mb-6">
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">Petrol</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">Automatic</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">24k km</span>
+</div>
+<div class="mt-auto">
+<div class="font-headline-md text-headline-md text-on-surface font-bold mb-1">₹65,00,000</div>
+<p class="text-sm text-on-surface-variant mb-4">EMI from ₹85,000/mo</p>
+<div class="flex gap-3">
+<button class="flex-1 bg-surface-container border border-outline-variant text-on-surface py-2 rounded-lg font-label-caps text-label-caps hover:bg-surface-container-highest transition-colors">
+                                        View Details
+                                    </button>
+<button class="flex-1 bg-[#25D366] text-white py-2 rounded-lg font-label-caps text-label-caps flex items-center justify-center gap-2 hover:brightness-110 transition-colors">
+<span class="material-symbols-outlined text-[18px]">chat</span> WhatsApp
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Car Card 2 -->
+<div class="bg-surface rounded-2xl overflow-hidden ambient-glow glass-stroke group flex flex-col">
+<div class="relative h-64 overflow-hidden">
+<img alt="Car 2" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A sleek, metallic silver modern sedan captured from a dynamic low angle in a clean, brightly lit modern parking structure. The crisp lines of the car reflect the cool, artificial lighting, conveying a sense of precision and premium quality." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMJ6wVM-hg6z6IBRrbSZyErzwc5A8oFRP6wCVbJ-dEZiX2ir15scaLEHXBV2-x3W2EGzrBAWsZcxTT6V_1trTqZyLaAL6AKJuLufrh0ARG9x937ZZSdosxkFv9C4NVdCosoMGiLcTh_ynFjRRpywIsL_GwB75xI4nk4IkkdUiBgwg9srvtIJ-jgXpUJYCnktHjRI8lc3RSehl5FFOZczW9ei9gp8JQqMnopRob0DYgNaVLKjyn_JqKJxfAFhYBcp-6ebQvWGmkADs"/>
+<div class="absolute top-4 left-4 bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 backdrop-blur-md">
+<span class="material-symbols-outlined text-[14px]">verified</span> RTO Verified
+                            </div>
+<button class="absolute top-4 right-4 bg-surface/50 backdrop-blur-md p-2 rounded-full text-on-surface hover:text-primary hover:bg-surface transition-colors glass-stroke">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-[20px] font-bold text-on-surface">2022 Mercedes-Benz C-Class</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Kukatpally Premium Motors</p>
+<div class="flex gap-2 mb-6">
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">Diesel</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">Automatic</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">12k km</span>
+</div>
+<div class="mt-auto">
+<div class="font-headline-md text-headline-md text-on-surface font-bold mb-1">₹52,50,000</div>
+<p class="text-sm text-on-surface-variant mb-4">EMI from ₹72,000/mo</p>
+<div class="flex gap-3">
+<button class="flex-1 bg-surface-container border border-outline-variant text-on-surface py-2 rounded-lg font-label-caps text-label-caps hover:bg-surface-container-highest transition-colors">
+                                        View Details
+                                    </button>
+<button class="flex-1 bg-[#25D366] text-white py-2 rounded-lg font-label-caps text-label-caps flex items-center justify-center gap-2 hover:brightness-110 transition-colors">
+<span class="material-symbols-outlined text-[18px]">chat</span> WhatsApp
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Car Card 3 -->
+<div class="bg-surface rounded-2xl overflow-hidden ambient-glow glass-stroke group flex flex-col">
+<div class="relative h-64 overflow-hidden">
+<img alt="Car 3" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" data-alt="A vibrant red compact luxury car showcased against a clean, minimalist concrete background in bright daylight. The vivid color pops against the neutral surroundings, emphasizing its sporty and immaculate condition." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA2yXFFKnsz5Jv3qN5yvKvTcor3zvSG3220efVnsbyR-xeyzjKEdul8EHfSxAukS9nIPooJj3z2cf86ENrfvtVR4qS4q0REgG7R3_FCN7igFUHf8phJRGYsrc3M4bDUb-PDk1Awe2vtkqq2o9MRS-hU23xF5pqoPrhMgNFf_vBimFYviZ4hvjgg0Pk6b6aH0z_Z2N3e3-9L5QP8tJRU1newSCV3o2degVZoPZUYvoz8ZJYaC9v-uh7jnQCbmfyilSF5OyirUoL1oc0"/>
+<div class="absolute top-4 left-4 bg-tertiary-container text-on-tertiary-container px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1 backdrop-blur-md">
+<span class="material-symbols-outlined text-[14px]">verified</span> RTO Verified
+                            </div>
+<button class="absolute top-4 right-4 bg-surface/50 backdrop-blur-md p-2 rounded-full text-on-surface hover:text-primary hover:bg-surface transition-colors glass-stroke">
+<span class="material-symbols-outlined">favorite</span>
+</button>
+</div>
+<div class="p-6 flex flex-col flex-grow">
+<div class="flex justify-between items-start mb-2">
+<h3 class="font-headline-md text-[20px] font-bold text-on-surface">2020 Audi A4 Premium</h3>
+</div>
+<p class="font-body-md text-body-md text-on-surface-variant mb-4">Madhapur Elite Autos</p>
+<div class="flex gap-2 mb-6">
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">Petrol</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">Automatic</span>
+<span class="bg-surface-container-high px-3 py-1 rounded-md text-sm text-on-surface-variant">38k km</span>
+</div>
+<div class="mt-auto">
+<div class="font-headline-md text-headline-md text-on-surface font-bold mb-1">₹38,00,000</div>
+<p class="text-sm text-on-surface-variant mb-4">EMI from ₹55,000/mo</p>
+<div class="flex gap-3">
+<button class="flex-1 bg-surface-container border border-outline-variant text-on-surface py-2 rounded-lg font-label-caps text-label-caps hover:bg-surface-container-highest transition-colors">
+                                        View Details
+                                    </button>
+<button class="flex-1 bg-[#25D366] text-white py-2 rounded-lg font-label-caps text-label-caps flex items-center justify-center gap-2 hover:brightness-110 transition-colors">
+<span class="material-symbols-outlined text-[18px]">chat</span> WhatsApp
+                                    </button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Why AutoBazaar -->
+<section class="py-section-gap-lg px-gutter max-w-container-max mx-auto">
+<div class="text-center mb-16">
+<h2 class="font-headline-lg text-headline-lg text-on-surface mb-4">Why Choose AutoBazaar</h2>
+<p class="font-body-lg text-body-lg text-on-surface-variant max-w-2xl mx-auto">The most transparent, efficient way to buy premium used cars in Hyderabad.</p>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+<div class="bg-surface-container p-8 rounded-2xl glass-stroke text-center group hover:-translate-y-2 transition-transform duration-300">
+<div class="w-16 h-16 bg-primary-container text-on-primary-container rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[32px]">shield</span>
+</div>
+<h3 class="font-headline-md text-[20px] font-bold text-on-surface mb-3">Verified Cars</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Every car undergoes a rigorous 150-point inspection and RTO background check before listing.</p>
+</div>
+<div class="bg-surface-container p-8 rounded-2xl glass-stroke text-center group hover:-translate-y-2 transition-transform duration-300">
+<div class="w-16 h-16 bg-primary-container text-on-primary-container rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[32px]">handshake</span>
+</div>
+<h3 class="font-headline-md text-[20px] font-bold text-on-surface mb-3">Trusted Dealers</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">We partner exclusively with highly-rated, verified dealers across Hyderabad's premium hubs.</p>
+</div>
+<div class="bg-surface-container p-8 rounded-2xl glass-stroke text-center group hover:-translate-y-2 transition-transform duration-300">
+<div class="w-16 h-16 bg-primary-container text-on-primary-container rounded-2xl flex items-center justify-center mx-auto mb-6 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-[32px]">forum</span>
+</div>
+<h3 class="font-headline-md text-[20px] font-bold text-on-surface mb-3">Instant Connect</h3>
+<p class="font-body-md text-body-md text-on-surface-variant">Skip the wait. Connect instantly with dealers via WhatsApp to negotiate or book a test drive.</p>
+</div>
+</div>
+</section>
+<!-- Dealer CTA Banner -->
+<section class="py-section-gap-sm px-gutter">
+<div class="max-w-container-max mx-auto bg-inverse-surface rounded-3xl overflow-hidden relative glass-stroke">
+<!-- Decorative Elements -->
+<div class="absolute top-0 right-0 w-96 h-96 bg-primary/20 blur-3xl rounded-full translate-x-1/3 -translate-y-1/3"></div>
+<div class="relative z-10 flex flex-col md:flex-row items-center justify-between p-12 md:p-16 gap-8">
+<div class="max-w-xl">
+<h2 class="font-display-lg-mobile text-display-lg-mobile text-white mb-4">Grow Your Showroom Digitally</h2>
+<p class="font-body-lg text-body-lg text-surface-dim mb-8">Join Hyderabad's fastest-growing premium used car network. Reach thousands of verified buyers daily.</p>
+<button class="bg-primary hover:bg-primary-container text-on-primary px-8 py-3 rounded-lg font-headline-md text-[18px] transition-colors">
+                            Partner With Us
+                        </button>
+</div>
+<div class="hidden lg:block w-1/3">
+<img alt="Dealer Success" class="rounded-xl shadow-2xl rotate-3 scale-110" data-alt="A modern, high-end corporate office setting inside an automotive dealership. Features sleek glass walls, polished floors, and subtle abstract automotive art, conveying professionalism and business growth." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDGJhL44B7T7EhIivXwErHccW5S4yDZKXT_dW33qsFbvgc0aRWJRsYhZYreyyRcSHxAvMj0scCK6VTNgPdJwZdcAuRtsTEHrHxc9r8WMN0OSQME46gL3OP4TPahDG9ND70O2NgvgOqREYJTArFrojQ0lfqwM6CdLNQ4rVLY3TcCFxiCZD_VnRQAWPAA8-2IN0gdJAZ4yMFK6yx2HRsTU36o_XDMKREVb17CR94BEpMHWvMUfv4pJ1WNjXxrQJriwUxr7ohU2Bkkms"/>
+</div>
+</div>
+</div>
+</section>
+</main>
+<!-- Footer -->
+<footer class="bg-surface-container-highest dark:bg-inverse-surface w-full py-section-gap-sm px-gutter mt-section-gap-lg border-t border-outline-variant/20 flat no shadows transition-all duration-300">
+<div class="grid grid-cols-1 md:grid-cols-4 gap-gutter max-w-container-max mx-auto">
+<div class="col-span-1 md:col-span-2">
+<div class="font-headline-md text-headline-md font-black text-primary dark:text-primary-fixed mb-4">
+                    AutoBazaar Hyderabad
+                </div>
+<p class="font-body-md text-body-md text-on-surface-variant dark:text-outline-variant max-w-md">
+                    The premium destination for verified used cars in Hyderabad. Connecting buyers with trusted local dealers for a seamless automotive experience.
+                </p>
+</div>
+<div class="col-span-1">
+<h4 class="font-label-caps text-label-caps text-on-surface dark:text-on-background mb-4">Quick Links</h4>
+<ul class="space-y-3">
+<li><a class="font-body-md text-body-md font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Terms of Service</a></li>
+<li><a class="font-body-md text-body-md font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Privacy Policy</a></li>
+<li><a class="font-body-md text-body-md font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">RTO Verification Guide</a></li>
+<li><a class="font-body-md text-body-md font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant hover:text-primary transition-colors hover:text-primary dark:hover:text-primary-fixed transition-colors" href="#">Contact Us</a></li>
+</ul>
+</div>
+<div class="col-span-1">
+<h4 class="font-label-caps text-label-caps text-on-surface dark:text-on-background mb-4">Connect</h4>
+<div class="flex gap-4 text-on-surface-variant">
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">mail</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">phone</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-primary transition-colors">location_on</span>
+</div>
+</div>
+</div>
+<div class="max-w-container-max mx-auto mt-12 pt-8 border-t border-outline-variant/20 text-center font-body-md text-body-md font-label-caps text-label-caps text-on-surface-variant dark:text-outline-variant">
+            © 2024 AutoBazaar Hyderabad. Premium Used Car Marketplace.
+        </div>
+</footer>
+</body></html>

@@ -21,6 +21,7 @@ export default function EditListingPage({ params }) {
   const { data: session, isPending } = authClient.useSession();
   const [form, setForm] = useState({
     title: "", brand: "", year: "", price: "", description: "",
+    registrationNumber: "", rcVerified: false,
   });
   const [existingImages, setExistingImages] = useState([]);
   const [files, setFiles] = useState(null);
@@ -31,6 +32,11 @@ export default function EditListingPage({ params }) {
   const [error, setError] = useState("");
   const [aiLoading, setAiLoading] = useState({ description: false, price: false });
   const [suggestedPriceRange, setSuggestedPriceRange] = useState(null);
+
+  // RTO Verification States to track search status and hold retrieved details
+  const [rtoData, setRtoData] = useState(null);
+  const [rtoLoading, setRtoLoading] = useState(false);
+  const [rtoError, setRtoError] = useState("");
 
   // Auth guard
   useEffect(() => {
@@ -101,6 +107,53 @@ export default function EditListingPage({ params }) {
     setAiLoading(prev => ({ ...prev, price: false }));
   }
 
+  // Verifies the vehicle registration number with our Live Vahan/RTO API
+  async function verifyRtoDetails() {
+    if (!form.registrationNumber) {
+      alert("Please enter a registration number first.");
+      return;
+    }
+    setRtoLoading(true);
+    setRtoError("");
+    setRtoData(null);
+
+    try {
+      // Normalize registration number by stripping spaces and hyphens
+      const cleanReg = form.registrationNumber.replace(/[\s-]/g, "").toUpperCase();
+      const res = await fetch(`${API}/api/cars/verify-vehicle/${cleanReg}`, {
+        credentials: "include",
+      });
+
+      const data = await res.json();
+
+      if (res.ok) {
+        setRtoData(data);
+      } else {
+        setRtoError(data.message || "Failed to verify vehicle. Please check plate format.");
+      }
+    } catch (err) {
+      console.error(err);
+      setRtoError("Network error checking vehicle registration.");
+    } finally {
+      setRtoLoading(false);
+    }
+  }
+
+  // Auto-fills form fields using data fetched from Vahan/RTO database
+  function autoFillFromRto() {
+    if (!rtoData) return;
+
+    // Populate form state fields symmetrically with our custom templates
+    setForm(prev => ({
+      ...prev,
+      brand: rtoData.brand,
+      title: `${rtoData.year} ${rtoData.brand} ${rtoData.model}${rtoData.variant ? ' ' + rtoData.variant : ''}`,
+      year: rtoData.year.toString(),
+      registrationNumber: rtoData.registrationNumber,
+      rcVerified: true, // Auto-sets RC verified to true since it came from RTO
+    }));
+  }
+
   // Fetch car data to pre-fill the form
   useEffect(() => {
     async function fetchCar() {
@@ -118,6 +171,8 @@ export default function EditListingPage({ params }) {
           year: String(car.year),
           price: String(car.price),
           description: car.description || "",
+          registrationNumber: car.registrationNumber || "",
+          rcVerified: car.rcVerified || false,
         });
         setExistingImages(car.images || []);
         setIsInspected(car.isInspected || false);
@@ -140,6 +195,8 @@ export default function EditListingPage({ params }) {
     formData.append("year", form.year);
     formData.append("price", form.price);
     formData.append("description", form.description);
+    formData.append("registrationNumber", form.registrationNumber);
+    formData.append("rcVerified", form.rcVerified);
 
     // Only append images if user selected new ones (otherwise keep existing)
     if (files && files.length > 0) {
@@ -312,23 +369,123 @@ export default function EditListingPage({ params }) {
             />
           </div>
 
-          <div className="pt-4 border-t border-neutral-200">
+          <div className="pt-4 border-t border-neutral-200 space-y-4">
             <h3 className="text-sm font-bold text-neutral-900 mb-2">Trust System</h3>
-            <div className="flex items-center gap-4 mb-3">
+            
+            {/* RTO Vehicle History Verification Section */}
+            <div>
+              <label className="block text-sm font-semibold text-neutral-900 mb-1.5">
+                Registration Number <span className="text-xs text-neutral-500 font-normal">(e.g., MH12DE5678 or DL3CAA1111)</span>
+              </label>
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  placeholder="e.g. MH-12-DE-5678"
+                  value={form.registrationNumber}
+                  onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
+                  className="flex-1 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 uppercase focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                />
+                <button
+                  type="button"
+                  onClick={verifyRtoDetails}
+                  disabled={rtoLoading || !form.registrationNumber}
+                  className="rounded-lg border border-primary bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5 disabled:opacity-50 cursor-pointer transition-colors"
+                >
+                  {rtoLoading ? "Checking..." : "Verify RTO"}
+                </button>
+              </div>
+
+              {/* RTO Verification error feedback */}
+              {rtoError && (
+                <p className="text-xs text-red-600 mt-1 font-medium">
+                  ⚠️ {rtoError}
+                </p>
+              )}
+
+              {/* Verified Details Panel */}
+              {rtoData && (
+                <div className="mt-3 rounded-xl border border-green-200 bg-green-50/50 p-4 shadow-sm backdrop-blur-sm animate-fade-in text-neutral-900">
+                  <div className="flex items-center justify-between mb-2 pb-2 border-b border-green-100">
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center rounded-full bg-green-100 px-2 py-0.5 text-xs font-bold text-green-800 uppercase tracking-wide">
+                        ✓ RTO Verified
+                      </span>
+                      <span className="text-sm font-bold tracking-wide uppercase">
+                        {rtoData.registrationNumber}
+                      </span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={autoFillFromRto}
+                      className="rounded bg-green-600 px-2.5 py-1 text-xs font-bold text-white shadow hover:bg-green-700 cursor-pointer transition-all duration-200"
+                    >
+                      ⚡ Auto-Fill Form
+                    </button>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs">
+                    <div>
+                      <span className="block text-[0.65rem] text-green-700 uppercase font-semibold">Registered Owner</span>
+                      <span className="font-bold">{rtoData.ownerName}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[0.65rem] text-green-700 uppercase font-semibold">Make & Model</span>
+                      <span className="font-bold">{rtoData.brand} {rtoData.model} {rtoData.variant}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[0.65rem] text-green-700 uppercase font-semibold">Year</span>
+                      <span className="font-bold">{rtoData.year}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[0.65rem] text-green-700 uppercase font-semibold">Fuel / Transmission</span>
+                      <span className="font-bold capitalize">{rtoData.fuelType} / {rtoData.transmission}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[0.65rem] text-green-700 uppercase font-semibold">RC Status</span>
+                      <span className="font-bold">{rtoData.rcStatus}</span>
+                    </div>
+                    <div>
+                      <span className="block text-[0.65rem] text-green-700 uppercase font-semibold">Insurance Till</span>
+                      <span className="font-bold">{rtoData.insuranceValid}</span>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Checkbox for RC status */}
+            <div className="flex items-start gap-3 py-1">
+              <input
+                type="checkbox"
+                id="rcVerified"
+                checked={form.rcVerified}
+                onChange={(e) => setForm({ ...form, rcVerified: e.target.checked })}
+                className="mt-0.5 w-4 h-4 accent-primary cursor-pointer"
+              />
+              <label htmlFor="rcVerified" className="text-sm font-semibold text-neutral-700 cursor-pointer">
+                RC transfer is ready (RTO verified)
+              </label>
+            </div>
+
+            {/* Existing Inspection fields */}
+            <div className="flex items-center gap-4 py-1">
               <label className="text-sm font-semibold text-neutral-900">Car Inspected?</label>
               <div className={`px-2 py-1 rounded text-xs font-bold ${isInspected ? "bg-green-100 text-green-700" : "bg-neutral-100 text-neutral-500"}`}>
                 {isInspected ? "✓ Yes" : "No"}
               </div>
             </div>
-            <label className="block text-sm font-semibold text-neutral-900 mb-1.5">
-              Upload Inspection Report <span className="text-neutral-500 font-normal">(PDF/Image)</span>
-            </label>
-            <input
-              type="file" accept="image/*,.pdf"
-              onChange={(e) => setInspectionDoc(e.target.files[0])}
-              className="w-full text-sm text-neutral-500 file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-neutral-900 file:cursor-pointer"
-            />
-            <p className="text-xs text-neutral-500 mt-1.5">Uploading an inspection report will add the ✓ Inspected badge to this listing.</p>
+            
+            <div>
+              <label className="block text-sm font-semibold text-neutral-900 mb-1.5">
+                Upload Inspection Report <span className="text-neutral-500 font-normal">(PDF/Image)</span>
+              </label>
+              <input
+                type="file" accept="image/*,.pdf"
+                onChange={(e) => setInspectionDoc(e.target.files[0])}
+                className="w-full text-sm text-neutral-500 file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-neutral-900 file:cursor-pointer"
+              />
+              <p className="text-xs text-neutral-500 mt-1.5">Uploading an inspection report will add the ✓ Inspected badge to this listing.</p>
+            </div>
           </div>
 
           <button
