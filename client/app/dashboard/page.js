@@ -349,8 +349,10 @@ export default function DashboardPage() {
     { id: "profile", label: "Profile", icon: Award },
   ] : [];
 
+  // We use `flex flex-col lg:flex-row` so the layout flows vertically on mobile/tablet
+  // (mobile header then main content) and horizontally on desktop (sidebar then main content).
   return (
-    <div className="min-h-screen bg-neutral-50 font-sans flex antialiased">
+    <div className="min-h-screen bg-neutral-50 font-sans flex flex-col lg:flex-row antialiased">
 
       {/* ─── Sidebar (desktop) ─── */}
       {isDealer && (
@@ -420,7 +422,12 @@ export default function DashboardPage() {
       )}
 
       {/* ─── Mobile header ─── */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-40 bg-white/80 backdrop-blur-md border-b border-neutral-200 flex items-center justify-between px-4 py-3">
+      {/* 
+        WHY STICKY TOP-16: The global Navbar is sticky top-0 and exactly 64px (h-16) high.
+        By setting this to `sticky top-16 z-30`, we position it directly below the global Navbar
+        as it scrolls. Changing from `fixed top-0` avoids it being covered by the Navbar!
+      */}
+      <div className="lg:hidden sticky top-16 left-0 right-0 z-30 bg-white border-b border-neutral-200 flex items-center justify-between px-4 py-3 shadow-xs">
         <div className="flex items-center gap-3">
           <button
             onClick={() => setIsMobileMenuOpen(true)}
@@ -449,19 +456,23 @@ export default function DashboardPage() {
       <AnimatePresence>
         {isMobileMenuOpen && (
           <>
+            {/* 
+              We use `z-[60]` for the backdrop and `z-[70]` for the drawer menu.
+              This guarantees they open completely above the global Navbar (which is at z-50).
+            */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 0.4 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 z-50 bg-black lg:hidden"
+              className="fixed inset-0 z-[60] bg-black/40 lg:hidden"
             />
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed inset-y-0 left-0 z-50 w-64 bg-primary-50 p-5 shadow-xl flex flex-col justify-between lg:hidden"
+              className="fixed inset-y-0 left-0 z-[70] w-64 bg-primary-50 p-5 shadow-xl flex flex-col justify-between lg:hidden"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-primary-100">
@@ -548,7 +559,11 @@ export default function DashboardPage() {
       </AnimatePresence>
 
       {/* ─── Main content ─── */}
-      <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8 lg:pt-8 pt-16">
+      {/* 
+        We removed the hardcoded `pt-16` on mobile because the sticky header now naturally
+        takes up block height in the flex flow, preventing any overlap without adding artificial padding!
+      */}
+      <main className="flex-1 min-w-0 p-4 md:p-6 lg:p-8">
 
         {/* Page header */}
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-6">

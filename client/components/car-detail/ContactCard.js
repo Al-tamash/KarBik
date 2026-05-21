@@ -217,7 +217,7 @@ export default function ContactCard({
             type="button"
             onClick={handleWhatsAppClick}
             disabled={sendingInquiry}
-            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer bg-emerald-700 hover:bg-emerald-800"
+            className="w-full flex items-center justify-center gap-2 py-3.5 rounded-xl text-sm font-bold text-white transition-all shadow-md hover:shadow-lg disabled:opacity-50 cursor-pointer bg-primary-600 hover:bg-primary-700"
           >
             <MessageCircle className="h-4 w-4" />
             Connect via WhatsApp
@@ -234,7 +234,7 @@ export default function ContactCard({
         </div>
       ) : (
         <div className="text-center py-3">
-          <p className="text-sm font-bold text-[#005338]">
+          <p className="text-sm font-bold text-primary-600">
             ✓ Lead Registered
           </p>
           <p className="text-xs text-[#464555] mt-1">
@@ -245,7 +245,7 @@ export default function ContactCard({
 
       {/* Brand Trust Tagline */}
       <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#777587] font-medium">
-        <ShieldCheck className="h-3.5 w-3.5 text-emerald-700" />
+        <ShieldCheck className="h-3.5 w-3.5 text-primary-600" />
         Secured by AutoBazaar • No spam, no sharing
       </div>
     </div>

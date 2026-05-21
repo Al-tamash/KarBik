@@ -224,14 +224,16 @@ export default function CarCard({ car }) {
           >
             View Details
           </Link>
-          <a 
-            href={`tel:${car.dealerProfile?.phone || "9199999999"}`}
-            onClick={(e) => e.stopPropagation()}
-            className="text-neutral-500 hover:text-primary-600 p-2.5 rounded-full transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center"
-            title="Call Dealer"
-          >
-            <Phone className="h-4 w-4" />
-          </a>
+          {car.dealerProfile?.phone && (
+            <Link 
+              href={`/cars/${car._id}?action=call`}
+              onClick={(e) => e.stopPropagation()}
+              className="text-neutral-500 hover:text-primary-600 p-2.5 rounded-full transition-all bg-neutral-100 hover:bg-neutral-200 active:scale-95 flex items-center justify-center"
+              title="Call Dealer"
+            >
+              <Phone className="h-4 w-4" />
+            </Link>
+          )}
         </div>
       </div>
     </div>

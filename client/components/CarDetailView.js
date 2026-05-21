@@ -17,6 +17,7 @@
 
 import React, { useState, useEffect } from "react";
 import Link from "next/link";
+import { useSearchParams, useRouter } from "next/navigation";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -116,6 +117,8 @@ export default function CarDetailView({
   similarCars = [],
 }) {
   const { data: session } = authClient.useSession();
+  const searchParams = useSearchParams();
+  const router = useRouter();
 
   /* Image gallery */
   const [activeImage, setActiveImage] = useState(0);
@@ -180,6 +183,20 @@ export default function CarDetailView({
         .catch(() => {});
     }
   }, [isLoggedIn, car?._id]);
+
+  /* Trigger call action automatically if navigated via Call Button on Listing Page */
+  // WHAT: Listens for query parameter ?action=call on page load.
+  // WHY: Forces user authentication and registers a callback lead before
+  //      initiating call, completely eliminating lead leakage!
+  useEffect(() => {
+    const action = searchParams.get("action");
+    if (action === "call") {
+      handleRequestCallback();
+      // Clean up the URL query parameter so it doesn't trigger again on refresh
+      const newUrl = window.location.pathname;
+      window.history.replaceState({}, "", newUrl);
+    }
+  }, [searchParams]);
 
   const hasImages = car.images && car.images.length > 0;
 
@@ -509,6 +526,22 @@ export default function CarDetailView({
               isWishlisted={isWishlisted} 
             />
 
+            {/* ─── Mobile Pricing & Contact Card (Visible only on mobile devices) ─── */}
+            {/* WHAT: Renders the ContactCard directly under the image gallery on mobile screens. */}
+            {/* WHY: Buyers on mobile expect to see the price, brand details, and action buttons */}
+            {/*      immediately after inspecting images. Putting this here drastically increases conversion. */}
+            <div className="block lg:hidden">
+              <ContactCard
+                car={car}
+                dealerProfile={dealerProfile}
+                inquiryStatus={inquiryStatus}
+                inquiryMessage={inquiryMessage}
+                hasInquired={hasInquired}
+                sendingInquiry={sendingInquiry}
+                handleWhatsAppClick={handleWhatsAppClick}
+                handleRequestCallback={handleRequestCallback}
+              />
+            </div>
 
             {/* ── 2. Spec Bento Grid ────────────────────── */}
             <SpecGrid car={car} />
@@ -700,7 +733,7 @@ export default function CarDetailView({
           {/* ════════════════════════════════════════════
               RIGHT COLUMN — Sticky Pricing Card (4/12)
               ════════════════════════════════════════════ */}
-          <div className="lg:col-span-4">
+          <div className="hidden lg:block lg:col-span-4">
             <ContactCard
               car={car}
               dealerProfile={dealerProfile}
