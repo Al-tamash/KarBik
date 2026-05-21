@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { generateDescription, suggestPrice } from "../controllers/aiController.js";
+import { generateDescription, suggestPrice, autoPopulateSpecs } from "../controllers/aiController.js";
 import { protect, dealerOnly } from "../middleware/protect.js";
 
 /**
@@ -13,6 +13,9 @@ export default function aiRoutes(auth) {
 
   // POST /api/ai/price-estimate — suggests a market price
   router.post("/price-estimate", protect(auth), dealerOnly, suggestPrice);
+
+  // POST /api/ai/specs — auto-populates car technical specifications & features
+  router.post("/specs", protect(auth), dealerOnly, autoPopulateSpecs);
 
   return router;
 }

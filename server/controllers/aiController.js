@@ -121,3 +121,82 @@ export async function suggestPrice(req, res) {
     res.status(500).json({ message: "Failed to suggest price", error: error.message });
   }
 }
+
+/**
+ * autoPopulateSpecs — Generates dynamic car specs and categorized features
+ *
+ * What you just learned:
+ * - We enforce a highly-structured schema output on Gemini to match our database.
+ * - Categorizing features into comfort, safety, interior, and exterior makes rendering them very easy.
+ * - This completely replaces expensive database providers for car catalog specs.
+ */
+export async function autoPopulateSpecs(req, res) {
+  try {
+    const { brand, model, variant, year, fuelType, transmission } = req.body;
+
+    // Validate the minimum fields required for accurate specification retrieval
+    if (!brand || !model || !year) {
+      return res.status(400).json({ message: "Brand, model, and year are required to fetch specifications." });
+    }
+
+    const gemini = getGeminiModel();
+
+    // Construct prompt that forces the AI to output only a valid, un-decorated JSON response
+    const prompt = `
+      You are an expert automotive intelligence system in India. Find the exact technical specifications and features for this car.
+      
+      Car Details:
+      - Brand: ${brand}
+      - Model: ${model}
+      - Variant: ${variant || "Base"}
+      - Year: ${year}
+      - Fuel Type: ${fuelType || "Not specified"}
+      - Transmission: ${transmission || "Not specified"}
+      
+      Instructions:
+      1. Provide authentic Indian automotive specifications and standard features lists for this exact trim.
+      2. Return ONLY a valid JSON object. Do not wrap the JSON in markdown code blocks (\`\`\`json). Just the raw JSON.
+      3. The JSON must have exactly this structure:
+      {
+        "engineCC": 1197,
+        "power": "88.5 bhp",
+        "groundClearance": "163 mm",
+        "certifiedMileage": "22 kmpl",
+        "features": {
+          "comfort": ["Automatic Climate Control", "Rear AC Vents", "Cruise Control", "Keyless Entry"],
+          "safety": ["ABS", "EBD", "Dual Airbags", "Reverse Parking Sensors"],
+          "interior": ["Fabric Upholstery", "Digital Instrument Cluster", "Adjustable Steering"],
+          "exterior": ["LED DRLs", "Body Coloured Bumpers", "Alloy Wheels"]
+        }
+      }
+      
+      Do not include any placeholders, comments, or explanations outside the JSON object. Fill each field with realistic and accurate information based on the variant and year. If the exact value is unknown, use a standard industry estimate for this model.
+    `;
+
+    const result = await gemini.generateContent(prompt);
+    let text = result.response.text();
+
+    // Clean up potential markdown formatting the AI might still include despite instructions
+    text = text.replace(/```json/gi, "").replace(/```/g, "").trim();
+
+    try {
+      const parsedJSON = JSON.parse(text);
+      res.status(200).json(parsedJSON);
+    } catch (parseError) {
+      console.error("AI Specs Parse Error:", text);
+      throw new Error("AI returned invalid JSON format");
+    }
+  } catch (error) {
+    console.error("AI Specs Generation Error:", error);
+
+    // Check for 503 high demand error
+    if (error.status === 503) {
+      return res.status(503).json({ 
+        message: "AI specification service is busy. Please try again in a moment." 
+      });
+    }
+
+    res.status(500).json({ message: "Failed to generate AI specifications", error: error.message });
+  }
+}
+

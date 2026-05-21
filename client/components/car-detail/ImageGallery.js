@@ -205,17 +205,15 @@ export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isW
       {/* Thumbnail Strip positioned below the main image box */}
       {hasImages && car.images.length > 1 && (
         <div className="w-full">
-          <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1">
-            {car.images.map((img, i) => (
+          {/* We use a simple flex row for exactly 4 thumbnails instead of a scrolling overflow strip */}
+          {/* This matches Spinny's clean aesthetic and looks extremely intentional and professional */}
+          <div className="flex gap-3 pb-1">
+            {car.images.slice(0, 4).map((img, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => setActiveImage(i)}
-                /* 
-                  - We replaced the hardcoded brand purple 'border-[#3525cd]' with the Tailwind theme brand color 'border-primary-600'.
-                  - This ensures absolute consistency across the whole styling catalog.
-                */
-                className={`relative flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                className={`relative flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
                   i === activeImage
                     ? "border-primary-600 opacity-100"
                     : "border-transparent opacity-60 hover:opacity-90"
@@ -229,13 +227,13 @@ export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isW
                   sizes="96px"
                   className="object-cover"
                 />
-                {/* +N Photos overlay on last visible thumb */}
-                {i === Math.min(car.images.length - 1, 3) &&
-                  car.images.length > 4 && (
-                    <div className="absolute inset-0 bg-black/55 flex items-center justify-center text-white text-[11px] font-bold">
-                      +{car.images.length - 4} Photos
-                    </div>
-                  )}
+                {/* +N Photos overlay on the 4th thumbnail (index 3) when there are more than 4 images */}
+                {i === 3 && car.images.length > 4 && (
+                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white text-xs font-bold transition-all hover:bg-black/50">
+                    <span>+{car.images.length - 4}</span>
+                    <span className="text-[9px] uppercase tracking-wider font-medium">Photos</span>
+                  </div>
+                )}
               </button>
             ))}
           </div>

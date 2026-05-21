@@ -119,6 +119,32 @@ const carSchema = new mongoose.Schema(
       default: null,
     },
 
+    // Maximum engine power output (e.g., "118.36 bhp")
+    power: {
+      type: String,
+      default: "",
+    },
+
+    // Vehicle ground clearance height (e.g., "209 mm")
+    groundClearance: {
+      type: String,
+      default: "",
+    },
+
+    // ARAI/OEM certified fuel efficiency (e.g., "17.57 kmpl")
+    certifiedMileage: {
+      type: String,
+      default: "",
+    },
+
+    // Categorized lists of equipment & features
+    features: {
+      comfort: { type: [String], default: [] },
+      safety: { type: [String], default: [] },
+      interior: { type: [String], default: [] },
+      exterior: { type: [String], default: [] },
+    },
+
     accidentHistory: {
       type: Boolean,
       default: false,

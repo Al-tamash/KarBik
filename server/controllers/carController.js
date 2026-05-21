@@ -420,7 +420,8 @@ export async function createCar(req, res) {
       fuelType, transmission, bodyType, owners, mileage, 
       color, city, registrationNumber, insuranceValid, 
       rcVerified, accidentHistory, serviceHistory,
-      description 
+      description,
+      engineCC, power, groundClearance, certifiedMileage, features
     } = createCarSchema.parse(req.body);
 
     // Upload each image file to Cloudinary (for direct binary attachments)
@@ -472,6 +473,13 @@ export async function createCar(req, res) {
       description: description || "",
       images,
       dealer: req.user.id,
+      
+      // New technical specifications and equipment list (Phase 13)
+      engineCC: engineCC || null,
+      power: power || "",
+      groundClearance: groundClearance || "",
+      certifiedMileage: certifiedMileage || "",
+      features: features || { comfort: [], safety: [], interior: [], exterior: [] },
     });
 
     // 201 = "Created" — a new resource was successfully created

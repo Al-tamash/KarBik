@@ -49,6 +49,29 @@ export const createCarSchema = z.object({
   accidentHistory: z.union([z.boolean(), z.string()]).transform(val => val === true || val === "true"),
   serviceHistory: z.union([z.boolean(), z.string()]).transform(val => val === true || val === "true"),
   description: z.string().max(2000).optional().default(""),
+  
+  // New specification & features fields (Phase 13)
+  engineCC: z.coerce.number().nullable().optional().default(null),
+  power: z.string().optional().default(""),
+  groundClearance: z.string().optional().default(""),
+  certifiedMileage: z.string().optional().default(""),
+  
+  // Custom union handles both parsed objects and JSON string inputs from FormData
+  features: z.union([
+    z.string().transform(val => {
+      try {
+        return JSON.parse(val);
+      } catch (e) {
+        return { comfort: [], safety: [], interior: [], exterior: [] };
+      }
+    }),
+    z.object({
+      comfort: z.array(z.string()).optional().default([]),
+      safety: z.array(z.string()).optional().default([]),
+      interior: z.array(z.string()).optional().default([]),
+      exterior: z.array(z.string()).optional().default([]),
+    })
+  ]).optional().default({}),
 });
 
 // Schema for updating a car (Partial body)

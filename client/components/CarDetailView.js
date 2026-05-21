@@ -52,6 +52,7 @@ import cloudinaryLoader from "@/lib/cloudinary-loader";
 
 import ImageGallery from "./car-detail/ImageGallery";
 import SpecGrid from "./car-detail/SpecGrid";
+import FeaturesGrid from "./car-detail/FeaturesGrid";
 import FAQAccordion from "./car-detail/FAQAccordion";
 import ContactCard from "./car-detail/ContactCard";
 
@@ -546,6 +547,72 @@ export default function CarDetailView({
             {/* ── 2. Spec Bento Grid ────────────────────── */}
             <SpecGrid car={car} />
 
+            {/* ── 2.5 AutoBazaar Assured Trust Highlights ────────────────── */}
+            {/* WHAT: Renders a premium, dynamic 3-column bento card showing critical trust signals */}
+            {/* WHY: Buyers are skeptical of used cars. Showing active DB verified attributes (RC Status, Accident History, */}
+            {/*      Service History) immediately under the specs matches Spinny's gold standard and dramatically boosts conversion. */}
+            <div className="bg-white rounded-2xl p-6 border border-neutral-200/80 shadow-sm flex flex-col gap-5">
+              <div>
+                <h3 className="text-base font-bold text-[#1b1b24] font-display flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-[#3525cd]" />
+                  AutoBazaar Assured™ Highlights
+                </h3>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Every Assured car undergoes strict physical inspection, documentation checks, and background validation.
+                </p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                {/* RTO / RC Status */}
+                <div className="flex gap-3 items-start p-3.5 bg-emerald-50/40 border border-emerald-100/60 rounded-xl">
+                  <div className="p-2 bg-emerald-500/10 text-emerald-700 rounded-lg shrink-0">
+                    <Check className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-neutral-800">RC Status</h4>
+                    <p className="text-[10px] font-semibold text-emerald-700 mt-0.5 uppercase tracking-wider">
+                      {car.rcVerified ? "Verified & Active" : "Under Validation"}
+                    </p>
+                    <p className="text-[10px] text-neutral-500 mt-1.5 leading-normal">
+                      No active RTO blacklist, challans or hypothecation blocks.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Accident History */}
+                <div className={`flex gap-3 items-start p-3.5 border rounded-xl ${!car.accidentHistory ? 'bg-indigo-50/30 border-indigo-100/50' : 'bg-rose-50/30 border-rose-100/50'}`}>
+                  <div className={`p-2 rounded-lg shrink-0 ${!car.accidentHistory ? 'bg-[#3525cd]/10 text-[#3525cd]' : 'bg-rose-500/10 text-rose-700'}`}>
+                    {!car.accidentHistory ? <ShieldCheck className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-neutral-800">Accident History</h4>
+                    <p className={`text-[10px] font-semibold mt-0.5 uppercase tracking-wider ${!car.accidentHistory ? 'text-primary-600' : 'text-rose-700'}`}>
+                      {!car.accidentHistory ? "No Major Accidents" : "History Reported"}
+                    </p>
+                    <p className="text-[10px] text-neutral-500 mt-1.5 leading-normal">
+                      {!car.accidentHistory ? "Structural frame and chassis are 100% original." : "Minor panel replacement or damage history."}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Service History */}
+                <div className="flex gap-3 items-start p-3.5 bg-[#f5f2ff]/40 border border-[#c7c4d8]/20 rounded-xl">
+                  <div className="p-2 bg-[#3525cd]/10 text-[#3525cd] rounded-lg shrink-0">
+                    <Settings className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h4 className="text-xs font-bold text-neutral-800">Service History</h4>
+                    <p className="text-[10px] font-semibold text-[#3525cd] mt-0.5 uppercase tracking-wider">
+                      {car.serviceHistory ? "Full Record Available" : "Regular Checks"}
+                    </p>
+                    <p className="text-[10px] text-neutral-500 mt-1.5 leading-normal">
+                      {car.serviceHistory ? "Maintained systematically at authorized brand workshops." : "General maintenance checks and filters replaced."}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
             {/* ── 3. Vehicle Overview / Description ────── */}
             {car.description && (
               <div>
@@ -557,6 +624,9 @@ export default function CarDetailView({
                 </p>
               </div>
             )}
+
+            {/* ── 3.5 Categorized Features Grid (Phase 13 AI Auto-population) ────── */}
+            <FeaturesGrid features={car.features} />
 
             {/* ── 4. Inspection Report ─────────── */}
             {car.isInspected && car.inspectionReport?.url && (

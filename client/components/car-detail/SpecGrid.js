@@ -1,6 +1,6 @@
 import React from "react";
-import { Gauge, Fuel, Settings, MapPin, Calendar, Users, Paintbrush, Car } from "lucide-react";
 
+// toTitleCase converts strings like "PETROL" to "Petrol" for consistent, human-crafted aesthetics
 function toTitleCase(str) {
   if (str === null || str === undefined || str === "") return "";
   return String(str)
@@ -11,107 +11,113 @@ function toTitleCase(str) {
 }
 
 export default function SpecGrid({ car }) {
-  const specTiles = [
+  // Define standard key specs
+  const standardSpecs = [
     {
-      icon: <Gauge className="h-5 w-5" />,
-      // We change the label from "Mileage" to "KM Driven" to be perfectly accurate for buyers.
-      // In the database, the 'mileage' field actually tracks the odometer (how many kilometers the vehicle has run),
-      // rather than the fuel efficiency rating (e.g. km/l).
       label: "KM Driven",
       value: `${(car.mileage || car.kmsDriven || 0).toLocaleString("en-IN")}`,
       unit: "km",
     },
     {
-      icon: <Fuel className="h-5 w-5" />,
       label: "Fuel Type",
-      value: toTitleCase(car.fuelType),
+      value: toTitleCase(car.fuelType) || "N/A",
       unit: "",
     },
     {
-      icon: <Settings className="h-5 w-5" />,
       label: "Transmission",
-      value: toTitleCase(car.transmission),
+      value: toTitleCase(car.transmission) || "N/A",
       unit: "",
     },
     {
-      icon: <MapPin className="h-5 w-5" />,
       label: "Registration",
       value: car.registrationNumber?.split("-")?.[0]?.toUpperCase() || "N/A",
       unit: "",
     },
     {
-      icon: <Calendar className="h-5 w-5" />,
       label: "Make Year",
-      value: String(car.year),
+      value: car.year ? String(car.year) : "N/A",
       unit: "",
     },
     {
-      icon: <Users className="h-5 w-5" />,
       label: "Ownership",
-      value: toTitleCase(car.owners),
+      value: toTitleCase(car.owners) || "N/A",
       unit: "",
     },
     {
-      icon: <Paintbrush className="h-5 w-5" />,
       label: "Colour",
       value: toTitleCase(car.color) || "N/A",
       unit: "",
     },
     {
-      icon: <Car className="h-5 w-5" />,
       label: "Body Type",
-      value: toTitleCase(car.bodyType),
+      value: toTitleCase(car.bodyType) || "N/A",
       unit: "",
     },
   ];
 
+  // Define new technical specs populated by AI/RTO
+  const techSpecs = [
+    {
+      label: "Engine Displacement",
+      value: car.engineCC ? String(car.engineCC) : "N/A",
+      unit: car.engineCC ? "cc" : "",
+    },
+    {
+      label: "Max Power",
+      value: car.power || "N/A",
+      unit: "",
+    },
+    {
+      label: "Ground Clearance",
+      value: car.groundClearance || "N/A",
+      unit: "",
+    },
+    {
+      label: "Certified Mileage",
+      value: car.certifiedMileage || "N/A",
+      unit: "",
+    },
+  ];
+
+  // Check if advanced technical specs exist to determine our grid rendering
+  const hasTechSpecs = car.engineCC || car.power || car.groundClearance || car.certifiedMileage;
+  
+  // Combine lists cleanly for one single card grid
+  const allSpecs = hasTechSpecs ? [...standardSpecs, ...techSpecs] : standardSpecs;
+
   return (
-    <div>
-      <h2 className="text-lg font-bold text-[#1b1b24] mb-5 font-display">
-        Key Specifications
-      </h2>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {specTiles.slice(0, 4).map((s) => (
-          <div
-            key={s.label}
-            // Use solid bg-white instead of bg-white/80 and backdrop-blur-sm for clean contrast and professional feel
-            className="flex flex-col gap-2 p-4 rounded-xl border border-neutral-200/80 bg-white shadow-sm hover:shadow-md transition-all duration-200"
-          >
-            <div className="p-2 bg-[#3525cd]/10 rounded-lg text-[#3525cd] w-fit">
-              {s.icon}
-            </div>
-            <span className="text-[10px] font-semibold text-[#777587] uppercase tracking-wider">
-              {s.label}
-            </span>
-            <span className="text-base font-bold text-[#1b1b24]">
-              {s.value}
-              {s.unit && (
-                <span className="text-sm font-medium text-[#777587] ml-1">
-                  {s.unit}
-                </span>
-              )}
-            </span>
-          </div>
-        ))}
+    <div className="bg-white rounded-2xl border border-neutral-200/80 p-6 shadow-sm">
+      {/* Unified Card Header using our official website typography and primary brand indicator line */}
+      <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
+        {/* Subtle left-side border indicator in our website's primary brand color (#3525cd) */}
+        <div className="w-1 h-5 bg-[#3525cd] rounded-full shrink-0" />
+        <h2 className="text-lg font-bold text-[#1b1b24] font-display">
+          Key Specifications & Technical Details
+        </h2>
       </div>
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
-        {specTiles.slice(4, 8).map((s) => (
-          <div
-            key={s.label}
-            // Use solid bg-white and custom border-neutral-200/80 to ensure excellent readability and modern minimalist card look
-            className="flex flex-col gap-2 p-4 rounded-xl border border-neutral-200/80 bg-white shadow-sm hover:shadow-md transition-all duration-200"
+
+      {/* 
+        A clean typographic spec sheet grid. 
+        It renders in a 2-column grid on mobile and dynamically scales to 4 columns on larger screens.
+        We have removed all individual cell icons to eliminate the visual clutter and maintain a 
+        100% professional, authentic, brochure-style editorial look.
+      */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-8 gap-y-6">
+        {allSpecs.map((spec) => (
+          <div 
+            key={spec.label} 
+            className="flex flex-col justify-between py-1 border-b border-neutral-100/50 pb-2 md:border-b-0 md:pb-0"
           >
-            <div className="p-2 bg-[#3525cd]/10 rounded-lg text-[#3525cd] w-fit">
-              {s.icon}
-            </div>
-            <span className="text-[10px] font-semibold text-[#777587] uppercase tracking-wider">
-              {s.label}
+            {/* Small uppercase label for premium structure and clean scannability */}
+            <span className="text-[10px] font-bold text-neutral-400 uppercase tracking-wider">
+              {spec.label}
             </span>
-            <span className="text-base font-bold text-[#1b1b24]">
-              {s.value}
-              {s.unit && (
-                <span className="text-sm font-medium text-[#777587] ml-1">
-                  {s.unit}
+            {/* Dark, crisp values using our design system's text properties */}
+            <span className="text-base font-bold text-[#1b1b24] mt-1">
+              {spec.value}
+              {spec.unit && (
+                <span className="text-xs font-semibold text-neutral-500 ml-1">
+                  {spec.unit}
                 </span>
               )}
             </span>
@@ -121,3 +127,10 @@ export default function SpecGrid({ car }) {
     </div>
   );
 }
+
+/*
+What you just learned:
+- brochure-style typography layouts: removing icons and using clean uppercase labels with heavy value fonts replicates the premium editorial design of high-end car catalogs.
+- Unified Card Containers: consolidating 12 separate floating cards into a single cohesive panel reduces cognitive load for buyers and improves layout balance.
+- Pure brand indicators: using a single vertical line colored with the primary brand theme (`bg-[#3525cd]`) links the component directly to the site identity without cluttering cells with unaligned colors.
+*/

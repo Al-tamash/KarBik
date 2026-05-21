@@ -93,8 +93,8 @@ export default function ContactCard({
       {/* Title & Key details */}
       <div>
         <div className="flex flex-wrap items-center gap-1.5 mb-2">
-          {car.isInspected && (
-            <span className="inline-flex items-center gap-1 bg-[#006e4b]/10 text-[#005338] px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-[#006e4b]/20">
+          {car.rcVerified && (
+            <span className="inline-flex items-center gap-1 bg-emerald-50 text-emerald-700 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider border border-emerald-200">
               <Check className="h-3 w-3" />
               RTO Verified
             </span>

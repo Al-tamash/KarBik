@@ -103,6 +103,9 @@ export default function AddCarWizard() {
     owners: "", city: "", price: "", registrationNumber: "",
     insuranceValid: "", rcVerified: false, accidentHistory: false,
     serviceHistory: false, description: "",
+    // Pre-populated mechanical details & equipment categories (Phase 13)
+    engineCC: "", power: "", groundClearance: "", certifiedMileage: "",
+    features: { comfort: [], safety: [], interior: [], exterior: [] }
   });
   const [uploadedImages, setUploadedImages] = useState([]);
   const [videoUrl, setVideoUrl] = useState("");
@@ -110,7 +113,7 @@ export default function AddCarWizard() {
   const [uploadingImages, setUploadingImages] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [stepErrors, setStepErrors] = useState({});
-  const [aiLoading, setAiLoading] = useState({ description: false, price: false });
+  const [aiLoading, setAiLoading] = useState({ description: false, price: false, specs: false });
   const [suggestedPriceRange, setSuggestedPriceRange] = useState(null);
   const [rtoData, setRtoData] = useState(null);
   const [rtoLoading, setRtoLoading] = useState(false);
@@ -276,6 +279,48 @@ export default function AddCarWizard() {
     setAiLoading(prev => ({ ...prev, price: false }));
   }
 
+  // Calls backend Google Gemini API to dynamically retrieve specifications & features
+  async function generateAISpecs() {
+    if (!formData.brand || !formData.year || !formData.model) {
+      addToast("Please enter Brand, Model, and Year first", "error");
+      return;
+    }
+    setAiLoading(prev => ({ ...prev, specs: true }));
+    try {
+      const res = await fetch(`${API}/api/ai/specs`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({
+          brand: formData.brand,
+          model: formData.model,
+          variant: formData.variant,
+          year: formData.year,
+          fuelType: formData.fuelType,
+          transmission: formData.transmission
+        }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setFormData(prev => ({
+          ...prev,
+          engineCC: data.engineCC || "",
+          power: data.power || "",
+          groundClearance: data.groundClearance || "",
+          certifiedMileage: data.certifiedMileage || "",
+          features: data.features || { comfort: [], safety: [], interior: [], exterior: [] }
+        }));
+        addToast("Specifications & features auto-populated by AI!", "success");
+      } else {
+        const data = await res.json();
+        addToast(data.message || "Failed to auto-populate specifications", "error");
+      }
+    } catch (err) {
+      addToast("Network error while reaching AI specifications service", "error");
+    }
+    setAiLoading(prev => ({ ...prev, specs: false }));
+  }
+
   async function verifyRtoDetails() {
     if (!formData.registrationNumber) {
       addToast("Please enter a registration number first", "error");
@@ -331,7 +376,10 @@ export default function AddCarWizard() {
     try {
       const submitData = new FormData();
       Object.keys(formData).forEach(key => {
-        if (key === "rcVerified" || key === "accidentHistory" || key === "serviceHistory") {
+        // Correctly serialize the nested features object as a JSON string
+        if (key === "features") {
+          submitData.append(key, JSON.stringify(formData[key]));
+        } else if (key === "rcVerified" || key === "accidentHistory" || key === "serviceHistory") {
           submitData.append(key, formData[key] ? "true" : "false");
         } else {
           submitData.append(key, formData[key]);
@@ -485,6 +533,7 @@ export default function AddCarWizard() {
                 onSuggestPrice={suggestAIPrice}
                 onVerifyRto={verifyRtoDetails}
                 onAutoFillRto={autoFillFromRto}
+                onGenerateSpecs={generateAISpecs}
                 errors={stepErrors[3] || {}}
               />
             </motion.div>
@@ -878,9 +927,101 @@ function Step2Media({ uploadedImages, isDragging, setIsDragging, uploadingImages
   );
 }
 
-function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, rtoData, rtoLoading, rtoError, onGenerateDescription, onSuggestPrice, onVerifyRto, onAutoFillRto, errors }) {
+function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, rtoData, rtoLoading, rtoError, onGenerateDescription, onSuggestPrice, onVerifyRto, onAutoFillRto, onGenerateSpecs, errors }) {
   return (
     <div className="space-y-6">
+      {/* Dynamic AI-Powered Technical Specifications & Features Auto-Population */}
+      <div className="card p-6 border-dashed border-2 border-primary-200 bg-primary-50/10">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div>
+            <h2 className="text-lg font-bold text-neutral-900 flex items-center gap-2 font-display">
+              <Sparkles className="w-5 h-5 text-primary-600 animate-pulse shrink-0" />
+              AI Technical Specifications & Features
+            </h2>
+            <p className="text-xs text-neutral-500 mt-1">
+              Google Gemini automatically finds Engine CC, Max Power, Ground Clearance, ARAI mileage, and standard comfort/safety equipment for this exact variant trim.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onGenerateSpecs}
+            disabled={aiLoading.specs || !formData.brand || !formData.model || !formData.year}
+            className="btn-md btn-primary flex items-center gap-2 shadow-sm hover:shadow-md transition-all duration-200 shrink-0"
+          >
+            {aiLoading.specs ? (
+              <>
+                <div className="h-4 w-4 rounded-full border-2 border-white border-t-transparent animate-spin" />
+                Populating...
+              </>
+            ) : (
+              <>
+                <Sparkles className="w-4 h-4" />
+                Auto-Populate Specs
+              </>
+            )}
+          </button>
+        </div>
+
+        {/* Display populated specs review block */}
+        {(formData.engineCC || formData.power || formData.groundClearance || formData.certifiedMileage) && (
+          <div className="mt-4 rounded-xl border border-neutral-200 bg-white p-4">
+            <h3 className="text-xs font-bold text-neutral-400 uppercase tracking-wider mb-3">AI Pre-populated Specs</h3>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+              <div>
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase">Engine Displacement</label>
+                <div className="relative mt-1">
+                  <input
+                    type="number"
+                    className="input py-1.5 px-3 text-sm pr-9"
+                    value={formData.engineCC || ""}
+                    onChange={e => setFormData({ ...formData, engineCC: e.target.value })}
+                  />
+                  <span className="absolute right-3 top-2 text-xs text-neutral-400">cc</span>
+                </div>
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase">Engine Max Power</label>
+                <input
+                  type="text"
+                  className="input py-1.5 px-3 text-sm mt-1"
+                  placeholder="e.g. 118 bhp"
+                  value={formData.power || ""}
+                  onChange={e => setFormData({ ...formData, power: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase">Ground Clearance</label>
+                <input
+                  type="text"
+                  className="input py-1.5 px-3 text-sm mt-1"
+                  placeholder="e.g. 209 mm"
+                  value={formData.groundClearance || ""}
+                  onChange={e => setFormData({ ...formData, groundClearance: e.target.value })}
+                />
+              </div>
+              <div>
+                <label className="text-[10px] font-semibold text-neutral-500 uppercase">ARAI Fuel Mileage</label>
+                <input
+                  type="text"
+                  className="input py-1.5 px-3 text-sm mt-1"
+                  placeholder="e.g. 17.5 kmpl"
+                  value={formData.certifiedMileage || ""}
+                  onChange={e => setFormData({ ...formData, certifiedMileage: e.target.value })}
+                />
+              </div>
+            </div>
+            
+            {/* Populated lists counts summary */}
+            <div className="mt-4 pt-3 border-t border-neutral-100 flex flex-wrap gap-2">
+              <span className="badge badge-primary">🛋️ Comfort ({formData.features?.comfort?.length || 0})</span>
+              <span className="badge badge-success">🛡️ Safety ({formData.features?.safety?.length || 0})</span>
+              <span className="badge badge-warning">🚗 Interior ({formData.features?.interior?.length || 0})</span>
+              <span className="badge badge-neutral">✨ Exterior ({formData.features?.exterior?.length || 0})</span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Pricing & Specs */}
       <div className="card p-6">
         <h2 className="text-lg font-bold text-neutral-900 mb-6">Pricing & Specifications</h2>
@@ -1155,6 +1296,16 @@ function Step4Review({ formData, uploadedImages, videoUrl, onGoToStep, onSubmit,
         { label: "Transmission", value: formData.transmission },
         { label: "Owners", value: formData.owners },
         { label: "Insurance", value: formData.insuranceValid || "—" },
+        { label: "Engine CC", value: formData.engineCC ? `${formData.engineCC} cc` : "—" },
+        { label: "Max Power", value: formData.power || "—" },
+        { label: "Ground Clearance", value: formData.groundClearance || "—" },
+        { label: "Certified Mileage", value: formData.certifiedMileage || "—" },
+        { 
+          label: "Populated Features", 
+          value: formData.features 
+            ? `${(formData.features.comfort?.length || 0) + (formData.features.safety?.length || 0) + (formData.features.interior?.length || 0) + (formData.features.exterior?.length || 0)} equipment items` 
+            : "0 features" 
+        },
       ],
     },
   ];
