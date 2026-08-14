@@ -54,7 +54,8 @@ export default function ProfileTab({
         {/* Trust & Verification */}
         <div className="card p-6">
           <h2 className="text-base font-bold text-neutral-900 mb-1 flex items-center gap-2">
-            <Award className="w-5 h-5 text-primary-500" />
+            {/* Unified icon color text-primary-600 to align with standard design system */}
+            <Award className="w-5 h-5 text-primary-600" />
             Trust & Verification
           </h2>
           <p className="text-sm text-neutral-500 mb-6">Upload dealer credentials to receive a verified badge.</p>
@@ -110,7 +111,8 @@ export default function ProfileTab({
         {/* Micro-website */}
         <div className="card p-6">
           <h2 className="text-base font-bold text-neutral-900 mb-1 flex items-center gap-2">
-            <Globe className="w-5 h-5 text-primary-500" />
+            {/* Unified icon color text-primary-600 to align with standard design system */}
+            <Globe className="w-5 h-5 text-primary-600" />
             Branded micro-website
           </h2>
           <p className="text-sm text-neutral-500 mb-6">A custom landing page to share with buyers.</p>

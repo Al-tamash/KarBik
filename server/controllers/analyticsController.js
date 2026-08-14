@@ -11,19 +11,26 @@ export async function getDealerAnalytics(req, res) {
   try {
     const dealerId = new mongoose.Types.ObjectId(req.user.id);
 
-    // 1. Get all cars owned by the dealer
-    const cars = await Car.find({ dealer: dealerId }).lean();
-    
-    // 2. Count Total Active Listings
-    const totalListings = cars.length;
+    // High-performance single-pass aggregation query to count listings, sum total views, and gather ID arrays
+    // This executes on the MongoDB server directly, completely bypassing heavy document payload transfers
+    const statsResult = await Car.aggregate([
+      { $match: { dealer: dealerId } },
+      {
+        $group: {
+          _id: null,
+          totalListings: { $sum: 1 },
+          totalViews: { $sum: { $ifNull: ["$views", 0] } },
+          carIds: { $push: "$_id" }
+        }
+      }
+    ]);
 
-    // 3. Sum up all views across these cars
-    const totalViews = cars.reduce((sum, car) => sum + (car.views || 0), 0);
+    const overview = statsResult[0] || { totalListings: 0, totalViews: 0, carIds: [] };
+    const totalListings = overview.totalListings;
+    const totalViews = overview.totalViews;
 
-    // 4. Count total inquiries sent to these cars
-    // Get array of car IDs
-    const carIds = cars.map(car => car._id);
-    const totalInquiries = await Inquiry.countDocuments({ car: { $in: carIds } });
+    // Count total inquiries sent to these cars using the gathered aggregated car IDs array
+    const totalInquiries = await Inquiry.countDocuments({ car: { $in: overview.carIds } });
 
     // 5. Count active boosts
     const activeBoosts = await Boost.countDocuments({

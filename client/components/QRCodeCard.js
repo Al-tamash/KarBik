@@ -20,6 +20,7 @@ import { useState, useEffect } from "react";
 import QRCode from "qrcode";
 // Import optimized next/image component
 import Image from "next/image";
+import { Smartphone, Download } from "lucide-react";
 
 export default function QRCodeCard({ slug }) {
   const [qrDataUrl, setQrDataUrl] = useState("");
@@ -76,8 +77,8 @@ export default function QRCodeCard({ slug }) {
 
   return (
     <div className="rounded-2xl border border-neutral-200 bg-white p-6 shadow-sm">
-      <h3 className="text-sm font-bold text-neutral-900 mb-1">
-        📱 Your Showroom QR Code
+      <h3 className="text-sm font-bold text-neutral-900 mb-1 flex items-center gap-2">
+        <Smartphone className="h-4 w-4 text-primary-600" /> Your Showroom QR Code
       </h3>
       <p className="text-xs text-neutral-500 mb-4">
         Print this QR code and display it at your showroom. When customers scan
@@ -111,14 +112,14 @@ export default function QRCodeCard({ slug }) {
           {/* Download button */}
           <button
             onClick={handleDownload}
-            className="mt-4 rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-neutral-900 hover:opacity-90 transition-opacity cursor-pointer"
+            className="mt-4 rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 hover:shadow-md transition-all cursor-pointer flex items-center gap-1.5"
           >
-            ⬇ Download QR Code
+            <Download className="h-4 w-4" /> Download QR Code
           </button>
         </div>
       ) : (
         <div className="flex items-center justify-center py-8">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+          <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
           <p className="text-sm text-neutral-500 ml-2">Generating QR...</p>
         </div>
       )}

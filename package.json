@@ -1,0 +1,10 @@
+{
+  "name": "autobazaar",
+  "private": true,
+  "type": "module",
+  "workspaces": [
+    "client",
+    "server",
+    "shared"
+  ]
+}

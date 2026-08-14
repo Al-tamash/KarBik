@@ -6,6 +6,8 @@ import helmet from "helmet";
 import { rateLimit } from "express-rate-limit";
 import { toNodeHandler } from "better-auth/node";
 import { ZodError } from "zod";
+import mongoose from "mongoose";
+import ApiError from "./utils/ApiError.js";
 import { connectDB, getDB } from "./config/db.js";
 import { createAuth } from "./lib/auth.js";
 import carRoutes from "./routes/cars.js";
@@ -67,7 +69,7 @@ const globalLimiter = rateLimit({
   limit: 100, // Limit each IP to 100 requests per window
   standardHeaders: "draft-6", // Use modern RateLimit headers format
   legacyHeaders: false, // Disable older X-RateLimit-* headers
-  skip: (req) => process.env.NODE_ENV !== "production" && req.headers["x-test-bypass"] === "true",
+  skip: (req) => process.env.NODE_ENV !== "production" || req.headers["x-test-bypass"] === "true",
   message: {
     message: "Too many requests from this IP, please try again after 15 minutes",
   },
@@ -80,7 +82,7 @@ const sensitiveLimiter = rateLimit({
   limit: 15, // Max 15 attempts
   standardHeaders: "draft-6",
   legacyHeaders: false,
-  skip: (req) => process.env.NODE_ENV !== "production" && req.headers["x-test-bypass"] === "true",
+  skip: (req) => process.env.NODE_ENV !== "production" || req.headers["x-test-bypass"] === "true",
   message: {
     message: "Too many requests. Please try again after 15 minutes to secure your account and resources",
   },
@@ -143,13 +145,21 @@ async function start() {
     // Step 14: Mount Database-Backed Wishlist routes
     app.use("/api/wishlist", wishlistRoutes(auth));
 
-    // Health check endpoint to verify the server is running
+    // Health check endpoint to verify the server and database are running
     app.get("/api/health", (_req, res) => {
-      res.json({ status: "ok", timestamp: new Date().toISOString() });
+      // 1 means connected. Checking this dynamically guards against silent DB failures.
+      const dbConnected = mongoose.connection.readyState === 1;
+
+      // Return 503 Service Unavailable if database is down, prompting orchestrators to restart the container
+      res.status(dbConnected ? 200 : 503).json({
+        status: dbConnected ? "ok" : "degraded",
+        database: dbConnected ? "connected" : "disconnected",
+        timestamp: new Date().toISOString()
+      });
     });
 
     // --- Global Error Handler ---
-    // This catches any errors thrown in routes (like Zod validation errors)
+    // This catches any errors thrown in routes (like Zod validation errors or ApiError)
     // and returns a clean JSON response instead of a crash.
     app.use((err, req, res, next) => {
       // If it's a Zod validation error, return 400 Bad Request
@@ -160,6 +170,14 @@ async function start() {
             path: e.path.join("."),
             message: e.message,
           })),
+        });
+      }
+
+      // If it is a custom ApiError instance, extract its custom status code and message
+      if (err instanceof ApiError) {
+        return res.status(err.statusCode).json({
+          message: err.message,
+          errors: err.errors.length > 0 ? err.errors : undefined,
         });
       }
 

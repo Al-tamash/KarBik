@@ -19,7 +19,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
-import { SlidersHorizontal, Calendar, Gauge, Fuel, Settings, Phone, ShieldCheck, Award, Car as CarIcon, MapPin } from "lucide-react";
+import { SlidersHorizontal, Calendar, Gauge, Fuel, Settings, Phone, ShieldCheck, Award, Car as CarIcon, MapPin, Heart } from "lucide-react";
 import cloudinaryLoader from "@/lib/cloudinary-loader";
 
 /**
@@ -63,12 +63,19 @@ function getDisplayTitle(car) {
 export default function CarCard({ car }) {
   const hasImage = car.images && car.images.length > 0;
   const [isComparing, setIsComparing] = useState(false);
+  const [isSaved, setIsSaved] = useState(false);
 
   // Check localStorage on mount to see if this car is already in comparison
   useEffect(() => {
     const selected = JSON.parse(localStorage.getItem("compareCars") || "[]");
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setIsComparing(selected.includes(car._id));
+  }, [car._id]);
+
+  // Check localStorage on mount to see if this car is saved
+  useEffect(() => {
+    const saved = JSON.parse(localStorage.getItem("savedCars") || "[]");
+    setIsSaved(saved.includes(car._id));
   }, [car._id]);
 
   // Toggle car in/out of comparison list
@@ -94,6 +101,24 @@ export default function CarCard({ car }) {
     window.dispatchEvent(new Event("compareChanged"));
   };
 
+  // Toggle car in/out of saved list
+  const toggleSave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+
+    let saved = JSON.parse(localStorage.getItem("savedCars") || "[]");
+    
+    if (isSaved) {
+      saved = saved.filter(id => id !== car._id);
+      setIsSaved(false);
+    } else {
+      saved.push(car._id);
+      setIsSaved(true);
+    }
+
+    localStorage.setItem("savedCars", JSON.stringify(saved));
+  };
+
   const emi = calculateEMI(car.price);
   const location = car.location || car.city || "India";
   const title = getDisplayTitle(car);
@@ -101,6 +126,19 @@ export default function CarCard({ car }) {
 
   return (
     <div className="group relative bg-white rounded-2xl overflow-hidden shadow-card border border-neutral-200/50 hover:border-primary-200/80 transition-all duration-300 translate-y-0 hover:-translate-y-1">
+      {/* Wishlist Heart Toggle */}
+      <button 
+        onClick={toggleSave}
+        className={`absolute top-3 left-3 z-20 h-8 w-8 flex items-center justify-center rounded-full transition-all ${
+          isSaved 
+            ? "bg-rose-50 text-rose-600 shadow-xs scale-105" 
+            : "bg-neutral-50/90 text-neutral-600 hover:bg-rose-50 hover:text-rose-600"
+        }`}
+        title={isSaved ? "Remove from wishlist" : "Save to wishlist"}
+      >
+        <Heart className={`h-3.5 w-3.5 transition-all ${isSaved ? "fill-rose-600" : ""}`} />
+      </button>
+
       {/* Compare Toggle (Completely outside main link) */}
       {/* WHAT: Flat, borderless comparison toggle circle button. */}
       {/* WHY: Removes shadows and border structures to avoid triggering nested-card visual detection, keeping it clean and minimal. */}

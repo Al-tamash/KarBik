@@ -16,7 +16,8 @@ import mongoose from "mongoose";
 import Car from "../models/Car.js";
 import Boost from "../models/Boost.js";
 import cloudinary from "../config/cloudinary.js";
-import { searchCarsSchema, createCarSchema, updateCarSchema } from "../utils/validation.js";
+// Load Zod validation contracts dynamically from our shared workspace package
+import { searchCarsSchema, createCarSchema, updateCarSchema } from "@autobazaar/shared";
 import { fetchVehicleDetails, isValidRegistrationNumber } from "../utils/vahanClient.js";
 
 /**
@@ -224,13 +225,10 @@ export async function getAllCars(req, res) {
     }
 
     if (search) {
-      const escapedSearch = escapeRegex(search);
+      // Utilize MongoDB's high-speed Full-Text Search index (defined in Car.js)
+      // This changes search operations from O(N) collection scans to O(log N) index lookups
       andFilters.push({
-        $or: [
-          { title: { $regex: escapedSearch, $options: "i" } },
-          { brand: { $regex: escapedSearch, $options: "i" } },
-          { model: { $regex: escapedSearch, $options: "i" } },
-        ],
+        $text: { $search: search }
       });
     }
 

@@ -252,14 +252,16 @@ export default function AnalyticsTab({
                     initial={{ opacity: 0, y: 6 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: 6 }}
-                    className="absolute bg-neutral-900 text-white px-3 py-1.5 rounded-xl text-body-xs font-bold shadow-lg"
+                    className="absolute bg-neutral-900 text-white px-3 py-1.5 rounded-xl text-body-xs font-bold shadow-lg flex items-center gap-1"
                     style={{
                       left: `${40 + hoveredBarIndex * (520 / (weeklyViews.length - 1)) + 12}px`,
                       top: `${140 - (weeklyViews[hoveredBarIndex].views / maxViewsVal) * 150}px`,
                       transform: "translateX(-50%)",
                     }}
                   >
-                    📈 {weeklyViews[hoveredBarIndex].views} views
+                    {/* We use the clean Lucide TrendingUp icon instead of a raw 📈 emoji to match premium UX standards */}
+                    <TrendingUp className="w-3.5 h-3.5 text-primary-400 shrink-0" />
+                    <span>{weeklyViews[hoveredBarIndex].views} views</span>
                   </motion.div>
                 )}
               </AnimatePresence>
@@ -332,8 +334,8 @@ export default function AnalyticsTab({
         </div>
 
         {cars.length === 0 ? (
-          <div className="card p-16 text-center text-neutral-400 font-semibold text-body-sm bg-white/60 backdrop-blur-md">
-            🚗 Add classified listings to activate dynamic metrics tables.
+          <div className="card p-16 text-center text-neutral-400 font-semibold text-body-sm bg-white/60 backdrop-blur-md flex items-center justify-center gap-2">
+            <Car className="h-5 w-5 text-neutral-400" /> Add classified listings to activate dynamic metrics tables.
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4">
@@ -383,8 +385,8 @@ export default function AnalyticsTab({
                           {car.title}
                         </Link>
                         {isBoosted && (
-                          <span className="inline-flex items-center gap-0.5 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-black uppercase border border-amber-200">
-                            ✨ Boosted
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 text-[9px] font-black uppercase border border-amber-200">
+                            <Sparkles className="h-3 w-3 text-amber-500 animate-pulse" /> Boosted
                           </span>
                         )}
                       </div>

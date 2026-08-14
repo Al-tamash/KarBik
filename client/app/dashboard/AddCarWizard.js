@@ -9,6 +9,7 @@ import {
   ChevronRight, ChevronLeft, ImageOff, Video, Link2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { createCarSchema } from "@autobazaar/shared";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -129,12 +130,25 @@ export default function AddCarWizard() {
   }, [formData.brand, formData.model, formData.year, formData.variant]);
 
   const validateStep1 = useCallback(() => {
-    const errors = {};
-    REQUIRED_STEP_1.forEach(field => {
-      if (!formData[field]) errors[field] = "Required";
+    const step1Schema = createCarSchema.pick({
+      brand: true,
+      model: true,
+      bodyType: true,
+      year: true,
+      color: true,
+      city: true
     });
-    setStepErrors(prev => ({ ...prev, 1: errors }));
-    return Object.keys(errors).length === 0;
+    const result = step1Schema.safeParse(formData);
+    if (!result.success) {
+      const errors = {};
+      result.error.issues.forEach(issue => {
+        errors[issue.path[0]] = issue.message;
+      });
+      setStepErrors(prev => ({ ...prev, 1: errors }));
+      return false;
+    }
+    setStepErrors(prev => ({ ...prev, 1: {} }));
+    return true;
   }, [formData]);
 
   const validateStep2 = useCallback(() => {
@@ -145,12 +159,24 @@ export default function AddCarWizard() {
   }, [uploadedImages]);
 
   const validateStep3 = useCallback(() => {
-    const errors = {};
-    REQUIRED_STEP_3.forEach(field => {
-      if (!formData[field]) errors[field] = "Required";
+    const step3Schema = createCarSchema.pick({
+      price: true,
+      mileage: true,
+      fuelType: true,
+      transmission: true,
+      owners: true
     });
-    setStepErrors(prev => ({ ...prev, 3: errors }));
-    return Object.keys(errors).length === 0;
+    const result = step3Schema.safeParse(formData);
+    if (!result.success) {
+      const errors = {};
+      result.error.issues.forEach(issue => {
+        errors[issue.path[0]] = issue.message;
+      });
+      setStepErrors(prev => ({ ...prev, 3: errors }));
+      return false;
+    }
+    setStepErrors(prev => ({ ...prev, 3: {} }));
+    return true;
   }, [formData]);
 
   const handleNext = () => {
@@ -372,6 +398,24 @@ export default function AddCarWizard() {
   }
 
   async function handleSubmit() {
+    const result = createCarSchema.safeParse(formData);
+    if (!result.success) {
+      const step1Errors = {};
+      const step3Errors = {};
+      result.error.issues.forEach(issue => {
+        const field = issue.path[0];
+        const msg = issue.message;
+        if (REQUIRED_STEP_1.includes(field)) {
+          step1Errors[field] = msg;
+        } else if (REQUIRED_STEP_3.includes(field)) {
+          step3Errors[field] = msg;
+        }
+      });
+      setStepErrors(prev => ({ ...prev, 1: step1Errors, 3: step3Errors }));
+      addToast("Please correct the validation errors on the form.", "error");
+      return;
+    }
+
     setSubmitting(true);
     try {
       const submitData = new FormData();
@@ -413,7 +457,8 @@ export default function AddCarWizard() {
   if (isPending || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="h-2.5 w-2.5 rounded-full bg-primary-500 animate-pulse" />
+        {/* Unified spinner loader to core bg-primary-600 to prevent visual jumpiness */}
+        <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
       </div>
     );
   }
@@ -1013,10 +1058,10 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
             
             {/* Populated lists counts summary */}
             <div className="mt-4 pt-3 border-t border-neutral-100 flex flex-wrap gap-2">
-              <span className="badge badge-primary">🛋️ Comfort ({formData.features?.comfort?.length || 0})</span>
-              <span className="badge badge-success">🛡️ Safety ({formData.features?.safety?.length || 0})</span>
-              <span className="badge badge-warning">🚗 Interior ({formData.features?.interior?.length || 0})</span>
-              <span className="badge badge-neutral">✨ Exterior ({formData.features?.exterior?.length || 0})</span>
+              <span className="badge badge-primary flex items-center gap-1"><Sparkles className="h-3 w-3" /> Comfort ({formData.features?.comfort?.length || 0})</span>
+              <span className="badge badge-success flex items-center gap-1"><Shield className="h-3 w-3" /> Safety ({formData.features?.safety?.length || 0})</span>
+              <span className="badge badge-warning flex items-center gap-1"><Car className="h-3 w-3" /> Interior ({formData.features?.interior?.length || 0})</span>
+              <span className="badge badge-neutral flex items-center gap-1"><Sparkles className="h-3 w-3" /> Exterior ({formData.features?.exterior?.length || 0})</span>
             </div>
           </div>
         )}
@@ -1030,7 +1075,7 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
           {/* Price */}
           <div className="sm:col-span-2">
             <div className="flex items-center justify-between mb-1.5">
-              <label className="label !mb-0">Price ₹ <span className="text-danger-500">*</span></label>
+              <label className="label mb-0!">Price ₹ <span className="text-danger-500">*</span></label>
               <button
                 type="button"
                 onClick={onSuggestPrice}
@@ -1146,7 +1191,8 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
       {/* Trust & Documents */}
       <div className="card p-6">
         <h2 className="text-lg font-bold text-neutral-900 mb-2 flex items-center gap-2">
-          <Shield className="w-5 h-5 text-primary-500" />
+          {/* Unified icon color to core text-primary-600 shade */}
+          <Shield className="w-5 h-5 text-primary-600" />
           Trust & Documents
         </h2>
         <p className="text-sm text-neutral-500 mb-5">These details make your listing more trustworthy.</p>

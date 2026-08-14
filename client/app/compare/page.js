@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, ArrowLeft, Fuel, Settings, Gauge, Calendar, IndianRupee } from "lucide-react";
+import { X, ArrowLeft, Fuel, Settings, Gauge, Calendar, IndianRupee, Search, Car } from "lucide-react";
 import cloudinaryLoader from "@/lib/cloudinary-loader";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -52,7 +52,7 @@ export default function ComparePage() {
   if (loading) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="h-12 w-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
+        <div className="h-12 w-12 border-4 border-primary-600 border-t-transparent rounded-full animate-spin" />
       </div>
     );
   }
@@ -62,7 +62,7 @@ export default function ComparePage() {
       <div className="mx-auto max-w-7xl px-4 sm:px-6">
         <div className="mb-12 flex items-center justify-between">
           <div>
-            <Link href="/cars" className="flex items-center gap-2 text-sm font-bold text-neutral-400 hover:text-primary transition-colors mb-4">
+            <Link href="/cars" className="flex items-center gap-2 text-sm font-bold text-neutral-400 hover:text-primary-600 transition-colors mb-4">
               <ArrowLeft className="h-4 w-4" /> Back to Inventory
             </Link>
             <h1 className="text-4xl font-black text-neutral-900 tracking-tighter">Compare Listings</h1>
@@ -73,11 +73,13 @@ export default function ComparePage() {
         </div>
 
         {cars.length === 0 ? (
-          <div className="rounded-[3rem] bg-white p-20 text-center border border-neutral-200 shadow-xl">
-            <div className="text-6xl mb-6">🔍</div>
+          <div className="rounded-3xl bg-white p-12 md:p-20 text-center border border-neutral-200 shadow-xl">
+            <div className="w-16 h-16 rounded-2xl bg-neutral-100 flex items-center justify-center mx-auto mb-6">
+              <Search className="h-8 w-8 text-neutral-400" />
+            </div>
             <h2 className="text-2xl font-black text-neutral-900 mb-4">No cars selected for comparison</h2>
             <p className="text-neutral-500 mb-8 max-w-sm mx-auto font-medium">Add some cars from the inventory to see them side-by-side.</p>
-            <Link href="/cars" className="inline-block rounded-2xl bg-neutral-900 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-neutral-900/20">
+            <Link href="/cars" className="inline-block rounded-2xl bg-primary-600 px-8 py-4 text-sm font-bold text-white shadow-xl shadow-primary-500/10 hover:bg-primary-700 transition-all">
               Browse Cars
             </Link>
           </div>
@@ -107,11 +109,13 @@ export default function ComparePage() {
                             className="object-cover"
                           />
                         ) : (
-                          <div className="flex h-full items-center justify-center text-4xl">🚗</div>
+                          <div className="flex h-full items-center justify-center bg-neutral-50">
+                            <Car className="h-10 w-10 text-neutral-300" />
+                          </div>
                         )}
                       </div>
                       <h3 className="text-xl font-black text-neutral-900 leading-tight">{car.title}</h3>
-                      <p className="text-2xl font-black text-primary mt-2">₹{car.price?.toLocaleString("en-IN")}</p>
+                      <p className="text-2xl font-black text-primary-600 mt-2">₹{car.price?.toLocaleString("en-IN")}</p>
                     </th>
                   ))}
                 </tr>
@@ -181,7 +185,7 @@ export default function ComparePage() {
                     <td key={car._id} className="p-6 text-center border-r border-neutral-100 last:border-r-0">
                       <Link 
                         href={`/cars/${car._id}`}
-                        className="inline-block rounded-xl bg-neutral-900 px-6 py-3 text-xs font-black text-white hover:bg-primary transition-all shadow-lg"
+                        className="inline-block rounded-xl bg-primary-600 px-6 py-3 text-xs font-black text-white hover:bg-primary-700 transition-all shadow-md hover:shadow-lg"
                       >
                         View Details
                       </Link>

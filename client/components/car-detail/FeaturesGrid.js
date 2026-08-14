@@ -7,34 +7,34 @@ import { motion, AnimatePresence } from "framer-motion";
 export default function FeaturesGrid({ features = {} }) {
   const [isExpanded, setIsExpanded] = useState(false);
 
-  // Group our feature categories using the primary website brand color theme (#3525cd)
+  // Group our feature categories using the primary website brand color theme (primary-600)
   const categories = [
     {
       key: "comfort",
       label: "Comfort & Convenience",
-      icon: <Wind className="h-5 w-5 text-[#3525cd]" />,
-      bg: "bg-[#3525cd]/10",
+      icon: <Wind className="h-5 w-5 text-primary-600" />,
+      bg: "bg-primary-50",
       items: features.comfort || [],
     },
     {
       key: "safety",
       label: "Safety & Security",
-      icon: <Shield className="h-5 w-5 text-[#3525cd]" />,
-      bg: "bg-[#3525cd]/10",
+      icon: <Shield className="h-5 w-5 text-primary-600" />,
+      bg: "bg-primary-50",
       items: features.safety || [],
     },
     {
       key: "interior",
       label: "Interior Features",
-      icon: <Compass className="h-5 w-5 text-[#3525cd]" />,
-      bg: "bg-[#3525cd]/10",
+      icon: <Compass className="h-5 w-5 text-primary-600" />,
+      bg: "bg-primary-50",
       items: features.interior || [],
     },
     {
       key: "exterior",
       label: "Exterior Features",
-      icon: <Car className="h-5 w-5 text-[#3525cd]" />,
-      bg: "bg-[#3525cd]/10",
+      icon: <Car className="h-5 w-5 text-primary-600" />,
+      bg: "bg-primary-50",
       items: features.exterior || [],
     },
   ];
@@ -48,7 +48,7 @@ export default function FeaturesGrid({ features = {} }) {
     <div className="mt-8 border-t border-neutral-200/60 pt-8">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-bold text-[#1b1b24] font-display">
+          <h2 className="text-xl font-bold text-neutral-900 font-display">
             Features & Equipment
           </h2>
           <p className="text-xs text-neutral-500 mt-1">
@@ -111,9 +111,9 @@ export default function FeaturesGrid({ features = {} }) {
                       transition={{ duration: 0.15, delay: index * 0.03 }}
                       className="flex items-start gap-2.5 text-sm text-neutral-600 font-medium"
                     >
-                      {/* Check icon colored in official brand style (#3525cd) */}
-                      <div className="mt-0.5 p-0.5 rounded-full bg-[#3525cd]/10 text-[#3525cd] shrink-0">
-                        <Check className="h-3 w-3 stroke-[3]" />
+                      {/* Check icon colored in official brand style (text-primary-600) with clean stroke-3 width */}
+                      <div className="mt-0.5 p-0.5 rounded-full bg-primary-50 text-primary-600 shrink-0">
+                        <Check className="h-3 w-3 stroke-3" />
                       </div>
                       <span className="leading-tight">{feature}</span>
                     </motion.li>
@@ -123,7 +123,7 @@ export default function FeaturesGrid({ features = {} }) {
 
               {/* Muted feedback for hidden items */}
               {!isExpanded && hasHiddenItems && (
-                <p className="text-xs text-[#3525cd] mt-4 font-semibold italic">
+                <p className="text-xs text-primary-600 mt-4 font-semibold italic">
                   + {category.items.length - 4} more items in this category
                 </p>
               )}
@@ -137,6 +137,6 @@ export default function FeaturesGrid({ features = {} }) {
 
 /*
 What you just learned:
-- Brand integration constraints: aligning active indicators, badges, and icons to a single main brand tone (`#3525cd` / `bg-[#3525cd]/10`) makes interfaces feel handcrafted and completely professional.
+- Brand integration constraints: aligning active indicators, badges, and icons to a single main brand tone (`primary-600` / `bg-primary-50`) makes interfaces feel handcrafted and completely professional.
 - Balanced design scaling: having the exact same accent coloring across all categories builds strong visual unity and structure compared to uncoordinated multicolored grids.
 */

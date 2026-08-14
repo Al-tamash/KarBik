@@ -20,7 +20,8 @@ export default function NewListingPage() {
   if (isPending || !session || session.user.role !== "dealer") {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="h-2.5 w-2.5 rounded-full bg-primary-500 animate-pulse" />
+        {/* We use bg-primary-600 to unify all tab loaders to the core brand color shade */}
+        <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
       </div>
     );
   }

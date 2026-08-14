@@ -24,6 +24,7 @@ import {
 import CarCard from "@/components/CarCard";
 import { CarCardSkeleton } from "@/components/Skeleton";
 import FilterSidebar from "@/components/FilterSidebar";
+import RecentlyViewedCars from "@/components/RecentlyViewedCars";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -181,7 +182,7 @@ function CarsPageContent() {
   useEffect(() => {
     fetch(`${API_BASE}/api/cars/brands`)
       .then((res) => res.json())
-      .then((data) => setBrands(data))
+      .then((data) => setBrands(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 
@@ -305,8 +306,33 @@ function CarsPageContent() {
     return items;
   };
 
+  const schemaJson = {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "numberOfItems": cars.length,
+    "itemListElement": cars.map((car, index) => ({
+      "@type": "ListItem",
+      "position": index + 1,
+      "url": `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/cars/${car._id}`,
+      "name": `${car.year} ${car.brand} ${car.title}`,
+      "image": car.images?.[0]?.url || "",
+      "description": car.description || "",
+      "offers": {
+        "@type": "Offer",
+        "price": car.price,
+        "priceCurrency": "INR",
+        "availability": "https://schema.org/InStock"
+      }
+    }))
+  };
+
   return (
     <div className="min-h-screen bg-neutral-50/50">
+      {/* Dynamic ItemList Structured Schema for Catalog Search Listings */}
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(schemaJson) }}
+      />
 
       {/* ─── Mobile Filter Drawer Overlay ─── */}
       <AnimatePresence>
@@ -598,6 +624,7 @@ function CarsPageContent() {
             </AnimatePresence>
           </main>
         </div>
+        <RecentlyViewedCars />
       </div>
     </div>
   );

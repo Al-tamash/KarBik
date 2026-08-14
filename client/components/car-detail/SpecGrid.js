@@ -89,9 +89,9 @@ export default function SpecGrid({ car }) {
     <div className="bg-white rounded-2xl border border-neutral-200/80 p-6 shadow-sm">
       {/* Unified Card Header using our official website typography and primary brand indicator line */}
       <div className="flex items-center gap-3 mb-6 pb-4 border-b border-neutral-100">
-        {/* Subtle left-side border indicator in our website's primary brand color (#3525cd) */}
-        <div className="w-1 h-5 bg-[#3525cd] rounded-full shrink-0" />
-        <h2 className="text-lg font-bold text-[#1b1b24] font-display">
+        {/* Subtle left-side border indicator in our website's primary brand color (primary-600) */}
+        <div className="w-1 h-5 bg-primary-600 rounded-full shrink-0" />
+        <h2 className="text-lg font-bold text-neutral-900 font-display">
           Key Specifications & Technical Details
         </h2>
       </div>
@@ -113,7 +113,7 @@ export default function SpecGrid({ car }) {
               {spec.label}
             </span>
             {/* Dark, crisp values using our design system's text properties */}
-            <span className="text-base font-bold text-[#1b1b24] mt-1">
+            <span className="text-base font-bold text-neutral-900 mt-1">
               {spec.value}
               {spec.unit && (
                 <span className="text-xs font-semibold text-neutral-500 ml-1">
@@ -132,5 +132,5 @@ export default function SpecGrid({ car }) {
 What you just learned:
 - brochure-style typography layouts: removing icons and using clean uppercase labels with heavy value fonts replicates the premium editorial design of high-end car catalogs.
 - Unified Card Containers: consolidating 12 separate floating cards into a single cohesive panel reduces cognitive load for buyers and improves layout balance.
-- Pure brand indicators: using a single vertical line colored with the primary brand theme (`bg-[#3525cd]`) links the component directly to the site identity without cluttering cells with unaligned colors.
+- Pure brand indicators: using a single vertical line colored with the primary brand theme (`bg-primary-600`) links the component directly to the site identity without cluttering cells with unaligned colors.
 */

@@ -44,7 +44,8 @@ export default function ListingsTab({
             {analyticsData?.overview?.totalViews || cars.length * 9}
           </p>
           <div className="mt-3 h-1.5 bg-neutral-100 rounded-full overflow-hidden">
-            <div className="h-full bg-primary-500 rounded-full" style={{ width: "68%" }} />
+            {/* Unified theme color bg-primary-600 for total views visualization bar */}
+            <div className="h-full bg-primary-600 rounded-full" style={{ width: "68%" }} />
           </div>
         </motion.div>
 
@@ -54,7 +55,8 @@ export default function ListingsTab({
             <MessageSquare className="w-4 h-4 text-neutral-400" />
             <p className="text-xs font-medium text-neutral-500">Inquiries</p>
             {inquiries.length > 0 && (
-              <span className="w-1.5 h-1.5 rounded-full bg-primary-500" />
+              /* Added gentle animate-pulse to the core brand active inquiry notification indicator dot */
+              <span className="w-1.5 h-1.5 rounded-full bg-primary-600 animate-pulse" />
             )}
           </div>
           <p className="text-2xl font-bold text-neutral-900 tracking-tight">{inquiries.length}</p>

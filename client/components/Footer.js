@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin, ShieldCheck } from "lucide-react";
+import { Mail, Phone, MapPin, ShieldCheck, Heart, Car } from "lucide-react";
 
 /**
  * Footer Component — Reusable premium footer
@@ -18,8 +18,8 @@ export default function Footer() {
           
           {/* Column 1: Brand Info & Socials */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-white select-none">
-              <span className="text-2xl">🚗</span>
+            <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-white select-none group">
+              <Car className="h-6 w-6 text-primary-600 group-hover:scale-110 transition-transform duration-300" />
               Auto<span className="text-primary-600">Bazaar</span>
             </Link>
             <p className="text-body-sm leading-relaxed text-neutral-400">
@@ -83,8 +83,11 @@ export default function Footer() {
             <ul className="space-y-2.5 text-body-sm">
               {[
                 { name: "Browse Used Cars", href: "/cars" },
+                { name: "How It Works", href: "/how-it-works" },
                 { name: "Subscription Plans", href: "/pricing" },
-                { name: "Compare Listings", href: "/compare" },
+                { name: "About Us", href: "/about" },
+                { name: "Contact Us", href: "/contact" },
+                { name: "FAQ / Help Guide", href: "/faq" },
                 { name: "Register Free", href: "/register" }
               ].map((link) => (
                 <li key={link.name}>
@@ -165,11 +168,11 @@ export default function Footer() {
           <div className="flex items-center gap-6">
             <Link href="/privacy" className="hover:text-neutral-300 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-neutral-300 transition-colors">Terms of Service</Link>
-            <Link href="/sitemap" className="hover:text-neutral-300 transition-colors">Sitemap</Link>
+            <Link href="/about" className="hover:text-neutral-300 transition-colors">About</Link>
           </div>
           {/* Change text-neutral-600 to text-neutral-400 for high-contrast signature row */}
-          <div className="text-neutral-400">
-            Crafted with ❤️ for premium Indian dealerships.
+          <div className="text-neutral-400 flex items-center gap-1">
+            Crafted with <Heart className="h-3 w-3 text-rose-500 fill-rose-500 inline" /> for premium Indian dealerships.
           </div>
         </div>
 

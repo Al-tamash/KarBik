@@ -53,31 +53,23 @@ export default async function CarDetailPage({ params }) {
     } else {
       car = await carRes.json();
 
-      // Fetch dealer profile, reviews, and all listings in parallel
-      const [profRes, revRes, allCarsRes] = await Promise.all([
+      // Fetch dealer profile, reviews, and similar cars in parallel
+      // We pass the brand and bodyType directly to the backend to get highly optimized dynamic recommendations
+      const [profRes, revRes, similarRes] = await Promise.all([
         fetch(`${API}/api/trust/profile/${car.dealer}`, { cache: "no-store" }).catch(() => null),
         fetch(`${API}/api/trust/reviews/${car.dealer}`, { cache: "no-store" }).catch(() => null),
-        fetch(`${API}/api/cars`, { cache: "no-store" }).catch(() => null),
+        fetch(`${API}/api/cars?brand=${car.brand}&bodyType=${car.bodyType}&limit=5`, { cache: "no-store" }).catch(() => null),
       ]);
 
       if (profRes && profRes.ok) dealerProfile = await profRes.json();
       if (revRes && revRes.ok) reviews = await revRes.json();
       
-      if (allCarsRes && allCarsRes.ok) {
-        const allCarsData = await allCarsRes.json();
-        const allCars = allCarsData.cars || [];
+      if (similarRes && similarRes.ok) {
+        const similarData = await similarRes.json();
+        const matchedCars = similarData.cars || [];
         
-        // Filter by same brand or same bodyType first, excluding the current car
-        let matched = allCars.filter(c => c._id !== car._id && (c.brand === car.brand || c.bodyType === car.bodyType));
-        
-        // If we don't have enough matching bodyType/brand cars, pad with general cars
-        if (matched.length < 4) {
-          const generalCars = allCars.filter(c => c._id !== car._id && !matched.some(m => m._id === c._id));
-          matched = [...matched, ...generalCars].slice(0, 4);
-        } else {
-          matched = matched.slice(0, 4);
-        }
-        similarCars = matched;
+        // Exclude the currently viewed car from the similar recommendations
+        similarCars = matchedCars.filter(c => c._id !== car._id).slice(0, 4);
       }
     }
   } catch (err) {

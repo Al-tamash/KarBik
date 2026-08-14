@@ -41,8 +41,9 @@ export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isW
           - We added 'group/gallery' to easily control desktop hover states on the child overlay buttons.
           - We use 'bg-neutral-100' for a clean, premium background that matches our light design theme.
         */}
+        {/* aspect-16/10 simplifies standard aspect ratio under Tailwind CSS v4 dynamic sizing */}
         <div
-          className="relative w-full aspect-[16/10] overflow-hidden rounded-xl bg-neutral-100 cursor-zoom-in border border-neutral-200/80 shadow-md group/gallery"
+          className="relative w-full aspect-16/10 overflow-hidden rounded-xl bg-neutral-100 cursor-zoom-in border border-neutral-200/80 shadow-md group/gallery"
           onClick={() => {
             setLightboxIndex(activeImage);
             setShowLightbox(true);
@@ -213,7 +214,7 @@ export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isW
                 key={i}
                 type="button"
                 onClick={() => setActiveImage(i)}
-                className={`relative flex-shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${
+                className={`relative shrink-0 w-24 h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${ // shrink-0 keeps thumbnail box static, preventing it from compressing inside the flex strip
                   i === activeImage
                     ? "border-primary-600 opacity-100"
                     : "border-transparent opacity-60 hover:opacity-90"
@@ -247,7 +248,7 @@ export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isW
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 flex items-center justify-center"
+            className="fixed inset-0 z-100 bg-black/95 flex items-center justify-center" // z-100 uses Tailwind CSS v4's dynamic z-index support without arbitrary bracket syntax
             onClick={() => setShowLightbox(false)}
           >
             <button
@@ -273,7 +274,8 @@ export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isW
               className="relative w-full max-w-5xl max-h-[85vh] px-16"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="relative aspect-[16/10] w-full">
+              {/* aspect-16/10 specifies clean aspect ratio for the fullscreen lightbox modal container */}
+              <div className="relative aspect-16/10 w-full">
                 <Image
                   loader={cloudinaryLoader}
                   src={car.images[lightboxIndex]?.url || ""}

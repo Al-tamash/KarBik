@@ -9,9 +9,11 @@
 import { useState, useEffect, use } from "react";
 import { useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import { Sparkles, AlertTriangle } from "lucide-react";
 // Optimized next/image and custom cloudinaryLoader for dashboard media previews
 import Image from "next/image";
 import cloudinaryLoader from "@/lib/cloudinary-loader";
+import { updateCarSchema } from "@autobazaar/shared";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -187,6 +189,18 @@ export default function EditListingPage({ params }) {
   async function handleSubmit(e) {
     e.preventDefault();
     setError("");
+    
+    // Validate the editing form inputs with Zod updateCarSchema (partial)
+    const result = updateCarSchema.safeParse(form);
+    if (!result.success) {
+      const firstError = result.error.issues[0];
+      const fieldName = firstError.path[0];
+      // Format to capital case for fields
+      const formattedField = fieldName.charAt(0).toUpperCase() + fieldName.slice(1);
+      setError(`${formattedField}: ${firstError.message}`);
+      return;
+    }
+
     setLoading(true);
 
     const formData = new FormData();
@@ -235,7 +249,7 @@ export default function EditListingPage({ params }) {
     return (
       <div className="flex min-h-[calc(100vh-57px)] items-center justify-center bg-neutral-50">
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+          <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
           <p className="text-sm font-medium text-neutral-500">Loading...</p>
         </div>
       </div>
@@ -268,7 +282,7 @@ export default function EditListingPage({ params }) {
               <input
                 type="text" required value={form.title}
                 onChange={(e) => setForm({ ...form, title: e.target.value })}
-                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
               />
             </div>
             <div>
@@ -276,7 +290,7 @@ export default function EditListingPage({ params }) {
               <input
                 type="text" required value={form.brand}
                 onChange={(e) => setForm({ ...form, brand: e.target.value })}
-                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
               />
             </div>
             <div>
@@ -284,7 +298,7 @@ export default function EditListingPage({ params }) {
               <input
                 type="number" required value={form.year}
                 onChange={(e) => setForm({ ...form, year: e.target.value })}
-                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
               />
             </div>
             <div>
@@ -294,15 +308,23 @@ export default function EditListingPage({ params }) {
                   type="button"
                   onClick={suggestAIPrice}
                   disabled={aiLoading.price}
-                  className="text-xs font-bold text-primary hover:text-primary/80 disabled:opacity-50"
+                  className="text-xs font-bold text-primary-600 hover:text-primary-700 disabled:opacity-50 flex items-center gap-1"
                 >
-                  {aiLoading.price ? "✨ Thinking..." : "✨ Suggest AI Price"}
+                  {aiLoading.price ? (
+                    <>
+                      <Sparkles className="h-3 w-3 animate-spin" /> Thinking...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="h-3 w-3" /> Suggest AI Price
+                    </>
+                  )}
                 </button>
               </div>
               <input
                 type="number" required value={form.price}
                 onChange={(e) => setForm({ ...form, price: e.target.value })}
-                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
               />
               {suggestedPriceRange && (
                 <div className="mt-2 rounded-lg bg-emerald-50 p-3 border border-emerald-100">
@@ -322,15 +344,23 @@ export default function EditListingPage({ params }) {
                 type="button"
                 onClick={generateAIDescription}
                 disabled={aiLoading.description}
-                className="text-xs font-bold text-primary hover:text-primary/80 disabled:opacity-50"
+                className="text-xs font-bold text-primary-600 hover:text-primary-700 disabled:opacity-50 flex items-center gap-1"
               >
-                {aiLoading.description ? "✨ Writing..." : "✨ AI Auto-Write"}
+                {aiLoading.description ? (
+                  <>
+                    <Sparkles className="h-3 w-3 animate-spin" /> Writing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="h-3 w-3" /> AI Auto-Write
+                  </>
+                )}
               </button>
             </div>
             <textarea
               value={form.description}
               onChange={(e) => setForm({ ...form, description: e.target.value })}
-              className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+              className="w-full rounded-lg border border-neutral-200 px-3 py-2.5 text-sm text-neutral-900 focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
               rows={4}
             />
           </div>
@@ -365,7 +395,7 @@ export default function EditListingPage({ params }) {
             <input
               type="file" accept="image/*" multiple
               onChange={(e) => setFiles(e.target.files)}
-              className="w-full text-sm text-neutral-500 file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-neutral-900 file:cursor-pointer"
+              className="w-full text-sm text-neutral-500 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-primary-700 file:cursor-pointer transition-all"
             />
           </div>
 
@@ -383,13 +413,13 @@ export default function EditListingPage({ params }) {
                   placeholder="e.g. MH-12-DE-5678"
                   value={form.registrationNumber}
                   onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
-                  className="flex-1 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 uppercase focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                  className="flex-1 rounded-lg border border-neutral-200 px-3 py-2 text-sm text-neutral-900 uppercase focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 />
                 <button
                   type="button"
                   onClick={verifyRtoDetails}
                   disabled={rtoLoading || !form.registrationNumber}
-                  className="rounded-lg border border-primary bg-white px-4 py-2 text-sm font-semibold text-primary hover:bg-primary/5 disabled:opacity-50 cursor-pointer transition-colors"
+                  className="rounded-lg border border-primary-600 bg-white px-4 py-2 text-sm font-semibold text-primary-600 hover:bg-primary-50/50 disabled:opacity-50 cursor-pointer transition-colors"
                 >
                   {rtoLoading ? "Checking..." : "Verify RTO"}
                 </button>
@@ -397,8 +427,8 @@ export default function EditListingPage({ params }) {
 
               {/* RTO Verification error feedback */}
               {rtoError && (
-                <p className="text-xs text-red-600 mt-1 font-medium">
-                  ⚠️ {rtoError}
+                <p className="text-xs text-danger-600 mt-1.5 font-semibold flex items-center gap-1">
+                  <AlertTriangle className="h-3.5 w-3.5" /> {rtoError}
                 </p>
               )}
 
@@ -417,9 +447,9 @@ export default function EditListingPage({ params }) {
                     <button
                       type="button"
                       onClick={autoFillFromRto}
-                      className="rounded bg-green-600 px-2.5 py-1 text-xs font-bold text-white shadow hover:bg-green-700 cursor-pointer transition-all duration-200"
+                      className="rounded bg-green-600 px-2.5 py-1 text-xs font-bold text-white shadow hover:bg-green-700 cursor-pointer transition-all duration-200 flex items-center gap-1"
                     >
-                      ⚡ Auto-Fill Form
+                      <Sparkles className="h-3 w-3 text-white animate-pulse" /> Auto-Fill Form
                     </button>
                   </div>
 
@@ -460,7 +490,7 @@ export default function EditListingPage({ params }) {
                 id="rcVerified"
                 checked={form.rcVerified}
                 onChange={(e) => setForm({ ...form, rcVerified: e.target.checked })}
-                className="mt-0.5 w-4 h-4 accent-primary cursor-pointer"
+                className="mt-0.5 w-4 h-4 accent-primary-600 cursor-pointer"
               />
               <label htmlFor="rcVerified" className="text-sm font-semibold text-neutral-700 cursor-pointer">
                 RC transfer is ready (RTO verified)
@@ -482,7 +512,7 @@ export default function EditListingPage({ params }) {
               <input
                 type="file" accept="image/*,.pdf"
                 onChange={(e) => setInspectionDoc(e.target.files[0])}
-                className="w-full text-sm text-neutral-500 file:mr-3 file:rounded-lg file:border-0 file:bg-primary file:px-4 file:py-2 file:text-sm file:font-semibold file:text-primary-neutral-900 file:cursor-pointer"
+                className="w-full text-sm text-neutral-500 file:mr-3 file:rounded-lg file:border-0 file:bg-primary-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-primary-700 file:cursor-pointer transition-all"
               />
               <p className="text-xs text-neutral-500 mt-1.5">Uploading an inspection report will add the ✓ Inspected badge to this listing.</p>
             </div>
@@ -490,7 +520,7 @@ export default function EditListingPage({ params }) {
 
           <button
             type="submit" disabled={loading}
-            className="w-full rounded-lg bg-primary py-2.5 text-sm font-semibold text-primary-neutral-900 hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-opacity"
+            className="w-full rounded-lg bg-primary-600 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 hover:shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer transition-all"
           >
             {loading ? "Updating listing..." : "Update Listing"}
           </button>

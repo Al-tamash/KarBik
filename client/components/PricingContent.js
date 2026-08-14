@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { authClient } from "@/lib/auth-client";
-import { ShieldCheck, RotateCcw, CreditCard, Sparkles, HelpCircle } from "lucide-react";
+import { ShieldCheck, RotateCcw, CreditCard, Sparkles, HelpCircle, Tag } from "lucide-react";
 import PricingCard from "@/components/PricingCard";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
@@ -135,8 +135,8 @@ export default function PricingContent({ initialPlans = [] }) {
               Annual Billing
             </button>
           </div>
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-accent-600 bg-accent-50 border border-accent-200/70 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
-            🏷️ Save 20% on Annual
+          <span className="inline-flex items-center gap-1.5 text-[11px] font-bold text-accent-600 bg-accent-50 border border-accent-200/70 px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+            <Tag className="h-3 w-3" /> Save 20% on Annual
           </span>
         </motion.div>
 

@@ -149,7 +149,8 @@ export default function FeaturedCars() {
           </div>
         ) : cars.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-3xl border border-neutral-200/60 p-8 max-w-xl mx-auto flex flex-col items-center">
-            <div className="h-14 w-14 rounded-2xl bg-primary-50 flex items-center justify-center text-primary-500 mb-4 border border-primary-100">
+            {/* Unified icon color text-primary-600 to align with standard brand design tokens */}
+            <div className="h-14 w-14 rounded-2xl bg-primary-50 flex items-center justify-center text-primary-600 mb-4 border border-primary-100">
               <Search className="h-6 w-6" />
             </div>
             <h3 className="text-base font-bold text-neutral-800">No cars match this filter</h3>

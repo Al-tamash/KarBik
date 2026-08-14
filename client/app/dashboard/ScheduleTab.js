@@ -104,7 +104,8 @@ export default function ScheduleTab({ inquiries }) {
           </h3>
           <div className="space-y-3">
             {todayList.map(inq => (
-              <div key={inq._id} className="card p-4 border-l-4 border-l-primary-500">
+              /* Unified accent border to brand core shade border-l-primary-600 */
+              <div key={inq._id} className="card p-4 border-l-4 border-l-primary-600">
                 <div className="flex items-start justify-between">
                   <div>
                     <p className="text-sm font-semibold text-neutral-900">{inq.name}</p>

@@ -173,6 +173,36 @@ export default function CarDetailView({
     }
   }, [session]);
 
+  // Save current car to recently viewed in localStorage on mount
+  useEffect(() => {
+    if (car && car._id) {
+      let recentlyViewed = JSON.parse(localStorage.getItem("recentlyViewedCars") || "[]");
+      // Remove if already exists to move it to the front
+      recentlyViewed = recentlyViewed.filter(item => item._id !== car._id);
+      
+      const lightCar = {
+        _id: car._id,
+        title: car.title,
+        brand: car.brand,
+        model: car.model,
+        year: car.year,
+        price: car.price,
+        mileage: car.mileage || car.kmsDriven,
+        fuelType: car.fuelType,
+        transmission: car.transmission,
+        images: car.images && car.images.length > 0 ? [{ url: car.images[0].url }] : [],
+        isBoosted: car.isBoosted,
+        rcVerified: car.rcVerified,
+        location: car.location || car.city || "Hyderabad",
+        dealerProfile: car.dealerProfile ? { isVerified: car.dealerProfile.isVerified, phone: car.dealerProfile.phone } : null
+      };
+      
+      recentlyViewed.unshift(lightCar);
+      // Cap at 6 recently viewed cars
+      localStorage.setItem("recentlyViewedCars", JSON.stringify(recentlyViewed.slice(0, 6)));
+    }
+  }, [car]);
+
   /* Check wishlist on mount */
   useEffect(() => {
     if (isLoggedIn && car?._id) {
@@ -496,13 +526,13 @@ export default function CarDetailView({
      RENDER
      ════════════════════════════════════════════════════════════════════════ */
   return (
-    <div className="min-h-screen bg-[#fcf8ff]">
+    <div className="min-h-screen bg-neutral-50">
 
       {/* ─── Back nav (now at the top of the details view) ────────────────── */}
       <div className="max-w-[1280px] mx-auto px-6 pt-6">
         <Link
           href="/cars"
-          className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#464555] hover:text-[#3525cd] transition-colors"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-neutral-600 hover:text-primary-600 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
           Back to listings
@@ -553,8 +583,8 @@ export default function CarDetailView({
             {/*      Service History) immediately under the specs matches Spinny's gold standard and dramatically boosts conversion. */}
             <div className="bg-white rounded-2xl p-6 border border-neutral-200/80 shadow-sm flex flex-col gap-5">
               <div>
-                <h3 className="text-base font-bold text-[#1b1b24] font-display flex items-center gap-2">
-                  <ShieldCheck className="h-5 w-5 text-[#3525cd]" />
+                <h3 className="text-base font-bold text-neutral-900 font-display flex items-center gap-2">
+                  <ShieldCheck className="h-5 w-5 text-primary-600" />
                   AutoBazaar Assured™ Highlights
                 </h3>
                 <p className="text-xs text-neutral-500 mt-1">
@@ -581,7 +611,7 @@ export default function CarDetailView({
 
                 {/* Accident History */}
                 <div className={`flex gap-3 items-start p-3.5 border rounded-xl ${!car.accidentHistory ? 'bg-indigo-50/30 border-indigo-100/50' : 'bg-rose-50/30 border-rose-100/50'}`}>
-                  <div className={`p-2 rounded-lg shrink-0 ${!car.accidentHistory ? 'bg-[#3525cd]/10 text-[#3525cd]' : 'bg-rose-500/10 text-rose-700'}`}>
+                  <div className={`p-2 rounded-lg shrink-0 ${!car.accidentHistory ? 'bg-primary-50 text-primary-600' : 'bg-rose-500/10 text-rose-700'}`}>
                     {!car.accidentHistory ? <ShieldCheck className="h-4 w-4" /> : <AlertTriangle className="h-4 w-4" />}
                   </div>
                   <div>
@@ -596,13 +626,13 @@ export default function CarDetailView({
                 </div>
 
                 {/* Service History */}
-                <div className="flex gap-3 items-start p-3.5 bg-[#f5f2ff]/40 border border-[#c7c4d8]/20 rounded-xl">
-                  <div className="p-2 bg-[#3525cd]/10 text-[#3525cd] rounded-lg shrink-0">
+                <div className="flex gap-3 items-start p-3.5 bg-primary-50/40 border border-primary-100 rounded-xl">
+                  <div className="p-2 bg-primary-50 text-primary-600 rounded-lg shrink-0">
                     <Settings className="h-4 w-4" />
                   </div>
                   <div>
                     <h4 className="text-xs font-bold text-neutral-800">Service History</h4>
-                    <p className="text-[10px] font-semibold text-[#3525cd] mt-0.5 uppercase tracking-wider">
+                    <p className="text-[10px] font-semibold text-primary-600 mt-0.5 uppercase tracking-wider">
                       {car.serviceHistory ? "Full Record Available" : "Regular Checks"}
                     </p>
                     <p className="text-[10px] text-neutral-500 mt-1.5 leading-normal">
@@ -616,10 +646,10 @@ export default function CarDetailView({
             {/* ── 3. Vehicle Overview / Description ────── */}
             {car.description && (
               <div>
-                <h2 className="text-lg font-bold text-[#1b1b24] mb-4 font-display">
+                <h2 className="text-lg font-bold text-neutral-900 mb-4 font-display">
                   Vehicle Overview
                 </h2>
-                <p className="text-[#464555] leading-relaxed text-base mb-4 whitespace-pre-line">
+                <p className="text-neutral-750 leading-relaxed text-base mb-4 whitespace-pre-line">
                   {car.description}
                 </p>
               </div>
@@ -699,9 +729,9 @@ export default function CarDetailView({
                   !hasReviewed && (
                     <form
                       onSubmit={handleReviewSubmit}
-                      className="mt-6 bg-[#f5f2ff] rounded-2xl border border-[#c7c4d8]/30 p-6"
+                      className="mt-6 bg-primary-50 rounded-2xl border border-primary-100 p-6"
                     >
-                      <h3 className="text-sm font-bold text-[#1b1b24] mb-4">
+                      <h3 className="text-sm font-bold text-neutral-900 mb-4">
                         Leave a Review
                       </h3>
                       <div className="flex items-center gap-2 mb-4">
@@ -718,7 +748,7 @@ export default function CarDetailView({
                               className={`h-6 w-6 ${
                                 n <= reviewForm.rating
                                   ? "fill-amber-400 text-amber-400"
-                                  : "text-[#c7c4d8]"
+                                  : "text-neutral-300"
                               }`}
                             />
                           </button>
@@ -734,7 +764,7 @@ export default function CarDetailView({
                         }
                         placeholder="Share your experience with this dealer..."
                         rows={3}
-                        className="w-full rounded-xl border border-[#c7c4d8]/50 bg-white px-4 py-3 text-sm text-[#1b1b24] placeholder:text-[#777587] focus:outline-none focus:border-[#3525cd] focus:ring-2 focus:ring-[#3525cd]/10 transition-all resize-none"
+                        className="w-full rounded-xl border border-neutral-350 bg-white px-4 py-3 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all resize-none"
                         required
                       />
                       <button
@@ -751,8 +781,8 @@ export default function CarDetailView({
 
             {/* ── 6. Similar Vehicles ───────────────────── */}
             {similarCars.length > 0 && (
-              <div className="border-t border-[#c7c4d8]/30 pt-8">
-                <h2 className="text-lg font-bold text-[#1b1b24] mb-5 font-display">
+              <div className="border-t border-neutral-200 pt-8">
+                <h2 className="text-lg font-bold text-neutral-900 mb-5 font-display">
                   Similar Vehicles You Might Like
                 </h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
@@ -760,10 +790,9 @@ export default function CarDetailView({
                     <Link
                       key={sc._id}
                       href={`/cars/${sc._id}`}
-                      // Changed from bg-white/80 and backdrop-blur-sm to solid bg-white border border-[#c7c4d8]/50 for clean visual accessibility
-                      className="group block bg-white border border-[#c7c4d8]/50 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
+                      className="group block bg-white border border-neutral-200 rounded-2xl overflow-hidden hover:shadow-lg transition-all duration-300"
                     >
-                      <div className="relative h-44 overflow-hidden bg-[#e4e1ee]">
+                      <div className="relative h-44 overflow-hidden bg-neutral-100">
                         {sc.images?.[0]?.url ? (
                            <Image
                              loader={cloudinaryLoader}
@@ -828,7 +857,7 @@ export default function CarDetailView({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[90] bg-black/60 backdrop-blur-sm flex items-center justify-center px-4"
+            className="fixed inset-0 z-90 bg-black/60 backdrop-blur-sm flex items-center justify-center px-4" // z-90 specifies high stacking index for absolute auth modal overlay without arbitrary bracket syntax
             onClick={() => setShowAuthModal(false)}
           >
             <motion.div

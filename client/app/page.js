@@ -4,6 +4,7 @@
  */
 
 import Link from "next/link";
+import Image from "next/image";
 import { 
   ShieldCheck, Store, 
   MessageSquare, ArrowRight, Car,
@@ -12,9 +13,18 @@ import {
 
 import HeroSearchWidget from "@/components/HeroSearchWidget";
 import FeaturedCars from "@/components/FeaturedCars";
+import JustArrivedCars from "@/components/JustArrivedCars";
+import Testimonials from "@/components/Testimonials";
+import TrustStatsStrip from "@/components/TrustStatsStrip";
 
 // Connect to the unified server API using the public environment variable
 const API = process.env.NEXT_PUBLIC_API_URL;
+
+export const metadata = {
+  title: "Used Cars in Hyderabad — Verified Dealers & Inspected Cars | AutoBazaar",
+  description: "Find certified second hand cars in Hyderabad from top rated local showrooms. Browse verified inventories in Kukatpally, Madhapur & Gachibowli with 150-point inspection reports and RTO verification.",
+  keywords: ["used cars in hyderabad", "second hand cars hyderabad", "pre-owned cars hyderabad", "verified car dealers hyderabad"],
+};
 
 export default async function Home() {
 
@@ -54,7 +64,7 @@ export default async function Home() {
           SECTION 1 — Premium Split Hero Layout
           Calm left-aligned value prop + clean framed showroom showcase on right
       ═══════════════════════════════════════════════ */}
-      <section className="relative w-full bg-gradient-to-br from-indigo-50/60 via-white to-neutral-50 border-b border-neutral-200">
+      <section className="relative w-full bg-linear-to-br from-indigo-50/60 via-white to-neutral-50 border-b border-neutral-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 py-12 md:py-20">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
             
@@ -96,15 +106,30 @@ export default async function Home() {
                   <span>Every Car Inspected</span>
                 </div>
               </div>
+
+              {/* Mobile Hero Image — shown ONLY on mobile/tablet where the right column is hidden */}
+              <div className="lg:hidden mt-4 w-full">
+                <div className="relative w-full aspect-video rounded-2xl overflow-hidden border border-neutral-200/80 bg-neutral-100 shadow-sm">
+                  <Image 
+                    alt="Premium Pre-Owned Showroom Hyderabad" 
+                    className="object-cover" 
+                    src="https://lh3.googleusercontent.com/aida-public/AB6AXuA725eW61wDKQE0vapkmdbZvSxIJpFeBoWjgoebGMwlNug6zEa8daiC0OuGZytG8Xm6A7G4Qz70XPhvWE5DVpfU1bcHxIizOPqSmf7tAIIrmGR-tzLOvEhV-j0rxz7PtbZVZfAYfaT-xe_jf4QI4zNr2XpanwG3j1F8QFNzX-J7jFHyDVnrzfNifsyXQ-_MbUsG4vARfSbNyuVW7MDRvIhemFxQ6HbUqNb0PeWryWMAZ5Pw61P1l96fBdeHwdYUFDbgDvulU3Iirxo"
+                    fill
+                    unoptimized
+                  />
+                </div>
+              </div>
             </div>
 
             {/* Right Column: Premium Framed Showroom Image (Desktop only) */}
             <div className="lg:col-span-5 hidden lg:block">
-              <div className="relative w-full aspect-[4/3] rounded-3xl overflow-hidden shadow-md border border-neutral-200/80 bg-neutral-100 transition-all duration-300 hover:shadow-lg">
-                <img 
+              <div className="relative w-full aspect-4/3 rounded-3xl overflow-hidden shadow-md border border-neutral-200/80 bg-neutral-100 transition-all duration-300 hover:shadow-lg">
+                <Image 
                   alt="Premium Pre-Owned Showroom Hyderabad" 
-                  className="w-full h-full object-cover" 
+                  className="object-cover" 
                   src="https://lh3.googleusercontent.com/aida-public/AB6AXuA725eW61wDKQE0vapkmdbZvSxIJpFeBoWjgoebGMwlNug6zEa8daiC0OuGZytG8Xm6A7G4Qz70XPhvWE5DVpfU1bcHxIizOPqSmf7tAIIrmGR-tzLOvEhV-j0rxz7PtbZVZfAYfaT-xe_jf4QI4zNr2XpanwG3j1F8QFNzX-J7jFHyDVnrzfNifsyXQ-_MbUsG4vARfSbNyuVW7MDRvIhemFxQ6HbUqNb0PeWryWMAZ5Pw61P1l96fBdeHwdYUFDbgDvulU3Iirxo"
+                  fill
+                  unoptimized
                 />
               </div>
             </div>
@@ -216,6 +241,8 @@ export default async function Home() {
         </div>
       </section>
 
+      <TrustStatsStrip />
+
       {/* ═══════════════════════════════════════════════
           SECTION 3 — Premium Brand Directory
           Elegant brand logos matching the requested brand slider mockup
@@ -265,6 +292,7 @@ export default async function Home() {
       </section>
 
       <FeaturedCars />
+      <JustArrivedCars />
 
       {/* ═══════════════════════════════════════════════
           SECTION 5 — Why Choose AutoBazaar (Trust)
@@ -345,6 +373,8 @@ export default async function Home() {
         </div>
       </section>
 
+      <Testimonials />
+
       {/* ═══════════════════════════════════════════════
           SECTION 6 — Dealer Success Radial Glow Card
           Dark showroom aesthetic, asymmetric split
@@ -373,7 +403,7 @@ export default async function Home() {
             </div>
 
             <div className="hidden lg:block w-[40%] relative">
-              <div className="absolute inset-0 bg-gradient-to-t from-neutral-900 via-transparent to-transparent z-10 pointer-events-none" />
+              <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-transparent to-transparent z-10 pointer-events-none" />
               <img 
                 alt="Dealer Growth Success Showroom" 
                 className="rounded-2xl shadow-2xl rotate-2 scale-105 border border-neutral-850" 

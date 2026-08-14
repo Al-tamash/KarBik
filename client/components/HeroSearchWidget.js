@@ -19,7 +19,7 @@ export default function HeroSearchWidget() {
   useEffect(() => {
     fetch(`${API}/api/cars/brands`)
       .then((res) => res.json())
-      .then((data) => setBrands(data || []))
+      .then((data) => setBrands(Array.isArray(data) ? data : []))
       .catch(() => {});
   }, []);
 

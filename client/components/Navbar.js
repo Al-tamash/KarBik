@@ -25,6 +25,8 @@ export default function Navbar() {
   const router = useRouter();
   const { data: session } = authClient.useSession();
   const [isOpen, setIsOpen] = useState(false);
+  const [showSearch, setShowSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
 
   // Check if a given path matches the current URL
   const isActive = (path) => pathname === path;
@@ -32,6 +34,19 @@ export default function Navbar() {
   const handleSignOut = async () => {
     await authClient.signOut();
     router.push("/login");
+  };
+
+  const handleSearchSubmit = (e) => {
+    if (e) e.preventDefault();
+    if (!searchQuery.trim()) return;
+    router.push(`/cars?search=${encodeURIComponent(searchQuery.trim())}`);
+    setShowSearch(false);
+    setSearchQuery("");
+  };
+
+  const handleBrandClick = (brand) => {
+    router.push(`/cars?brand=${encodeURIComponent(brand)}`);
+    setShowSearch(false);
   };
 
   // Navigation links shown to everyone
@@ -83,6 +98,16 @@ export default function Navbar() {
 
         {/* ─── Right Actions ─── */}
         <div className="flex items-center gap-3">
+          
+          {/* Quick Search Button */}
+          <button 
+            onClick={() => setShowSearch(true)}
+            className="p-2 text-neutral-500 hover:text-primary-600 hover:bg-neutral-100 rounded-full transition-all duration-200 cursor-pointer"
+            title="Search vehicles"
+          >
+            <Search className="h-5 w-5 shrink-0" />
+          </button>
+
           <div className="hidden md:flex items-center gap-3">
             {session ? (
               <>
@@ -172,7 +197,7 @@ export default function Navbar() {
                       pathname.startsWith("/dashboard")
                         ? "bg-primary-50 text-primary-600"
                         : "text-neutral-700 hover:bg-neutral-50"
-                    }`}
+                      }`}
                   >
                     <LayoutDashboard className="h-5 w-5" />
                     Dashboard
@@ -207,6 +232,80 @@ export default function Navbar() {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* ─── Search Overlay Modal ─── */}
+      <AnimatePresence>
+        {showSearch && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-95 bg-black/60 backdrop-blur-xs flex items-start justify-center pt-24 px-4"
+            onClick={() => setShowSearch(false)}
+          >
+            <motion.div
+              initial={{ scale: 0.97, y: -8, opacity: 0 }}
+              animate={{ scale: 1, y: 0, opacity: 1 }}
+              exit={{ scale: 0.97, y: -8, opacity: 0 }}
+              transition={{ duration: 0.2 }}
+              className="w-full max-w-xl bg-white rounded-3xl overflow-hidden shadow-2xl border border-neutral-200/80 p-6 flex flex-col text-left"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* Input row */}
+              <form onSubmit={handleSearchSubmit} className="relative flex items-center mb-6">
+                <Search className="absolute left-4 h-5 w-5 text-neutral-400" />
+                <input
+                  type="text"
+                  autoFocus
+                  placeholder="Type brand, model, or body type (e.g. SUV, Tata)..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full rounded-2xl border border-neutral-200 bg-neutral-50/50 pl-12 pr-12 py-4 text-sm font-medium focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100 transition-all text-neutral-900"
+                />
+                {searchQuery && (
+                  <button 
+                    type="button"
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-4 p-1 hover:bg-neutral-200 text-neutral-400 hover:text-neutral-700 rounded-full transition-colors cursor-pointer"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                )}
+              </form>
+
+              {/* Popular Searches */}
+              <div className="space-y-3">
+                <h4 className="text-[10px] font-black uppercase tracking-wider text-neutral-400 select-none">
+                  Popular Brand Filters
+                </h4>
+                <div className="flex flex-wrap gap-2.5">
+                  {["Maruti", "Tata", "Toyota", "Kia", "Hyundai", "Mahindra"].map((brand) => (
+                    <button
+                      key={brand}
+                      onClick={() => handleBrandClick(brand)}
+                      className="px-4 py-2 rounded-xl border border-neutral-200 hover:border-primary-500 hover:text-primary-600 bg-white hover:bg-primary-50/10 text-neutral-600 text-xs font-bold transition-all cursor-pointer"
+                    >
+                      {brand}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tips footer */}
+              <div className="mt-8 border-t border-neutral-100 pt-4 flex justify-between items-center text-[10px] font-semibold text-neutral-400">
+                <span>Press Enter to search entire database</span>
+                <button 
+                  onClick={() => setShowSearch(false)}
+                  className="text-primary-600 hover:underline cursor-pointer font-bold"
+                >
+                  Cancel Escape
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
     </header>
   );
 }

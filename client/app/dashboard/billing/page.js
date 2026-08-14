@@ -17,6 +17,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
 import { authClient } from "@/lib/auth-client";
+import { Sparkles } from "lucide-react";
 
 const API = process.env.NEXT_PUBLIC_API_URL;
 
@@ -90,7 +91,7 @@ function BillingContent() {
     return (
       <div className="flex min-h-[calc(100vh-57px)] items-center justify-center bg-neutral-50">
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+          <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
           <p className="text-sm font-medium text-neutral-500">Loading billing...</p>
         </div>
       </div>
@@ -110,8 +111,9 @@ function BillingContent() {
 
         {/* Success Toast */}
         {showSuccess && (
-          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-5 py-4 flex items-center gap-3">
-            <span className="text-lg">🎉</span>
+          <div className="mb-6 rounded-xl border border-green-200 bg-green-50 px-5 py-4 flex items-center gap-3 animate-fade-in">
+            {/* Styled vector sparkles instead of cheap unstyled celebration emoji */}
+            <Sparkles className="w-5 h-5 text-green-600 shrink-0" />
             <div>
               <p className="text-sm font-bold text-green-800">Subscription activated!</p>
               <p className="text-xs text-green-700">Your plan has been upgraded successfully.</p>
@@ -127,7 +129,7 @@ function BillingContent() {
           </div>
           <Link
             href="/pricing"
-            className="rounded-lg bg-primary px-5 py-2.5 text-sm font-semibold text-primary-neutral-900 hover:opacity-90 transition-opacity"
+            className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 hover:shadow-md transition-all"
           >
             {isFreeTier ? "Upgrade Plan" : "Change Plan"}
           </Link>
@@ -140,7 +142,7 @@ function BillingContent() {
               <div className="flex items-center gap-3 mb-1">
                 <h2 className="text-xl font-bold text-neutral-900">{plan?.name || "Free"} Plan</h2>
                 {plan?.features?.dealerBadge && (
-                  <span className="text-xs font-bold text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                  <span className="text-xs font-bold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-full">
                     {plan.features.dealerBadge}
                   </span>
                 )}
@@ -179,14 +181,14 @@ function BillingContent() {
               <div className="h-2.5 w-full rounded-full bg-neutral-200 overflow-hidden">
                 <div
                   className={`h-full rounded-full transition-all duration-500 ${
-                    usagePercent >= 90 ? "bg-red-500" : usagePercent >= 70 ? "bg-amber-500" : "bg-primary"
+                    usagePercent >= 90 ? "bg-red-500" : usagePercent >= 70 ? "bg-amber-500" : "bg-primary-600"
                   }`}
                   style={{ width: `${Math.min(usagePercent, 100)}%` }}
                 />
               </div>
             )}
             {listingLimit === "Unlimited" && (
-              <p className="text-xs text-neutral-500 mt-1">Unlimited listings with your Pro plan ✨</p>
+              <p className="text-xs text-neutral-500 mt-1">Unlimited listings with your Pro plan</p>
             )}
           </div>
         </div>
@@ -220,7 +222,7 @@ function BillingContent() {
 
         {/* Back to Dashboard */}
         <div className="text-center">
-          <Link href="/dashboard" className="text-sm font-medium text-primary hover:underline">
+          <Link href="/dashboard" className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline">
             ← Back to Dashboard
           </Link>
         </div>
@@ -234,7 +236,7 @@ export default function BillingPage() {
     <Suspense fallback={
       <div className="flex min-h-[calc(100vh-57px)] items-center justify-center bg-neutral-50">
         <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary animate-pulse" />
+          <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
           <p className="text-sm font-medium text-neutral-500">Loading billing...</p>
         </div>
       </div>

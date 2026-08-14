@@ -11,8 +11,14 @@ export default function cloudinaryLoader({ src, width, quality }) {
     return src;
   }
 
-  // Use a safe set of transformation parameters
-  const params = ["f_auto", "q_auto"].join(",");
+  // Use dynamic format, quality, and responsive width values
+  // c_limit ensures the image is scaled down to the requested width only
+  const params = [
+    "f_auto",
+    `q_${quality || "auto"}`,
+    `w_${width}`,
+    "c_limit"
+  ].join(",");
 
   /**
    * Cloudinary URL structure: 

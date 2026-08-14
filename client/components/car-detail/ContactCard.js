@@ -99,11 +99,11 @@ export default function ContactCard({
               RTO Verified
             </span>
           )}
-          <span className="bg-[#f0ecf9] text-[#464555] px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
+          <span className="bg-primary-50 text-primary-700 border border-primary-200/50 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
             {car.year} Model
           </span>
           {car.owners && (
-            <span className="bg-[#f0ecf9] text-[#464555] px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
+            <span className="bg-primary-50 text-primary-700 border border-primary-200/50 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider">
               {toTitleCase(car.owners)}
             </span>
           )}
@@ -114,13 +114,13 @@ export default function ContactCard({
           )}
         </div>
 
-        <h1 className="text-2xl font-bold text-[#1b1b24] tracking-tight leading-snug font-display">
+        <h1 className="text-2xl font-bold text-neutral-900 tracking-tight leading-snug font-display">
           {toTitleCase(car.title)}
         </h1>
-        <p className="mt-2 text-xs text-[#777587]">
+        <p className="mt-2 text-xs text-neutral-500">
           {toTitleCase(car.bodyType)} • {toTitleCase(car.fuelType)} • {toTitleCase(car.transmission)}
         </p>
-        <p className="text-xs text-[#777587] mt-0.5">
+        <p className="text-xs text-neutral-500 mt-0.5">
           {(car.mileage || car.kmsDriven || 0).toLocaleString("en-IN")} km driven
         </p>
       </div>
@@ -129,13 +129,13 @@ export default function ContactCard({
 
       {/* Price section */}
       <div>
-        <p className="text-[10px] font-bold text-[#777587] uppercase tracking-wider mb-1">
+        <p className="text-[10px] font-bold text-neutral-500 uppercase tracking-wider mb-1">
           Asking Price
         </p>
         <h2 className="text-3xl font-bold text-primary-600 tracking-tight">
           {formatPrice(car.price)}
         </h2>
-        <p className="text-xs text-[#464555] mt-1">
+        <p className="text-xs text-neutral-600 mt-1">
           Ex-showroom, {dealerProfile?.city || "Hyderabad"}
         </p>
       </div>
@@ -143,38 +143,40 @@ export default function ContactCard({
       <hr className="border-neutral-200/80" />
 
       {/* Integrated Live EMI Slider Calculator */}
-      <EMICalculator 
+      <EMICalculator
         dynamicEmi={dynamicEmi}
         downPaymentPercent={downPaymentPercent}
         setDownPaymentPercent={setDownPaymentPercent}
         downPaymentAmount={downPaymentAmount}
         emiTenureSlider={emiTenureSlider}
         setEmiTenureSlider={setEmiTenureSlider}
+        carPrice={car.price}
       />
 
       {/* Solid Dealer Info Card (Removed glass bg-white/60 -> solid bg-neutral-50) */}
       {dealerProfile && (
         <div className="flex items-center gap-3.5 p-4 bg-neutral-50 rounded-xl border border-neutral-200">
-          <div className="w-11 h-11 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-base flex-shrink-0">
+          {/* shrink-0 prevents this avatar circle from compressing when dealer name is long */}
+          <div className="w-11 h-11 rounded-full bg-primary-600 text-white flex items-center justify-center font-bold text-base shrink-0">
             {(dealerProfile.businessName || "D")[0].toUpperCase()}
           </div>
           <div>
-            <h4 className="text-sm font-bold text-[#1b1b24]">
+            <h4 className="text-sm font-bold text-neutral-900">
               {dealerProfile.businessName || "Dealer"}
             </h4>
             {dealerProfile.averageRating > 0 && (
               <div className="flex items-center gap-1 mt-0.5">
                 <Star className="h-3.5 w-3.5 fill-amber-400 text-amber-400" />
-                <span className="text-xs font-semibold text-[#1b1b24]">
+                <span className="text-xs font-semibold text-neutral-900">
                   {dealerProfile.averageRating?.toFixed(1)}
                 </span>
-                <span className="text-xs text-[#777587]">
+                <span className="text-xs text-neutral-500">
                   ({dealerProfile.totalReviews} reviews)
                 </span>
               </div>
             )}
             {dealerProfile.city && (
-              <p className="text-xs text-[#464555] mt-0.5">
+              <p className="text-xs text-neutral-600 mt-0.5">
                 {dealerProfile.city}
               </p>
             )}
@@ -237,14 +239,14 @@ export default function ContactCard({
           <p className="text-sm font-bold text-primary-600">
             ✓ Lead Registered
           </p>
-          <p className="text-xs text-[#464555] mt-1">
+          <p className="text-xs text-neutral-600 mt-1">
             Our team will call you within 15 minutes.
           </p>
         </div>
       )}
 
       {/* Brand Trust Tagline */}
-      <div className="flex items-center justify-center gap-1.5 text-[10px] text-[#777587] font-medium">
+      <div className="flex items-center justify-center gap-1.5 text-[10px] text-neutral-500 font-medium">
         <ShieldCheck className="h-3.5 w-3.5 text-primary-600" />
         Secured by AutoBazaar • No spam, no sharing
       </div>

@@ -43,7 +43,7 @@ export default function CompareBar() {
         >
           <div className="bg-neutral-900 text-white rounded-[2rem] p-4 flex items-center justify-between shadow-2xl shadow-neutral-900/40 border border-white/10 backdrop-blur-xl">
             <div className="flex items-center gap-4 pl-4">
-              <div className="h-10 w-10 bg-primary rounded-full flex items-center justify-center text-white font-black shadow-lg shadow-primary/20">
+              <div className="h-10 w-10 bg-primary-600 rounded-full flex items-center justify-center text-white font-black shadow-lg shadow-primary-500/20">
                 {count}
               </div>
               <div>
@@ -59,7 +59,7 @@ export default function CompareBar() {
 
             <Link 
               href="/compare"
-              className="group flex items-center gap-3 bg-white text-neutral-900 rounded-2xl px-6 py-3 text-xs font-black hover:bg-primary hover:text-white transition-all shadow-xl"
+              className="group flex items-center gap-3 bg-white text-neutral-900 rounded-2xl px-6 py-3 text-xs font-black hover:bg-primary-600 hover:text-white transition-all shadow-xl"
             >
               Compare Now
               <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />

@@ -13,6 +13,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CompareBar from "@/components/CompareBar";
 import NotificationManager from "@/components/NotificationManager";
+import MobileBottomNav from "@/components/MobileBottomNav";
 import { ToastProvider } from "@/components/ToastProvider";
 
 /**
@@ -88,7 +89,8 @@ export default function RootLayout({ children }) {
           <Navbar />
           <CompareBar />
           <NotificationManager />
-          <main className="flex-1">{children}</main>
+          <MobileBottomNav />
+          <main className="flex-1 pb-16 lg:pb-0">{children}</main>
           <Footer />
         </ToastProvider>
       </body>

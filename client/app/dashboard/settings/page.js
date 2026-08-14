@@ -34,7 +34,8 @@ export default function SettingsPage() {
   if (isPending || !session) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-neutral-50">
-        <div className="h-2.5 w-2.5 rounded-full bg-primary-500 animate-pulse" />
+        {/* We use bg-primary-600 to keep the spinner shade completely consistent with our main brand color theme */}
+        <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
       </div>
     );
   }

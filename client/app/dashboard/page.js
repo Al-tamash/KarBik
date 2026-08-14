@@ -465,14 +465,14 @@ export default function DashboardPage() {
               animate={{ opacity: 0.4 }}
               exit={{ opacity: 0 }}
               onClick={() => setIsMobileMenuOpen(false)}
-              className="fixed inset-0 z-[60] bg-black/40 lg:hidden"
+              className="fixed inset-0 z-60 bg-black/40 lg:hidden"
             />
             <motion.div
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
               transition={{ type: "spring", damping: 25, stiffness: 220 }}
-              className="fixed inset-y-0 left-0 z-[70] w-64 bg-primary-50 p-5 shadow-xl flex flex-col justify-between lg:hidden"
+              className="fixed inset-y-0 left-0 z-70 w-64 bg-primary-50 p-5 shadow-xl flex flex-col justify-between lg:hidden"
             >
               <div className="space-y-4">
                 <div className="flex items-center justify-between pb-3 border-b border-primary-100">

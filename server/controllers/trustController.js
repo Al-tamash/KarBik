@@ -129,11 +129,21 @@ export async function submitReview(req, res) {
 
     await review.save();
 
-    // Now, recalculate the dealer's average rating
-    const allReviews = await Review.find({ dealer: new mongoose.Types.ObjectId(dealerId) });
-    const totalReviews = allReviews.length;
-    const sumRatings = allReviews.reduce((sum, rev) => sum + rev.rating, 0);
-    const averageRating = parseFloat((sumRatings / totalReviews).toFixed(1));
+    // Optimize review math by aggregating directly on the database engine
+    // Avoids fetching and parsing all reviews in the Node.js server memory
+    const stats = await Review.aggregate([
+      { $match: { dealer: new mongoose.Types.ObjectId(dealerId) } },
+      {
+        $group: {
+          _id: null,
+          totalReviews: { $sum: 1 },
+          averageRating: { $avg: "$rating" }
+        }
+      }
+    ]);
+
+    const totalReviews = stats[0]?.totalReviews || 0;
+    const averageRating = stats[0] ? parseFloat(stats[0].averageRating.toFixed(1)) : 0;
 
     // Update or create Dealer Profile
     await DealerProfile.findOneAndUpdate(
