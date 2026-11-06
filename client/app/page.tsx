@@ -11,6 +11,7 @@ import {
   ChevronRight
 } from "lucide-react";
 
+import type { ApiCar } from "@/lib/api-types";
 import { API_BASE } from "@/lib/api-base";
 import HeroSearchWidget from "@/components/HeroSearchWidget";
 import FeaturedCars from "@/components/FeaturedCars";
@@ -49,12 +50,15 @@ export default async function Home() {
   // Falls back to a calm gradient when no photos exist yet.
   let heroImage: string | null = null;
   let heroCaption: string | null = null;
+  // Same response also seeds the homepage listing sections, so they are in the HTML (no placeholders).
+  let initialCars: ApiCar[] = [];
   try {
     const res = await fetch(`${API_BASE}/api/cars?limit=8`, { cache: 'no-store' });
     if (res.ok) {
       const data = await res.json();
       type HeroCar = { images?: Array<{ url?: string }>; city?: string; dealerProfile?: { businessName?: string } | null };
       const carsList: HeroCar[] = data.cars ?? [];
+      initialCars = (data.cars ?? []) as ApiCar[];
       const heroCar = carsList.find((c) => (c.images?.length ?? 0) > 0);
       heroImage = heroCar?.images?.[0]?.url ?? null;
       if (heroCar) {
@@ -249,7 +253,7 @@ export default async function Home() {
         </Reveal>
       </section>
 
-      <TrustStatsStrip />
+      <TrustStatsStrip initialCount={stats.loaded ? stats.totalCars : null} />
 
       {/* ═══════════════════════════════════════════════
           SECTION 3 — Premium Brand Directory
@@ -301,8 +305,8 @@ export default async function Home() {
         </Reveal>
       </section>
 
-      <FeaturedCars />
-      <JustArrivedCars />
+      <FeaturedCars initialCars={initialCars.length > 0 ? initialCars.slice(0, 6) : undefined} />
+      <JustArrivedCars initialCars={initialCars.length > 0 ? initialCars.slice(0, 4) : undefined} />
 
       {/* ═══════════════════════════════════════════════
           SECTION 5 — Why Choose KarBik (Trust)

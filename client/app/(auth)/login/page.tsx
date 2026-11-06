@@ -12,10 +12,10 @@
  *      - Collapses gracefully to single-column on mobile
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useAppSession } from "@/lib/auth-client";
 import { Car, ShieldCheck, Award, Star } from "lucide-react";
 
 export default function LoginPage() {
@@ -23,6 +23,13 @@ export default function LoginPage() {
   const [form, setForm] = useState({ email: "", password: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Already signed in? Don't leave the visitor staring at the form.
+  const { data: existingSession, isPending: sessionPending } = useAppSession();
+  useEffect(() => {
+    if (sessionPending || !existingSession) return;
+    router.replace(existingSession.user?.role === "admin" ? "/admin" : "/dashboard");
+  }, [sessionPending, existingSession, router]);
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

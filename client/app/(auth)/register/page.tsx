@@ -8,10 +8,10 @@
  *      (highlights "Join 200+ dealers" and "Free buyer account").
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { authClient } from "@/lib/auth-client";
+import { authClient, useAppSession } from "@/lib/auth-client";
 import { Car, ShoppingCart, Store, ShieldCheck, Sparkles, TrendingUp } from "lucide-react";
 
 export default function RegisterPage() {
@@ -19,6 +19,13 @@ export default function RegisterPage() {
   const [form, setForm] = useState({ name: "", email: "", password: "", role: "buyer" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  // Already signed in? Don't leave the visitor staring at the form.
+  const { data: existingSession, isPending: sessionPending } = useAppSession();
+  useEffect(() => {
+    if (sessionPending || !existingSession) return;
+    router.replace(existingSession.user?.role === "admin" ? "/admin" : "/dashboard");
+  }, [sessionPending, existingSession, router]);
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();

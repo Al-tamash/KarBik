@@ -56,6 +56,7 @@ import SpecGrid from "./car-detail/SpecGrid";
 import FeaturesGrid from "./car-detail/FeaturesGrid";
 import FAQAccordion from "./car-detail/FAQAccordion";
 import ContactCard from "./car-detail/ContactCard";
+import { displayCarName } from "@/lib/car-name";
 
 
 
@@ -332,7 +333,7 @@ export default function CarDetailView({
           message:
             customMessage ||
             inquiry.message ||
-            `Interested in ${car.year} ${toTitleCase(car.brand)} ${toTitleCase(car.title)}. Please connect for a test drive.`,
+            `Interested in ${displayCarName(car)}. Please connect for a test drive.`,
         }),
         credentials: "include",
       });
@@ -888,8 +889,7 @@ export default function CarDetailView({
                       </div>
                       <div className="p-5">
                         <h3 className="text-base font-bold text-ink-strong mb-1">
-                          {sc.year} {toTitleCase(sc.brand)}{" "}
-                          {toTitleCase(sc.title)}
+                          {displayCarName(sc)}
                         </h3>
                         <p className="text-sm text-ink-muted mb-3">
                           {sc.year} •{" "}

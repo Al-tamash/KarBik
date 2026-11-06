@@ -26,6 +26,7 @@ import { CarCardSkeleton } from "@/components/Skeleton";
 import FilterSidebar from "@/components/FilterSidebar";
 import RecentlyViewedCars from "@/components/RecentlyViewedCars";
 import type { ApiCar } from "@/lib/api-types";
+import { displayCarName } from "@/lib/car-name";
 
 
 
@@ -272,7 +273,7 @@ function CarsPageContent() {
       "@type": "ListItem",
       "position": index + 1,
       "url": `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/cars/${car.id}`,
-      "name": `${car.year} ${car.brand} ${car.title}`,
+      "name": displayCarName(car),
       "image": car.images?.[0]?.url || "",
       "description": car.description || "",
       "offers": {

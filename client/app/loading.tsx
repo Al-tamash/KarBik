@@ -28,9 +28,7 @@ export default function Loading() {
         </div>
 
         {/* Loading text */}
-        <p className="text-sm font-semibold text-neutral-500 animate-pulse">
-          Loading...
-        </p>
+        <span className="sr-only" role="status" aria-label="Loading page" />
       </div>
     </div>
   );

@@ -136,7 +136,7 @@ export default function ContactCard({
         </div>
 
         <h1 className="text-2xl font-bold text-ink-strong tracking-tight leading-snug font-display">
-          {toTitleCase(car.title)}
+          {car.title}
         </h1>
         <p className="mt-2 text-xs text-ink-muted">
           {toTitleCase(car.bodyType)} • {toTitleCase(car.fuelType)} • {toTitleCase(car.transmission)}

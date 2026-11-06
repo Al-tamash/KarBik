@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ChevronLeft, ChevronRight, Heart, Share2, Copy, ExternalLink, X, Car as CarIcon } from "lucide-react";
 import cloudinaryLoader from "@/lib/cloudinary-loader";
 import type { ApiCar } from "@/lib/api-types";
+import { displayCarName } from "@/lib/car-name";
 
 function toTitleCase(str: unknown): string {
   if (str === null || str === undefined || str === "") return "";
@@ -186,7 +187,7 @@ export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isW
                         type="button" aria-label="Share on WhatsApp"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const text = `Check out this ${toTitleCase(car.brand)} ${toTitleCase(car.title)} on KarBik: ${window.location.href}`;
+                          const text = `Check out this ${displayCarName(car)} on KarBik: ${window.location.href}`;
                           window.open(
                             `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
                             "_blank"

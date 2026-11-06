@@ -113,7 +113,7 @@ export default function PricingContent({ initialPlans = [] }: { initialPlans?: A
               plan={plan}
               index={index}
               isRecommended={plan.slug === "starter"}
-              isCurrentPlan={plan.slug === currentPlanSlug}
+              isCurrentPlan={Boolean(session?.user) && plan.slug === currentPlanSlug}
               user={session?.user}
               onSubscribe={handleSubscribeSuccess}
             />

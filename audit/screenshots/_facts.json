@@ -1,0 +1,597 @@
+[
+  {
+    "route": "/",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "home-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/cars/f378e875-e898-455c-a55a-9c58db54deef?_rsc=5CB68i4pnAekjehf net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e3207bff-ec88-4be2-9c57-07184cbe595f?_rsc=5CB68i4pnAekjehf net::ERR_ABORTED",
+      "https://www.karbik.com/cars/9dfd52f2-aaa8-4db3-bc61-47e624cbc744?_rsc=5CB68i4pnAekjehf net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e3207bff-ec88-4be2-9c57-07184cbe595f?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/9dfd52f2-aaa8-4db3-bc61-47e624cbc744?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/f378e875-e898-455c-a55a-9c58db54deef?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED"
+    ],
+    "finalUrl": "/",
+    "title": "Used Cars in Hyderabad from Local Dealers | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Hyderabad’s Marketplacefor Used Cars from Local Dealers"
+    ]
+  },
+  {
+    "route": "/cars",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "cars-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/pricing?_rsc=wtCrrRvnHpfWmdBp net::ERR_ABORTED",
+      "https://www.karbik.com/pricing?_rsc=wtCrrRvnHpfWmdBp net::ERR_ABORTED",
+      "https://www.karbik.com/cars/30f32e41-13b4-478b-a13b-0848edd9351a?_rsc=wtCrrRvnHpfWmdBp net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e953c845-5ac4-4193-aeff-6016f175f579?_rsc=wtCrrRvnHpfWmdBp net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e953c845-5ac4-4193-aeff-6016f175f579?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/1d65a8c4-f98b-4157-85bb-644b63dc16c6?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED"
+    ],
+    "finalUrl": "/cars?sort=newest",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Verified Used Cars"
+    ]
+  },
+  {
+    "route": "/cars?brand=Toyota",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "cars-brand-toyota-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/cars/4d80bb3d-5ab6-44ae-84eb-73229d6319a7?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/fb36dbb1-3bc6-4b3a-8780-4650c143d212?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/1d65a8c4-f98b-4157-85bb-644b63dc16c6?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/fc8db031-416d-4520-9561-66cfbb3bafe1?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED"
+    ],
+    "finalUrl": "/cars?brand=Toyota&sort=newest",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Verified Used Cars"
+    ]
+  },
+  {
+    "route": "/cars/b679b107-4ef8-4b09-9e53-786888b411dc",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "car-detail-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/?_rsc=VQFMPj-qG0HYEqqg net::ERR_ABORTED",
+      "https://www.karbik.com/cars/f221deeb-300a-4ddd-ab05-e2b7108e65a9?_rsc=VQFMPj-qG0HYEqqg net::ERR_ABORTED",
+      "https://www.karbik.com/cars/10d29f24-5dc1-438f-85ad-cf6c8b919aec?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/cars/f221deeb-300a-4ddd-ab05-e2b7108e65a9?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e9ea5b6a-7c33-49af-bee9-4cd6446f18c3?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/dealer/southgate-motors?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED"
+    ],
+    "finalUrl": "/cars/b679b107-4ef8-4b09-9e53-786888b411dc",
+    "title": "2021 Mahindra Bolero Neo N10 (O) Diesel | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "2021 Mahindra Bolero Neo N10 (o) Diesel",
+      "2021 Mahindra Bolero Neo N10 (o) Diesel"
+    ]
+  },
+  {
+    "route": "/dealer/southgate-motors",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "dealer-public-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/cars/f378e875-e898-455c-a55a-9c58db54deef?_rsc=0T4sijoTlaIC9f3o net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e3207bff-ec88-4be2-9c57-07184cbe595f?_rsc=0T4sijoTlaIC9f3o net::ERR_ABORTED",
+      "https://www.karbik.com/cars/f378e875-e898-455c-a55a-9c58db54deef?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/5b9dfd21-ace4-48a9-9490-22558ec0e6fe?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/0d8e04ca-1701-42c5-9675-08d6fee60a1b?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/fb36dbb1-3bc6-4b3a-8780-4650c143d212?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED"
+    ],
+    "finalUrl": "/dealer/southgate-motors",
+    "title": "Southgate Motors - Gachibowli Tech Hub — Premium Used Cars Showroom in Hyderabad | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Southgate Motors - Gachibowli Tech Hub"
+    ]
+  },
+  {
+    "route": "/pricing",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "pricing-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/pricing",
+    "title": "Pricing Plans & Subscriptions | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Accelerate your dealership growth"
+    ]
+  },
+  {
+    "route": "/compare",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "compare-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/pricing?_rsc=1SfzXOvHUThkSklk net::ERR_ABORTED",
+      "https://www.karbik.com/?_rsc=vr_qeDxs4XL1cRl5 net::ERR_ABORTED",
+      "https://www.karbik.com/pricing?_rsc=vr_qeDxs4XL1cRl5 net::ERR_ABORTED"
+    ],
+    "finalUrl": "/compare",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Compare Listings"
+    ]
+  },
+  {
+    "route": "/login",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "login-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/?_rsc=sW2A7HEmFQnSVIMx net::ERR_ABORTED"
+    ],
+    "finalUrl": "/login",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Sign in to your account"
+    ]
+  },
+  {
+    "route": "/register",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "register-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/register",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Create your account"
+    ]
+  },
+  {
+    "route": "/dashboard",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "dashboard-loggedout-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/pricing?_rsc=sW2A7HEmFQnSVIMx net::ERR_ABORTED"
+    ],
+    "finalUrl": "/login",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Sign in to your account"
+    ]
+  },
+  {
+    "route": "/about",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "about-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/pricing?_rsc=yMFZbW3py_RmPDJX net::ERR_ABORTED"
+    ],
+    "finalUrl": "/about",
+    "title": "About Us | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Building Hyderabad's Most Transparent Car Marketplace"
+    ]
+  },
+  {
+    "route": "/contact",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "contact-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/pricing?_rsc=mTa8tpfUvA8h8GpF net::ERR_ABORTED"
+    ],
+    "finalUrl": "/contact",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Contact Us"
+    ]
+  },
+  {
+    "route": "/faq",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "faq-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/pricing?_rsc=QgfnF85fYcrwyI4V net::ERR_ABORTED",
+      "https://www.karbik.com/?_rsc=QgfnF85fYcrwyI4V net::ERR_ABORTED",
+      "https://www.karbik.com/pricing?_rsc=wKPz8cjhDlzQ_BQw net::ERR_ABORTED"
+    ],
+    "finalUrl": "/faq",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "route": "/how-it-works",
+    "viewport": "desktop",
+    "status": 200,
+    "file": "how-it-works-desktop.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/pricing?_rsc=Fx0W6LBBUZ1h_XYe net::ERR_ABORTED"
+    ],
+    "finalUrl": "/how-it-works",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "How KarBik Works"
+    ]
+  },
+  {
+    "route": "/",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "home-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/cars/f378e875-e898-455c-a55a-9c58db54deef?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e3207bff-ec88-4be2-9c57-07184cbe595f?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/9dfd52f2-aaa8-4db3-bc61-47e624cbc744?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/77f1c090-809e-4c56-829b-122c222f6152?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/d61a70ab-ae0e-416b-8ad3-8290f7379cbc?_rsc=tXyZJ52UQVBCVsD3 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/30f32e41-13b4-478b-a13b-0848edd9351a?_rsc=5CB68i4pnAekjehf net::ERR_ABORTED"
+    ],
+    "finalUrl": "/",
+    "title": "Used Cars in Hyderabad from Local Dealers | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Hyderabad’s Marketplacefor Used Cars from Local Dealers"
+    ]
+  },
+  {
+    "route": "/cars",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "cars-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/cars/1d65a8c4-f98b-4157-85bb-644b63dc16c6?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e953c845-5ac4-4193-aeff-6016f175f579?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/30f32e41-13b4-478b-a13b-0848edd9351a?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/f378e875-e898-455c-a55a-9c58db54deef?_rsc=wtCrrRvnHpfWmdBp net::ERR_ABORTED",
+      "https://www.karbik.com/cars/b679b107-4ef8-4b09-9e53-786888b411dc?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/77f1c090-809e-4c56-829b-122c222f6152?_rsc=wtCrrRvnHpfWmdBp net::ERR_ABORTED"
+    ],
+    "finalUrl": "/cars?sort=newest",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Verified Used Cars"
+    ]
+  },
+  {
+    "route": "/cars?brand=Toyota",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "cars-brand-toyota-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/1d65a8c4-f98b-4157-85bb-644b63dc16c6?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/fb36dbb1-3bc6-4b3a-8780-4650c143d212?_rsc=wtCrrRvnHpfWmdBp net::ERR_ABORTED",
+      "https://www.karbik.com/cars/fb36dbb1-3bc6-4b3a-8780-4650c143d212?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/4d80bb3d-5ab6-44ae-84eb-73229d6319a7?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED",
+      "https://www.karbik.com/cars/fc8db031-416d-4520-9561-66cfbb3bafe1?_rsc=erkhVXfpnbpvhBOv net::ERR_ABORTED"
+    ],
+    "finalUrl": "/cars?brand=Toyota&sort=newest",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Verified Used Cars"
+    ]
+  },
+  {
+    "route": "/cars/b679b107-4ef8-4b09-9e53-786888b411dc",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "car-detail-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/dealer/southgate-motors?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/cars/0d8e04ca-1701-42c5-9675-08d6fee60a1b?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/cars/f221deeb-300a-4ddd-ab05-e2b7108e65a9?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/cars/10d29f24-5dc1-438f-85ad-cf6c8b919aec?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e9ea5b6a-7c33-49af-bee9-4cd6446f18c3?_rsc=ZIHJF0fC0qO4Z0OY net::ERR_ABORTED"
+    ],
+    "finalUrl": "/cars/b679b107-4ef8-4b09-9e53-786888b411dc",
+    "title": "2021 Mahindra Bolero Neo N10 (O) Diesel | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "2021 Mahindra Bolero Neo N10 (o) Diesel",
+      "2021 Mahindra Bolero Neo N10 (o) Diesel"
+    ]
+  },
+  {
+    "route": "/dealer/southgate-motors",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "dealer-public-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/cars/9dfd52f2-aaa8-4db3-bc61-47e624cbc744?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/77f1c090-809e-4c56-829b-122c222f6152?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/f378e875-e898-455c-a55a-9c58db54deef?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e3207bff-ec88-4be2-9c57-07184cbe595f?_rsc=0T4sijoTlaIC9f3o net::ERR_ABORTED",
+      "https://www.karbik.com/cars/d61a70ab-ae0e-416b-8ad3-8290f7379cbc?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED",
+      "https://www.karbik.com/cars/e3207bff-ec88-4be2-9c57-07184cbe595f?_rsc=91pvYABPOqALXUL1 net::ERR_ABORTED"
+    ],
+    "finalUrl": "/dealer/southgate-motors",
+    "title": "Southgate Motors - Gachibowli Tech Hub — Premium Used Cars Showroom in Hyderabad | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Southgate Motors - Gachibowli Tech Hub"
+    ]
+  },
+  {
+    "route": "/pricing",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "pricing-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/pricing",
+    "title": "Pricing Plans & Subscriptions | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Accelerate your dealership growth"
+    ]
+  },
+  {
+    "route": "/compare",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "compare-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/compare",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Compare Listings"
+    ]
+  },
+  {
+    "route": "/login",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "login-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/login",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Sign in to your account"
+    ]
+  },
+  {
+    "route": "/register",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "register-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/register",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Create your account"
+    ]
+  },
+  {
+    "route": "/dashboard",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "dashboard-loggedout-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/login",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Sign in to your account"
+    ]
+  },
+  {
+    "route": "/about",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "about-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [
+      "https://www.karbik.com/?_rsc=yMFZbW3py_RmPDJX net::ERR_ABORTED",
+      "https://www.karbik.com/pricing?_rsc=yMFZbW3py_RmPDJX net::ERR_ABORTED"
+    ],
+    "finalUrl": "/about",
+    "title": "About Us | KarBik",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Building Hyderabad's Most Transparent Car Marketplace"
+    ]
+  },
+  {
+    "route": "/contact",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "contact-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/contact",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Contact Us"
+    ]
+  },
+  {
+    "route": "/faq",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "faq-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/faq",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "Frequently Asked Questions"
+    ]
+  },
+  {
+    "route": "/how-it-works",
+    "viewport": "mobile",
+    "status": 200,
+    "file": "how-it-works-mobile.jpg",
+    "consoleErrors": [],
+    "failed": [],
+    "finalUrl": "/how-it-works",
+    "title": "KarBik — Premium Car Marketplace",
+    "loadingVisible": false,
+    "ellipsisOnlyLines": 0,
+    "brokenImages": [],
+    "imagesMissingAlt": 0,
+    "horizontalScroll": false,
+    "h1": [
+      "How KarBik Works"
+    ]
+  }
+]

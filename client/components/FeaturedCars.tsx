@@ -1,7 +1,7 @@
 "use client";
 import type { ApiCar } from "@/lib/api-types";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ChevronRight, Search } from "lucide-react";
@@ -9,10 +9,12 @@ import CarCard from "@/components/CarCard";
 
 
 
-export default function FeaturedCars() {
+export default function FeaturedCars({ initialCars }: { initialCars?: ApiCar[] }) {
   const [activeFilter, setActiveFilter] = useState("All");
-  const [cars, setCars] = useState<ApiCar[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [cars, setCars] = useState<ApiCar[]>(initialCars ?? []);
+  const [loading, setLoading] = useState(!initialCars);
+  // The server already rendered the unfiltered list; only fetch on filter change.
+  const skipInitialFetch = useRef(Boolean(initialCars));
   const [fetchError, setFetchError] = useState("");
 
   const quickFilters = [
@@ -57,8 +59,13 @@ export default function FeaturedCars() {
   }, [activeFilter]);
 
   useEffect(() => {
+    if (skipInitialFetch.current && activeFilter === "All") {
+      skipInitialFetch.current = false;
+      return;
+    }
+    skipInitialFetch.current = false;
     fetchCars();
-  }, [fetchCars]);
+  }, [fetchCars, activeFilter]);
 
   const containerVariants = {
     hidden: { opacity: 0 },

@@ -7,7 +7,7 @@ import type { ApiCar } from "@/lib/api-types";
  *      Google and users love fresh content; this increases browse time
  *      and conversion rate by showcasing active inventory.
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import Link from "next/link";
 import { motion, type Variants } from "framer-motion";
 import { ChevronRight, Sparkles, Car as CarIcon, Search } from "lucide-react";
@@ -15,9 +15,10 @@ import CarCard from "@/components/CarCard";
 
 
 
-export default function JustArrivedCars() {
-  const [cars, setCars] = useState<ApiCar[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function JustArrivedCars({ initialCars }: { initialCars?: ApiCar[] }) {
+  const [cars, setCars] = useState<ApiCar[]>(initialCars ?? []);
+  const [loading, setLoading] = useState(!initialCars);
+  const skipInitialFetch = useRef(Boolean(initialCars));
   const [fetchError, setFetchError] = useState("");
 
   const fetchRecentCars = useCallback(async () => {
@@ -40,6 +41,10 @@ export default function JustArrivedCars() {
   }, []);
 
   useEffect(() => {
+    if (skipInitialFetch.current) {
+      skipInitialFetch.current = false;
+      return;
+    }
     fetchRecentCars();
   }, [fetchRecentCars]);
 

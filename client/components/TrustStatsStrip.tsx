@@ -11,8 +11,13 @@
 import { useState, useEffect } from "react";
 import { Car, ShieldCheck, FileText, Star } from "lucide-react";
 
-export default function TrustStatsStrip() {
-  const [carCount, setCarCount] = useState<number | null>(null);
+export default function TrustStatsStrip({
+  initialCount = null,
+}: {
+  /** Listing total rendered by the server so the first paint is never a placeholder. */
+  initialCount?: number | null;
+}) {
+  const [carCount, setCarCount] = useState<number | null>(initialCount);
 
   useEffect(() => {
     fetch(`/api/cars?limit=1`)
@@ -29,7 +34,7 @@ export default function TrustStatsStrip() {
   const stats = [
     {
       icon: Car,
-      value: carCount === null ? "…" : `${carCount}+`,
+      value: carCount === null ? "—" : `${carCount}+`,
       label: "Live Listings",
       sub: "Added by local dealers",
     },

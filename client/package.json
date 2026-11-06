@@ -13,7 +13,11 @@
     "seed:plans": "tsx scripts/seedPlans.ts",
     "seed:admin": "tsx scripts/seed-admin.ts",
     "admin:rotate-password": "tsx scripts/rotate-admin-password.ts",
-    "rotate:secrets": "tsx scripts/rotateSecrets.ts"
+    "rotate:secrets": "tsx scripts/rotateSecrets.ts",
+    "test:unit": "tsx --test e2e/unit.test.ts",
+    "test:smoke": "tsx --test e2e/smoke.test.ts",
+    "test:flows": "tsx --test e2e/flows.test.ts",
+    "test:e2e": "tsx --test e2e/unit.test.ts e2e/smoke.test.ts e2e/flows.test.ts"
   },
   "dependencies": {
     "@autobazaar/shared": "*",

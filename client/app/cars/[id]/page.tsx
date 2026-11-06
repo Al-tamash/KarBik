@@ -2,6 +2,7 @@ import React from "react";
 import Link from "next/link";
 import CarDetailView from "@/components/CarDetailView";
 import type { ApiCar, ApiPublicDealerProfile, ApiReview } from "@/lib/api-types";
+import { displayCarName } from "@/lib/car-name";
 import { API_BASE } from "@/lib/api-base";
 
 /**
@@ -11,19 +12,6 @@ import { API_BASE } from "@/lib/api-base";
  * It fetches the car data and sets the page title, description,
  * and OpenGraph tags specifically for this car.
  */
-/**
- * Dealers often type the year and brand into the title already
- * ("2023 Tata Nexon EV"), so blindly prefixing them gave "2023 Tata 2023 Tata Nexon EV".
- * Only add what is missing.
- */
-function displayCarName(car: Pick<ApiCar, "year" | "brand" | "title">): string {
-  const title = car.title.trim();
-  const hasYear = (" " + title + " ").includes(" " + car.year + " ");
-  const hasBrand = title.toLowerCase().includes(car.brand.toLowerCase());
-  return [hasYear ? "" : String(car.year), hasBrand ? "" : car.brand, title]
-    .filter(Boolean)
-    .join(" ");
-}
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

@@ -20,6 +20,8 @@ import {
 } from "@/lib/lead-routing";
 import { publiclyVisible } from "@/lib/car-visibility";
 import { buildWhatsAppUrl } from "@/lib/dealer-public";
+import { displayCarName } from "@/lib/car-name";
+import { describeCar } from "@/lib/whatsapp-message";
 import {
   countLeadEventsByIp,
   getClientMeta,
@@ -131,9 +133,9 @@ export async function POST(request: Request) {
       }
 
       targetDealerId = car.dealer;
-      notificationCarTitle = `${car.brand} ${car.title}`;
+      notificationCarTitle = displayCarName(car);
       notificationCarImage = car.images?.[0]?.url || "/logo.png";
-      whatsappSubject = `the ${car.year} ${car.brand} ${car.title}`;
+      whatsappSubject = `the ${describeCar(car)}`;
     } else {
       if (targetDealerId === user.id) {
         return Response.json(
