@@ -7,6 +7,31 @@ import { db, schema } from "@/lib/db";
 // (see scripts/seed-admin.ts), never through the public sign-up endpoint.
 const SELF_SERVE_ROLES = ["buyer", "dealer"] as const;
 
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000";
+
+// Better Auth rejects any request whose Origin is not trusted (INVALID_ORIGIN).
+// By default only the baseURL origin is trusted, but production serves the site
+// on both karbik.com and www.karbik.com (one redirects to the other), so trust
+// both spellings of the configured host, plus the Vercel alias.
+function trustedOriginsFor(appUrl: string): string[] {
+  const origins = new Set<string>(["https://kar-bik.vercel.app"]);
+  try {
+    const url = new URL(appUrl);
+    origins.add(url.origin);
+    const isLocal =
+      url.hostname === "localhost" || /^[\d.]+$/.test(url.hostname);
+    if (!isLocal) {
+      const altHost = url.hostname.startsWith("www.")
+        ? url.hostname.slice(4)
+        : `www.${url.hostname}`;
+      origins.add(`${url.protocol}//${altHost}${url.port ? `:${url.port}` : ""}`);
+    }
+  } catch {
+    // Malformed NEXT_PUBLIC_APP_URL: fall back to Better Auth's default.
+  }
+  return [...origins];
+}
+
 export const auth = betterAuth({
   database: drizzleAdapter(db, {
     provider: "pg",
@@ -17,7 +42,8 @@ export const auth = betterAuth({
     enabled: true,
   },
 
-  baseURL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
+  baseURL: APP_URL,
+  trustedOrigins: trustedOriginsFor(APP_URL),
 
   user: {
     additionalFields: {
