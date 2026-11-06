@@ -5,9 +5,5 @@
   "workspaces": [
     "client",
     "shared"
-  ],
-  "devDependencies": {
-    "dotenv": "^17.4.2",
-    "tsx": "^4.23.12"
-  }
+  ]
 }
