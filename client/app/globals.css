@@ -1,5 +1,5 @@
 /**
- * AutoBazaar Design System — globals.css
+ * KarBik Design System — globals.css
  *
  * WHAT: The single source of truth for ALL visual tokens and reusable component classes.
  * WHY: By centralizing colors, fonts, shadows, buttons, badges, cards, and inputs here,
@@ -11,25 +11,82 @@
  */
 @import "tailwindcss";
 
-/* ─── Google Fonts are loaded optimally via next/font in layout.js ─── */
+/* Dark mode is class-based: <html class="dark"> toggled by ThemeToggle
+   (tri-state light/dark/system, persisted in localStorage, applied pre-hydration
+   by the anti-flash script in layout.tsx). */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* ─── Google Fonts are loaded optimally via next/font in layout.tsx ─── */
+
+/* ════════════════════════════════════════════════════════════════════════════
+   SEMANTIC TOKENS — the ONLY way pages should reference surfaces/borders/text.
+   Raw palette utilities (neutral-*, primary-*) are for accents/tints inside a
+   known context only.    Every value here is identical between modes today except
+   where noted; dark values derive from the graphite (steel) family.
+   ════════════════════════════════════════════════════════════════════════════ */
+:root {
+  --bg: var(--color-neutral-50);            /* page background */
+  --surface: #ffffff;                        /* cards, inputs */
+  --surface-alt: var(--color-neutral-100);   /* inset sections, table headers */
+  --border: var(--color-neutral-200);        /* hairline borders */
+  --border-strong: var(--color-neutral-300);
+  --ink: var(--color-neutral-800);           /* body text */
+  --ink-strong: var(--color-neutral-900);    /* headings */
+  --ink-muted: var(--color-neutral-500);     /* secondary text */
+  --ink-subtle: #666C7D;                     /* captions, placeholders — 5.2:1 on white, 4.6:1 on inset surfaces (was neutral-400, 3.2:1) */
+}
+
+.dark {
+  --bg: var(--color-neutral-900);            /* #0E1218 deep graphite */
+  --surface: var(--color-neutral-850);       /* #141922 */
+  --surface-alt: var(--color-neutral-800);   /* #1B212B */
+  --border: #272E3A;                          /* graphite hairline */
+  --border-strong: #3B4350;
+  --ink: var(--color-neutral-100);
+  --ink-strong: var(--color-neutral-0);
+  --ink-muted: var(--color-neutral-300);
+  --ink-subtle: var(--color-neutral-400);
+}
 
 /* ════════════════════════════════════════════════════════════════════════════
    THEME TOKENS — Tailwind v4 CSS-first config
    These register as Tailwind utilities: bg-primary-600, text-neutral-800, etc.
    ════════════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════════════
+   DESIGN RULES (locked)
+   RADIUS: pills/avatars/badges = rounded-full · cards & media = rounded-2xl
+   · buttons = their .btn-* radii · inputs/selects = rounded-lg · chips = xl.
+   NEVER rounded-3xl+ or arbitrary bracket values.
+   SHADOW: cards = shadow-card / shadow-card-hover · floating chrome =
+   shadow-lg/xl · never shadow-2xl.
+   SURFACES/TEXT in pages = semantic utilities (bg-surface, text-ink,
+   border-border…). Raw palette utilities are for accents and tints only.
+   ════════════════════════════════════════════════════════════════════════════ */
 @theme inline {
-  /* ─── Primary (Indigo) ─── brand identity, links, active states */
-  --color-primary-50:  #EEF0FF;
-  --color-primary-100: #E0E3FF;
-  --color-primary-200: #C7CCFE;
-  --color-primary-300: #A5ACFC;
-  --color-primary-400: #818DF8;
-  --color-primary-500: #6366F1;
-  --color-primary-600: #4F46E5;   /* ← main brand color */
-  --color-primary-650: #4842D8;
-  --color-primary-700: #4338CA;
-  --color-primary-800: #3730A3;
-  --color-primary-900: #312E81;
+  /* ─── Semantic (mode-aware) ─── use these for surfaces/borders/text */
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-surface-alt: var(--surface-alt);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-ink: var(--ink);
+  --color-ink-strong: var(--ink-strong);
+  --color-ink-muted: var(--ink-muted);
+  --color-ink-subtle: var(--ink-subtle);
+
+  /* ─── Primary (Highway Blue) ─── trust blue — the category standard for
+     automotive marketplaces (Cars24, Spinny). Brand identity, links, active states. */
+  --color-primary-50:  #EAF3FE;
+  --color-primary-100: #D7E8FD;
+  --color-primary-200: #B1D1FB;
+  --color-primary-300: #83B5F9;
+  --color-primary-400: #4C93F7;
+  --color-primary-500: #2B7FF5;
+  --color-primary-600: #1B6EF3;   /* ← main brand color */
+  --color-primary-650: #1460DB;
+  --color-primary-700: #0F52BE;
+  --color-primary-800: #0D3F8F;
+  --color-primary-900: #0B2A5B;   /* navy anchor — hero sections, footers */
 
   /* ─── Accent (Orange) ─── CTAs, price highlights, attention-grabbers */
   --color-accent-50:  #FFF7ED;
@@ -44,6 +101,9 @@
   /* ─── Success (Green) ─── available, verified, passed */
   --color-success-50:  #F0FDF4;
   --color-success-100: #DCFCE7;
+  --color-success-200: #BBF7D0;
+  --color-success-300: #86EFAC;
+  --color-success-400: #4ADE80;
   --color-success-500: #22C55E;
   --color-success-600: #16A34A;
   --color-success-700: #15803D;
@@ -52,38 +112,48 @@
   /* ─── Warning (Amber) ─── featured, boosted */
   --color-warning-50:  #FFFBEB;
   --color-warning-100: #FEF3C7;
+  --color-warning-200: #FDE68A;
+  --color-warning-300: #FCD34D;
+  --color-warning-400: #FBBF24;
   --color-warning-500: #F59E0B;
   --color-warning-600: #D97706;
+  --color-warning-700: #B45309;
 
   /* ─── Danger (Rose) ─── errors, delete actions */
   --color-danger-50:  #FFF1F2;
   --color-danger-100: #FFE4E6;
   --color-danger-200: #FECDD3;
   --color-danger-300: #FDA4AF;
+  --color-danger-400: #FB7185;
   --color-danger-500: #F43F5E;
   --color-danger-600: #E11D48;
   --color-danger-700: #BE123C;
+  --color-danger-800: #9F1239;
 
-  /* ─── Neutral (Slate tinted toward indigo, chroma ~0.008) ─── text, borders, backgrounds */
-  --color-neutral-0:   #FEFEFF;
-  --color-neutral-50:  #F8F9FC;
-  --color-neutral-100: #F0F1F7;
-  --color-neutral-150: #E8E9F1;
-  --color-neutral-200: #DCDDE8;
-  --color-neutral-250: #D0D1DF;
-  --color-neutral-300: #B8B9CC;
-  --color-neutral-400: #8A8BA5;
-  --color-neutral-450: #747596;
-  --color-neutral-500: #5C5D78;
-  --color-neutral-600: #42435C;
-  --color-neutral-700: #2E2F45;
-  --color-neutral-800: #1A1B30;
-  --color-neutral-850: #121326;
-  --color-neutral-900: #0C0D1A;
+  /* ─── Neutral (Graphite / steel-tinted, chroma ~0.006) ─── text, borders, backgrounds.
+     Cool grey reads "gunmetal/steel" — automotive — instead of indigo's tech undertone. */
+  --color-neutral-0:   #FEFEFE;
+  --color-neutral-50:  #F7F8FA;
+  --color-neutral-100: #EFF1F4;
+  --color-neutral-150: #E7E9EE;
+  --color-neutral-200: #DCDEE4;
+  --color-neutral-250: #D0D3DB;
+  --color-neutral-300: #B8BCC7;
+  --color-neutral-400: #8B90A0;
+  --color-neutral-450: #757B8D;
+  --color-neutral-500: #5D6375;
+  --color-neutral-600: #43495A;
+  --color-neutral-700: #2E3440;
+  --color-neutral-800: #1B212B;
+  --color-neutral-850: #141922;
+  --color-neutral-900: #0E1218;
 
-  /* ─── Fonts ─── */
-  --font-sans: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
-  --font-display: "Plus Jakarta Sans", sans-serif;
+  /* ─── Fonts ───
+     --font-sans comes from next/font (Inter) via layout.tsx.
+     --font-display resolves to Archivo (next/font variable --font-heading),
+     our automotive grotesque for headlines. Body text never uses it. */
+  --font-sans: "Inter", system-ui, sans-serif;
+  --font-display: var(--font-heading), "Inter", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", monospace;
 
   /* ─── Shadows ─── */
@@ -139,13 +209,17 @@
   html {
     scroll-behavior: smooth;
     font-size: 16px;
-    background-color: var(--color-neutral-50);
+    background-color: var(--bg);
+    color-scheme: light;
+  }
+  html.dark {
+    color-scheme: dark;
   }
 
   body {
     font-family: var(--font-sans);
-    color: var(--color-neutral-800);
-    background-color: var(--color-neutral-50);
+    color: var(--ink);
+    background-color: var(--bg);
     font-feature-settings: 'kern' 1, 'liga' 1, 'cv11' 1;
     line-height: 1.6;
   }
@@ -169,6 +243,18 @@
   ::selection {
     background: var(--color-primary-100);
     color: var(--color-primary-900);
+  }
+
+  /* Respect users who opt out of motion at the OS level. Framer-motion
+     animations are covered separately by <MotionConfig reducedMotion="user">
+     in ToastProvider (which wraps the whole app in layout.tsx). */
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
 
@@ -201,13 +287,14 @@
     @apply bg-primary-600 text-white hover:bg-primary-700
            active:bg-primary-800 shadow-sm hover:shadow-md;
   }
+  /* Dark text on the vivid orange: white on #F97316 is only 2.8:1, dark ink is 6.6:1 */
   .btn-accent {
-    @apply bg-accent-500 text-white hover:bg-accent-600
-           active:bg-accent-700 shadow-sm hover:shadow-md;
+    @apply bg-accent-500 text-neutral-900 hover:bg-accent-400
+           active:bg-accent-600 shadow-sm hover:shadow-md;
   }
   .btn-outline {
-    @apply border border-neutral-300 text-neutral-700 bg-white
-           hover:bg-neutral-50 hover:border-neutral-400 active:bg-neutral-100;
+    @apply border border-border-strong text-ink bg-surface
+           hover:bg-surface-alt active:bg-surface-alt;
   }
   .btn-outline-primary {
     @apply border border-primary-300 text-primary-700 bg-white
@@ -224,10 +311,11 @@
            active:bg-danger-700 shadow-sm;
   }
   .btn-success {
-    @apply bg-success-600 text-white hover:bg-success-700 shadow-sm;
+    @apply bg-success-700 text-white hover:bg-success-800 shadow-sm;
   }
+  /* WhatsApp green with dark text (9.4:1); white on #25D366 was 2:1 */
   .btn-whatsapp {
-    @apply bg-[#25D366] text-white hover:bg-[#20BD5A] shadow-sm;
+    @apply bg-[#25D366] text-neutral-900 hover:bg-[#20BD5A] shadow-sm;
   }
 
   /* Full width */
@@ -240,7 +328,7 @@
     @apply inline-flex items-center gap-1 font-medium rounded-full
            text-xs px-2.5 py-0.5;
   }
-  .badge-sm { @apply text-[0.65rem] px-2 py-px; }
+  .badge-sm { @apply text-xs px-2 py-px; }
   .badge-lg { @apply text-sm px-3 py-1; }
 
   .badge-primary  { @apply bg-primary-50 text-primary-700 border border-primary-200; }
@@ -260,14 +348,16 @@
   /* ─── CARDS ────────────────────────────────────────────────────────────── */
 
   .card {
-    @apply bg-white rounded-2xl shadow-card border border-neutral-200/60;
+    @apply bg-surface rounded-2xl shadow-card border border-border;
   }
+  /* LISTING CARDS ONLY (CarCard grid). Never combine with dashboards,
+     forms, or static sections — lift-on-hover elsewhere reads as gimmick. */
   .card-hover {
     @apply transition-all duration-300
            hover:shadow-card-hover hover:-translate-y-0.5;
   }
   .card-flat {
-    @apply bg-white rounded-2xl border border-neutral-200;
+    @apply bg-surface rounded-2xl border border-border;
   }
   .card-body    { @apply p-5; }
   .card-body-sm { @apply p-4; }
@@ -277,11 +367,11 @@
   /* ─── INPUTS ───────────────────────────────────────────────────────────── */
 
   .input {
-    @apply w-full px-4 py-2.5 bg-white border border-neutral-300 rounded-lg
-           text-base text-neutral-900 placeholder:text-neutral-400
+    @apply w-full px-4 py-2.5 bg-surface border border-border-strong rounded-lg
+           text-base text-ink-strong placeholder:text-ink-subtle
            transition-all duration-200
            focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100
-           disabled:bg-neutral-50 disabled:text-neutral-400 disabled:cursor-not-allowed;
+           disabled:bg-surface-alt disabled:text-ink-subtle disabled:cursor-not-allowed;
   }
   .input-lg { @apply py-3; }
   .input-sm { @apply py-2 text-sm; }
@@ -296,10 +386,10 @@
   }
 
   .label {
-    @apply block text-sm font-medium text-neutral-700 mb-1.5;
+    @apply block text-sm font-medium text-ink mb-1.5;
   }
   .helper-text {
-    @apply text-xs text-neutral-500 mt-1;
+    @apply text-xs text-ink-muted mt-1;
   }
   .error-text {
     @apply text-xs text-danger-600 mt-1;
@@ -308,22 +398,24 @@
 
   /* ─── TYPOGRAPHY ───────────────────────────────────────────────────────── */
 
-  .heading-page    { @apply text-4xl font-display font-bold text-neutral-900 tracking-tight; }
-  .heading-section { @apply text-2xl font-display font-bold text-neutral-900; }
-  .heading-card    { @apply text-lg font-semibold text-neutral-900; }
-  .heading-sm      { @apply text-base font-semibold text-neutral-800; }
-  .text-muted      { @apply text-sm text-neutral-500; }
-  .text-caption    { @apply text-xs text-neutral-400; }
+  .heading-page    { @apply text-4xl font-display font-bold text-ink-strong tracking-tight; }
+  .heading-section { @apply text-2xl font-display font-bold text-ink-strong; }
+  .heading-card    { @apply text-lg font-semibold text-ink-strong; }
+  .heading-sm      { @apply text-base font-semibold text-ink; }
+  .text-muted      { @apply text-sm text-ink-muted; }
+  .text-caption    { @apply text-xs text-ink-subtle; }
 
 
   /* ─── DIVIDERS ─────────────────────────────────────────────────────────── */
 
-  .divider { @apply border-t border-neutral-200; }
+  .divider { @apply border-t border-border; }
 
   /* ─── WIZARD SIDEBAR ─── */
   .wizard-sidebar {
     /* Anchored right below the sticky 64px global navbar with a height subtraction to prevent viewport overflow */
-    @apply w-64 bg-primary-50 border-r border-primary-100 flex flex-col justify-between shrink-0 p-4 sticky top-16 h-[calc(100vh-64px)];
+    @apply w-64 border-r flex flex-col justify-between shrink-0 p-4 sticky top-16 h-[calc(100vh-64px)]
+           bg-primary-50 border-primary-100
+           dark:bg-surface dark:border-border;
   }
 
   .wizard-nav-item {
@@ -335,11 +427,12 @@
   }
 
   .wizard-nav-item-inactive {
-    @apply text-neutral-600 hover:bg-primary-100 hover:text-primary-700;
+    @apply text-neutral-600 hover:bg-primary-100 hover:text-primary-700
+           dark:text-ink-muted dark:hover:bg-surface-alt dark:hover:text-ink;
   }
 
   .wizard-add-btn {
-    @apply w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-white bg-accent-500 hover:bg-accent-600 active:bg-accent-700 rounded-xl transition-colors shadow-sm;
+    @apply w-full inline-flex items-center justify-center gap-2 px-4 py-3 text-sm font-bold text-neutral-900 bg-accent-500 hover:bg-accent-400 active:bg-accent-600 rounded-xl transition-colors shadow-sm;
   }
 
   /* ─── STEP INDICATOR ─── */
@@ -440,17 +533,6 @@
   /* Text balance for headings */
   .text-balance { text-wrap: balance; }
 
-  /* Edge refraction for premium glassmorphism */
-  .glass-stroke {
-    box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-  }
-  
-  /* Ambient glow shadow */
-  .ambient-glow {
-    box-shadow: 0 20px 45px -10px rgba(79, 70, 229, 0.06);
-  }
-
   /* Range slider — EMI calculator */
   input[type="range"] {
     -webkit-appearance: none;
@@ -460,7 +542,7 @@
   input[type="range"]::-webkit-slider-runnable-track {
     height: 4px;
     border-radius: 2px;
-    background: #c7c4d8;
+    background: var(--border-strong);
   }
   input[type="range"]::-webkit-slider-thumb {
     -webkit-appearance: none;
@@ -468,13 +550,49 @@
     height: 18px;
     width: 18px;
     border-radius: 50%;
-    background: #3525cd;
+    background: var(--color-primary-600);
     margin-top: -7px;
     cursor: pointer;
-    box-shadow: 0 2px 6px rgba(53, 37, 205, 0.35);
-    border: 2px solid white;
+    box-shadow: 0 2px 6px rgb(27 110 243 / 0.35);
+    border: 2px solid var(--surface);
   }
   input[type="range"]:focus {
     outline: none;
   }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════
+   CONTRAST OVERRIDES (WCAG AA) — unlayered on purpose so they beat utilities.
+   Measured with the in-app audit: these token/text pairs were below 4.5:1.
+   ════════════════════════════════════════════════════════════════════════════ */
+/* Light mode: brand blue/orange/green used as small TEXT sits on white or pale tints
+   at 3.1–4.1:1. One step deeper clears 4.5:1. Fills (buttons, bars) keep the brand shade. */
+.text-primary-600 { color: var(--color-primary-700); }
+.text-accent-600 { color: var(--color-accent-700); }
+.text-success-600 { color: var(--color-success-700); }
+.text-danger-600 { color: var(--color-danger-700); }
+
+/* Dark mode: those same texts are lifted for graphite surfaces, and the pale chip
+   backgrounds (bg-*-50/100) become translucent dark tints so lifted text stays readable
+   instead of sitting on a glaring light blob. */
+.dark .text-primary-600,
+.dark .text-primary-700 { color: var(--color-primary-400); }
+.dark .text-accent-600,
+.dark .text-accent-700 { color: var(--color-accent-400); }
+.dark .text-success-600,
+.dark .text-success-700 { color: var(--color-success-500); }
+.dark .text-warning-700,
+.dark .text-warning-800 { color: var(--color-warning-400, #FBBF24); }
+.dark .text-danger-600,
+.dark .text-danger-700 { color: var(--color-danger-400, #FB7185); }
+.dark .bg-primary-50, .dark .bg-primary-100 { background-color: color-mix(in srgb, var(--color-primary-500) 12%, transparent); }
+.dark .bg-accent-50, .dark .bg-accent-100 { background-color: color-mix(in srgb, var(--color-accent-500) 16%, transparent); }
+.dark .bg-success-50, .dark .bg-success-100 { background-color: color-mix(in srgb, var(--color-success-500) 14%, transparent); }
+.dark .bg-warning-50, .dark .bg-warning-100 { background-color: color-mix(in srgb, var(--color-warning-500) 14%, transparent); }
+.dark .bg-danger-50, .dark .bg-danger-100 { background-color: color-mix(in srgb, var(--color-danger-500) 14%, transparent); }
+
+/* Touch targets: 44px minimum on phones (buttons were 36–40px). */
+@media (pointer: coarse), (max-width: 767px) {
+  .btn, .btn-sm, .btn-md { min-height: 2.75rem; }
+  .input, .select { min-height: 2.75rem; }
 }

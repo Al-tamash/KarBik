@@ -16,3 +16,12 @@ out/
 next-env.d.ts
 .agents/
 learning/
+# local tooling / scratch output (never commit)
+.playwright-mcp/
+.ua/
+client/dev.log
+client/dev.err
+client/*-test.png
+client/*-test2.png
+client/test-*.png
+client/.secrets-backup/

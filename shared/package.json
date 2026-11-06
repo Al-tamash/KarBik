@@ -2,8 +2,12 @@
   "name": "@autobazaar/shared",
   "version": "1.0.0",
   "type": "module",
-  "main": "validation.js",
+  "main": "index.ts",
+  "exports": {
+    ".": "./index.ts"
+  },
   "dependencies": {
     "zod": "^4.4.3"
   }
 }
+

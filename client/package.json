@@ -6,23 +6,44 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx scripts/migrate.ts",
+    "db:reset": "tsx scripts/reset-db.ts",
+    "seed:plans": "tsx scripts/seedPlans.ts",
+    "seed:admin": "tsx scripts/seed-admin.ts",
+    "admin:rotate-password": "tsx scripts/rotate-admin-password.ts",
+    "rotate:secrets": "tsx scripts/rotateSecrets.ts"
   },
   "dependencies": {
     "@autobazaar/shared": "*",
+    "@google/generative-ai": "^0.24.1",
+    "@neondatabase/serverless": "^1.1.0",
+    "@types/qrcode": "^1.5.6",
     "better-auth": "^1.6.11",
+    "cloudinary": "^2.10.1",
+    "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.38.0",
     "lucide-react": "^1.16.0",
     "next": "16.2.6",
     "qrcode": "^1.5.4",
+    "razorpay": "^2.9.8",
     "react": "19.2.4",
     "react-dom": "19.2.4",
+    "web-push": "^3.6.7",
     "zod": "^4.4.3"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "^4",
+    "@types/node": "^26.2.0",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@types/web-push": "^3.6.4",
+    "drizzle-kit": "^0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.6",
-    "tailwindcss": "^4"
+    "playwright": "^1.62.1",
+    "tailwindcss": "^4",
+    "typescript": "^6.0.3"
   }
 }

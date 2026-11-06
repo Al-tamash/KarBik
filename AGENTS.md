@@ -3,104 +3,107 @@
 AutoBazaar is a full-stack car dealer marketplace.
 Dealers list cars for sale. Buyers browse and send inquiries.
 
+## Architecture
+
+Single Next.js 16 app (App Router, TypeScript strict) deployed on Vercel.
+API lives in `client/app/api/**` route handlers. Database is Postgres on Neon,
+accessed via Drizzle ORM (neon-http driver). Auth is Better Auth with the
+drizzle adapter, mounted at `/api/auth/[...all]`.
+
+See `docs/adr/` for the key decisions and `CONTEXT.md` for domain language.
+
 ## Two user roles
+
 - `dealer` — create/edit/delete listings, view inquiries
 - `buyer` — browse listings, send inquiries (default on register)
 
 ## Tech stack
-- Frontend: Next.js 14+ App Router, JavaScript (no TypeScript), Tailwind CSS
-- Backend: Node.js + Express.js, ESModules only (import/export — never require)
-- Database: MongoDB via Mongoose
-- Auth: Better Auth (email + password)
-- File uploads: Cloudinary (Phase 2 onwards)
+
+- Framework: Next.js 16 App Router + React 19, TypeScript (`strict: true`)
+- Styling: Tailwind CSS 4
+- API: Next.js Route Handlers (`app/api/**/route.ts`)
+- Database: PostgreSQL on Neon via Drizzle ORM (`@neondatabase/serverless`, `neon-http`)
+- Auth: Better Auth (`better-auth/adapters/drizzle`), email + password
+- Validation: Zod schemas in `shared/` (single source of truth for both client & API)
+- File uploads: Cloudinary (intake via `request.formData()`)
+- Payments: Razorpay; AI: Google Gemini; Push: web-push (VAPID)
 
 ## Folder structure
+
 ```
 autobazaar/
 ├── AGENTS.md
-├── client/                     Next.js frontend (port 3000)
-│   ├── app/
-│   │   ├── layout.js
-│   │   ├── page.js
-│   │   ├── (auth)/login/page.js
-│   │   ├── (auth)/register/page.js
-│   │   └── dashboard/page.js
-│   ├── lib/auth-client.js      Better Auth client config
-│   ├── components/
-│   └── .env.local
-└── server/                     Express backend (port 5000)
-    ├── index.js
-    ├── config/db.js
-    ├── lib/auth.js             Better Auth server config
-    ├── models/Car.js           Phase 2+
-    ├── models/Inquiry.js       Phase 5+
-    ├── routes/auth.js
-    ├── routes/cars.js          Phase 2+
-    ├── routes/inquiries.js     Phase 5+
-    ├── middleware/protect.js
-    └── .env
+├── CONTEXT.md                      # Domain glossary
+├── docs/adr/                       # Architecture decision records
+├── shared/                         # @autobazaar/shared — zod schemas + TS types
+│   ├── index.ts
+│   ├── types.ts                    # CloudFile, CarFeatures, PlanFeatures, enums…
+│   └── validation.ts               # searchCarsSchema, createCarSchema…
+└── client/                         # The entire app (port 3000)
+    ├── drizzle.config.ts
+    ├── drizzle/0000_init.sql       # Versioned migrations (committed)
+    ├── lib/
+    │   ├── db/{schema.ts,index.ts} # Drizzle schema + neon-http client
+    │   ├── auth.ts                 # Better Auth server config
+    │   ├── auth-client.ts          # useAppSession() typed hook
+    │   ├── guards.ts               # requireUser / requireDealer / ApiError / apiHandler
+    │   ├── api-types.ts            # JSON shapes returned by the API
+    │   ├── form.ts                 # formData parsing helpers
+    │   └── …                       # cloudinary-server, razorpay-server, gemini, vahan, push
+    ├── app/
+    │   ├── api/
+    │   │   ├── auth/[...all]/route.ts
+    │   │   ├── cars/…              # list/create, brands, mine, upload, [id], verify-vehicle
+    │   │   ├── dealers/…           # list, check-slug, profile, [slug]
+    │   │   ├── inquiries/…         # create, mine, sent, check, [id]/{status,notes,follow-up,whatsapp}
+    │   │   ├── wishlist/…          # get, check, toggle
+    │   │   ├── payments/…          # create-order, verify
+    │   │   ├── subscriptions/…     # plans, my-plan
+    │   │   ├── boosts/…            # cars/[id], cars/[id]/status, verify
+    │   │   ├── ai/…                # description, price-estimate, specs
+    │   │   ├── analytics/dashboard
+    │   │   ├── trust/…             # verify, reviews, reviews/:dealerId, profile/:dealerId
+    │   │   └── notifications/subscribe
+    │   └── …                       # pages (all .tsx)
+    ├── components/                 # all .tsx
+    ├── scripts/                    # migrate.ts, reset-db.ts, seedPlans.ts, rotateSecrets.ts
+    └── .env.local
 ```
 
 ## Environment variables
 
-server/.env
-```
-MONGO_URI=mongodb+srv://<user>:<pass>@cluster.mongodb.net/autobazaar
-BETTER_AUTH_SECRET=<random_32_char_string>
-PORT=5000
-CLIENT_URL=http://localhost:3000
-```
-
 client/.env.local
+
 ```
-NEXT_PUBLIC_API_URL=http://localhost:5000
 NEXT_PUBLIC_APP_URL=http://localhost:3000
+DATABASE_URL=postgresql://<user>:<pass>@<ep-pooler>.neon.tech/neondb?sslmode=require
+BETTER_AUTH_SECRET=<random_32_char_string>
+CLOUDINARY_CLOUD_NAME=…
+CLOUDINARY_API_KEY=…
+CLOUDINARY_API_SECRET=…
+RAZORPAY_KEY_ID=…
+RAZORPAY_KEY_SECRET=…
+GEMINI_API_KEY=…
+VAPID_PUBLIC_KEY=…
+VAPID_PRIVATE_KEY=…
 ```
 
-## API routes
-- POST /api/auth/sign-up/email — register
-- POST /api/auth/sign-in/email — login
-- POST /api/auth/sign-out — logout
-- GET  /api/auth/get-session — current session
-- GET  /api/cars — public listings (Phase 2+)
-- GET  /api/cars/mine — dealer's own listings (Phase 4+)
-- POST /api/cars — create listing, dealer only (Phase 2+)
-- PUT  /api/cars/:id — update, dealer owner only (Phase 2+)
-- DELETE /api/cars/:id — delete, dealer owner only (Phase 2+)
-- POST /api/inquiries — buyer sends inquiry (Phase 5+)
-- GET  /api/inquiries/mine — dealer views inquiries (Phase 5+)
-- GET  /api/inquiries/sent — buyer views sent inquiries (Phase 5+)
-- POST /api/subscriptions — create subscription (Phase 7+)
-- GET  /api/subscriptions/plans — list all plans (Phase 7+)
-- GET  /api/subscriptions/my-plan — dealer's active plan (Phase 7+)
-- POST /api/payments/create-order — Razorpay order (Phase 7+)
-- POST /api/payments/verify — verify payment (Phase 7+)
-- POST /api/cars/:id/boost — boost a listing (Phase 8+)
-- GET  /api/analytics/dashboard — dealer analytics (Phase 9+)
-- GET  /api/analytics/listing/:id — per-listing stats (Phase 9+)
-- POST /api/reviews — buyer leaves dealer review (Phase 10+)
-- GET  /api/reviews/dealer/:id — dealer's reviews (Phase 10+)
-- POST /api/dealers/verify — submit verification docs (Phase 10+)
-- GET  /api/dealers/check-slug/:slug — check slug availability (Phase 12+)
-- GET  /api/dealers/:slug — dealer micro-website public page (Phase 12+)
-- PATCH /api/dealers/profile — dealer updates micro-website settings (Phase 12+)
+## Common commands (run inside client/)
 
-## Build phases
-| Phase | Feature | Status |
-|-------|---------|--------|
-| 1 | Setup + MongoDB + Express + Better Auth | ✅ Done |
-| 2 | Car listing CRUD + Cloudinary upload | ✅ Done |
-| 3 | Public browse + search + filters | ✅ Done |
-| 4 | Dealer dashboard + role-based access | ✅ Done |
-| 5 | Buyer inquiry system | ✅ Done |
-| 6 | Deploy to Vercel + Render + MongoDB Atlas | ✅ Done |
-| 7 | Dealer subscription plans + Razorpay payment gateway | ✅ Done |
-| 8 | Featured/Boost listings (pay-per-use) | ✅ Done |
-| 9 | Advanced dealer analytics dashboard | ✅ Done |
-| 10 | Car inspection + trust system (reviews, verification) | ✅ Done |
-| 11 | WhatsApp integration + CRM | ✅ Done |
-| 12 | Dealer micro-website + QR code | ✅ Done |
-| 13 | AI-powered features (price suggestion, auto-description) | ✅ Done |
-| 14 | Mobile PWA (push notifications, offline mode) | ✅ Done |
+```
+npm run dev          # dev server
+npm run build        # production build
+npm run lint         # eslint
+npm run db:generate  # generate SQL migration from schema changes
+npm run db:migrate   # apply migrations to Neon
+npm run db:reset     # drop + recreate public schema (dev only!)
+npm run seed:plans   # upsert Free/Starter/Pro plans
+```
 
-Update 🔲 to ✅ when a phase is complete and tested.
+## Conventions
+
+- All application code is TypeScript strict — do not add `.js/.jsx` files.
+- Server-side fetches need absolute URLs (`lib/api-base.ts`); browser code uses relative `/api/...`.
+- Guards: call `requireUser()` / `requireDealer()` inside route handlers; wrap handlers with `apiHandler()`.
+- User IDs are Better Auth strings; entity PKs are UUIDs.
+- Embedded/nested documents are JSONB columns; stable enums are `pgEnum`s.

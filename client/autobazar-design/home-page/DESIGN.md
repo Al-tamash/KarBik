@@ -111,11 +111,11 @@ The personality is authoritative yet welcoming. It leverages "cinematic" dark mo
 
 ## Colors
 
-The palette is anchored by **Indigo (#4F46E5)**, representing stability and high-end technology. **Accent Orange (#F97316)** is used sparingly for high-priority Calls to Action (CTAs), cutting through the cool tones to drive conversion. 
+The palette is anchored by **Highway Blue (#1B6EF3)** — the trust-blue standard of automotive marketplaces (Cars24, Spinny) — backed by the deep navy anchor **#0B2A5B**. **Accent Orange (#F97316)** is used sparingly for high-priority Calls to Action (CTAs), cutting through the cool tones to drive conversion. 
 
 For the "Cinematic" experience:
-- **Hero Sections:** Use a deep Zinc-950 background with subtle Indigo radial gradients to create depth.
-- **Content Areas:** Transition to a clean White/Zinc-50 background to ensure maximum readability for technical specifications.
+- **Hero Sections:** Use a deep graphite background with subtle blue radial gradients to create depth.
+- **Content Areas:** Transition to a clean White/neutral-50 background to ensure maximum readability for technical specifications.
 - **Semantic Colors:** Emerald (#10B981) is reserved strictly for success states, such as "Verified Seller" badges or successful booking confirmations.
 
 ## Typography

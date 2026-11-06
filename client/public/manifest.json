@@ -1,11 +1,11 @@
 {
-  "name": "AutoBazaar",
-  "short_name": "AutoBazaar",
+  "name": "KarBik",
+  "short_name": "KarBik",
   "description": "Premium Car Dealer Marketplace",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#0f172a",
+  "theme_color": "#0B2A5B",
   "icons": [
     {
       "src": "https://res.cloudinary.com/demo/image/upload/w_192,h_192,c_fill,r_max/car_placeholder.png",
