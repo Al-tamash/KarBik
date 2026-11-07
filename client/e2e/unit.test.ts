@@ -50,3 +50,28 @@ describe("buildWhatsAppUrl", () => {
     assert.equal(buildWhatsAppUrl("", "x"), null);
   });
 });
+
+import { buildContactEmail, contactSchema } from "../lib/contact-mail";
+
+describe("contact form", () => {
+  const valid = { name: "Asha", email: "asha@example.com", topic: "buying", message: "Is the Bolero still available?" };
+
+  it("accepts a valid message", () => {
+    assert.equal(contactSchema.safeParse(valid).success, true);
+  });
+  it("rejects a bad email, unknown topic and a too-short message", () => {
+    assert.equal(contactSchema.safeParse({ ...valid, email: "not-an-email" }).success, false);
+    assert.equal(contactSchema.safeParse({ ...valid, topic: "spam" }).success, false);
+    assert.equal(contactSchema.safeParse({ ...valid, message: "hi" }).success, false);
+  });
+  it("escapes HTML and keeps line breaks out of the subject", () => {
+    const mail = buildContactEmail({
+      ...(valid as { name: string; email: string; topic: "buying"; message: string }),
+      name: "Eve\r\nBcc: x@y.z",
+      message: "<script>alert(1)</script>",
+    });
+    assert.ok(!/[\r\n]/.test(mail.subject), "subject contains a line break");
+    assert.ok(!mail.html.includes("<script>"), "message was not escaped");
+    assert.ok(mail.html.includes("&lt;script&gt;"));
+  });
+});

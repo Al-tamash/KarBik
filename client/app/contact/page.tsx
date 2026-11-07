@@ -16,14 +16,42 @@ import {
 } from "lucide-react";
 
 export default function ContactPage() {
-  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "" });
+  const [form, setForm] = useState({ name: "", email: "", subject: "", message: "", website: "" });
   const [submitted, setSubmitted] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSubmit = (e: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // In production, this would POST to an API endpoint
-    // For now, we show a success state to demonstrate the flow
-    setSubmitted(true);
+    if (sending) return;
+    setSending(true);
+    setError("");
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          name: form.name,
+          email: form.email,
+          topic: form.subject,
+          message: form.message,
+          website: form.website,
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { message?: string };
+      if (!res.ok) {
+        setError(
+          data.message ||
+            "We couldn't send your message. Please email support@karbik.com or WhatsApp 94947 20878."
+        );
+        return;
+      }
+      setSubmitted(true);
+    } catch {
+      setError("Network problem. Please check your connection and try again, or email support@karbik.com.");
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -140,7 +168,7 @@ export default function ContactPage() {
                     Thank you for reaching out. We&apos;ll respond to your inquiry within 24 hours on working days.
                   </p>
                   <button
-                    onClick={() => { setSubmitted(false); setForm({ name: "", email: "", subject: "", message: "" }); }}
+                    onClick={() => { setSubmitted(false); setForm({ name: "", email: "", subject: "", message: "", website: "" }); }}
                     className="mt-6 text-sm font-semibold text-primary-600 hover:text-primary-700 hover:underline cursor-pointer"
                   >
                     Send another message
@@ -150,10 +178,13 @@ export default function ContactPage() {
                 <form onSubmit={handleSubmit} className="space-y-5">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-sm font-semibold text-ink mb-1.5">
+                      <label htmlFor="contact-name" className="block text-sm font-semibold text-ink mb-1.5">
                         Your Name
                       </label>
                       <input
+                        id="contact-name"
+                        maxLength={100}
+                        autoComplete="name"
                         type="text"
                         required
                         value={form.name}
@@ -163,10 +194,13 @@ export default function ContactPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-semibold text-ink mb-1.5">
+                      <label htmlFor="contact-email" className="block text-sm font-semibold text-ink mb-1.5">
                         Email Address
                       </label>
                       <input
+                        id="contact-email"
+                        maxLength={200}
+                        autoComplete="email"
                         type="email"
                         required
                         value={form.email}
@@ -178,10 +212,11 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-ink mb-1.5">
+                    <label htmlFor="contact-topic" className="block text-sm font-semibold text-ink mb-1.5">
                       Subject
                     </label>
                     <select
+                      id="contact-topic"
                       required
                       value={form.subject}
                       onChange={(e) => setForm({ ...form, subject: e.target.value })}
@@ -198,11 +233,14 @@ export default function ContactPage() {
                   </div>
 
                   <div>
-                    <label className="block text-sm font-semibold text-ink mb-1.5">
+                    <label htmlFor="contact-message" className="block text-sm font-semibold text-ink mb-1.5">
                       Message
                     </label>
                     <textarea
+                      id="contact-message"
                       required
+                      minLength={10}
+                      maxLength={2000}
                       rows={5}
                       value={form.message}
                       onChange={(e) => setForm({ ...form, message: e.target.value })}
@@ -211,12 +249,37 @@ export default function ContactPage() {
                     />
                   </div>
 
+                  {/* Honeypot: hidden from people, bots tend to fill it. */}
+
+                  <div aria-hidden="true" style={{ position: "absolute", left: "-10000px", width: 1, height: 1, overflow: "hidden" }}>
+
+                    <label htmlFor="contact-website">Website</label>
+
+                    <input id="contact-website" type="text" tabIndex={-1} autoComplete="off" value={form.website} onChange={(e) => setForm({ ...form, website: e.target.value })} />
+
+                  </div>
+
+
+                  {error && (
+
+                    <p role="alert" className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+
+                      {error}
+
+                    </p>
+
+                  )}
+
+
                   <button
+
                     type="submit"
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer"
+
+                    disabled={sending}
+                    className="w-full sm:w-auto disabled:opacity-60 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-8 py-3 rounded-xl font-bold text-sm transition-all shadow-sm hover:shadow-md active:scale-[0.98] cursor-pointer"
                   >
                     <Send className="h-4 w-4" />
-                    Send Message
+                    {sending ? "Sending..." : "Send Message"}
                   </button>
                 </form>
               )}

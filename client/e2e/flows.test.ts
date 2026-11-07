@@ -208,3 +208,54 @@ describe("dealer listing lifecycle", { skip }, () => {
     await ctx.close();
   });
 });
+
+describe("contact form", { skip }, () => {
+  const good = { name: "E2E", email: "e2e@example.test", topic: "buying", message: "This is an automated end-to-end test message." };
+  const headers = { Origin: BASE_URL, "Content-Type": "application/json" };
+
+  it("API rejects invalid input with a 400 and a readable message", async () => {
+    const ctx = await newContext(browser);
+    const res = await ctx.request.post(BASE_URL + "/api/contact", { headers, data: { ...good, email: "nope" } });
+    assert.equal(res.status(), 400);
+    assert.match(((await res.json()) as { message: string }).message, /email/i);
+    await ctx.close();
+  });
+
+  it("API silently accepts a honeypot hit without sending anything", async () => {
+    const ctx = await newContext(browser);
+    const res = await ctx.request.post(BASE_URL + "/api/contact", { headers, data: { ...good, website: "http://spam.example" } });
+    assert.equal(res.status(), 200);
+    await ctx.close();
+  });
+
+  it("page shows a success state only when the API says it sent", async () => {
+    const ctx = await newContext(browser);
+    const page = await ctx.newPage();
+    await page.route("**/api/contact", (route) => route.fulfill({ status: 200, contentType: "application/json", body: JSON.stringify({ ok: true }) }));
+    await page.goto(BASE_URL + "/contact", { waitUntil: "networkidle" });
+    await page.fill("#contact-name", "E2E");
+    await page.fill("#contact-email", "e2e@example.test");
+    await page.selectOption("#contact-topic", "buying");
+    await page.fill("#contact-message", "This is an automated end-to-end test message.");
+    await page.click("button[type=submit]");
+    await page.waitForSelector("text=Message Sent!", { timeout: 10000 });
+    await ctx.close();
+  });
+
+  it("page shows the error (not a fake success) when sending fails", async () => {
+    const ctx = await newContext(browser);
+    const page = await ctx.newPage();
+    await page.route("**/api/contact", (route) =>
+      route.fulfill({ status: 503, contentType: "application/json", body: JSON.stringify({ message: "We couldn't send your message right now. Please email support@karbik.com." }) })
+    );
+    await page.goto(BASE_URL + "/contact", { waitUntil: "networkidle" });
+    await page.fill("#contact-name", "E2E");
+    await page.fill("#contact-email", "e2e@example.test");
+    await page.selectOption("#contact-topic", "buying");
+    await page.fill("#contact-message", "This is an automated end-to-end test message.");
+    await page.click("button[type=submit]");
+    await page.waitForSelector("[role=alert]", { timeout: 10000 });
+    assert.equal(await page.locator("text=Message Sent!").count(), 0);
+    await ctx.close();
+  });
+});

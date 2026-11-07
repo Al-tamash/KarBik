@@ -72,7 +72,7 @@ Where "local" is stated, the flow ran on a production build of this branch with 
 | 4 | Dealer create / edit / delete a listing | **Pass** (local, API) | create 201, edit 200 (price and colour changed), delete 200, then the listing is no longer reachable (403/404/410) and gone from the public list. Image upload not exercised (Cloudinary not available locally). | none needed |
 | 5a | Pricing | **Pass** after fix | Plans from API (Free ₹0, Starter ₹999/mo, Pro ₹2,999/mo) match the page. Logged-out "Current active plan" bug fixed. | Yes |
 | 5b | Compare | **Pass with notes** | Two cars selected: table renders. Notes: the compare bar also overlays the compare page, and the values mix cases ("manual" vs "DIESEL"). | none |
-| 6 | Forms | **Mixed** | Login: wrong password shows "Invalid email or password" and stays put (pass). Register: weak password rejected with a message (pass). **Contact form: fake**, `handleSubmit` only calls `setSubmitted(true)` and shows "Message Sent! We'll respond within 24 hours". It sends nothing. | **Not fixed** (decision needed) |
+| 6 | Forms | **Mixed → fixed** | Login: wrong password shows "Invalid email or password" and stays put (pass). Register: weak password rejected with a message (pass). **Contact form: fake**, `handleSubmit` only calls `setSubmitted(true)` and shows "Message Sent! We'll respond within 24 hours". It sends nothing. | **Fixed**: real form via Resend (`/api/contact`, see `docs/contact-form-resend.md`). Success is shown only when Resend accepted the email; otherwise an error with the email and WhatsApp fallback. |
 | 7 | Search and filters | **Pass** | `?brand=Toyota` keeps the URL and returns only Toyota; `fuelType` and `maxPrice` narrow results correctly; `sort=newest` is appended. | none |
 
 Rate limits are working (a repeated test enquiry returned 429: 3 per phone per day, 5 per buyer per hour, per-IP cap).
@@ -112,7 +112,7 @@ Checks: international format, no `+`, no spaces: pass. URL-encoded: pass. Year, 
 
 ## 6. Open questions for you
 
-1. **Contact form.** It looks like it sends but does not. Preferred fix: a small `/api/contact` that emails `support@karbik.com` through Resend (no new database table). Or replace the form with a `mailto:` / WhatsApp button. Which?
+1. ~~Contact form~~ **Done** with Resend (your choice). Needs, in Vercel Production: `RESEND_API_KEY`, `LEAD_EMAIL_FROM`, and `SUPPORT_ALERT_EMAIL` (set to a working inbox until `support@karbik.com` has MX records). Real send is untested until this branch reaches `main`: Preview has no Resend variables.
 2. **Copy that contradicts how leads work:** (a) "Direct dealer contact … no middlemen" on `/cars`; (b) "RTO VERIFIED" on the car page vs "RC checked" elsewhere; (c) the financing-partner card (HDFC, ICICI, IDFC, Poonawalla, "from 9.5% p.a."); (d) "4.9 (42 reviews)" with 3 shown; (e) every card shows INSPECTED, RC VERIFIED and ACCIDENT-FREE. Which of these are true today? I can reword or remove them on your word.
 3. **Canonical host.** Recommended: set `NEXT_PUBLIC_APP_URL=https://www.karbik.com` in Vercel and redeploy (I may not change env vars). Or make the apex the primary domain. Sitemap, `og:url` and canonical then follow automatically.
 4. **Public data exposure.** Mask the registration number on listings? Drop `searchVector` and dealer user ids from `/api/cars`? The first changes what buyers see.
@@ -130,15 +130,15 @@ Checks: international format, no `+`, no spaces: pass. URL-encoded: pass. Year, 
 Files changed: `app/page.tsx`, `app/loading.tsx`, `components/{TrustStatsStrip,FeaturedCars,JustArrivedCars,PricingContent,CarDetailView}.tsx`, `components/car-detail/{ContactCard,ImageGallery}.tsx`, `app/(auth)/{login,register}/page.tsx`, `app/api/inquiries/route.ts`, `app/cars/page.tsx`, `app/cars/[id]/page.tsx`; new `lib/car-name.ts`, `lib/whatsapp-message.ts`; `client/package.json` gains scripts only (no new dependencies, lockfile untouched).
 
 **Tests added** (`client/e2e/`, `node:test` + the existing `playwright` dependency):
-- `npm run test:unit`: 7 tests (car names, WhatsApp text and URL building).
+- `npm run test:unit`: 10 tests (car names, WhatsApp text and URL building, contact schema and email escaping).
 - `npm run test:smoke`: 26 read-only tests, safe on production. Includes the "no `Loading...` after 5 seconds" homepage test, raw-HTML placeholder check, filters, pricing, compare, 390px overflow.
-- `npm run test:flows`: 9 write tests (register, login, redirect, logout, validation, WhatsApp, dealer create/edit/delete). They **refuse to run against karbik.com** and need `E2E_ALLOW_WRITES=1`.
+- `npm run test:flows`: 13 write tests (register, login, redirect, logout, validation, WhatsApp, dealer create/edit/delete, contact form). Run the local server with blank `RESEND_API_KEY` / `LEAD_EMAIL_FROM` so no real mail is sent. They **refuse to run against karbik.com** and need `E2E_ALLOW_WRITES=1`.
 - Env: `BASE_URL`, `HOST_MAP="www.karbik.com=216.198.79.1"` (pins DNS; this computer's resolver still returns the old Hostinger page for karbik.com), `CHROMIUM_PATH`.
 
 **Results:**
 | Target | unit | smoke | flows | tsc | eslint | build |
 |---|---|---|---|---|---|---|
-| This branch, local production build + QA DB | 7/7 | 26/26 | 9/9 | pass | pass | pass |
+| This branch, local production build + QA DB | 10/10 | 26/26 | 13/13 | pass | pass | pass |
 | Production today (read-only smoke) | n/a | 24/26 | n/a | | | |
 
 The two production failures are exactly the bugs this branch fixes: `Loading...` in the raw homepage HTML, and "Current active plan" shown to logged-out visitors.
