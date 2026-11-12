@@ -86,6 +86,18 @@ export type ApiDealerSummary = {
   isSample?: boolean;
 };
 
+/**
+ * All a buyer page may know about a dealer. No name, slug, address or phone:
+ * KarBik support names the dealer only after the lead (see PRODUCT.md).
+ */
+export type BuyerDealerSummary = {
+  isVerified: boolean;
+  isSample: boolean;
+  city: string;
+  averageRating: number;
+  totalReviews: number;
+};
+
 export type ApiDealerProfile = ApiDealerSummary & {
   id: string;
   user: string;

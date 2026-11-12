@@ -4,6 +4,9 @@ import CarDetailView from "@/components/CarDetailView";
 import type { ApiCar, ApiPublicDealerProfile, ApiReview } from "@/lib/api-types";
 import { displayCarName } from "@/lib/car-name";
 import { API_BASE } from "@/lib/api-base";
+import { formatPrice } from "@/lib/car-format";
+import { scrubDescription, toBuyerCar, toBuyerDealer } from "@/lib/buyer-car";
+import { SHOW_DEALER_REVIEWS } from "@/lib/flags";
 
 /**
  * generateMetadata — Dynamic SEO for every car listing
@@ -29,10 +32,10 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       title: carTitle,
       // Sample (demo) inventory must not be indexed by search engines.
       ...(car.dealerIsSample ? { robots: { index: false, follow: false } } : {}),
-      description: car.description?.slice(0, 160) || `Check out this ${carTitle} on KarBik.`,
+      description: scrubDescription(car.description).slice(0, 160) || `Check out this ${carTitle} on KarBik.`,
       openGraph: {
         title: carTitle,
-        description: `Price: ₹${car.price.toLocaleString("en-IN")}. Certified used car.`,
+        description: `Used car in Hyderabad. Price: ${formatPrice(car.price)}. Ask KarBik support to connect you with the dealer.`,
         images: firstImage ? [{ url: firstImage }] : [],
       },
     };
@@ -58,25 +61,33 @@ export default async function CarDetailPage({ params }: { params: Promise<{ id: 
     } else {
       car = (await carRes.json()) as ApiCar;
 
-      // Fetch dealer profile, reviews, and similar cars in parallel
-      // We pass the brand and bodyType directly to the backend to get highly optimized dynamic recommendations
-      const [profRes, revRes, similarRes] = await Promise.all([
+      // Dealer profile, reviews and candidates for "Similar cars", in parallel.
+      // Candidates: same body type, plus same brand (a buyer weighing a Baleno also looks
+      // at other Marutis). They are ranked by how close the price is, below.
+      const [profRes, revRes, bodyRes, brandRes] = await Promise.all([
         fetch(`${API_BASE}/api/trust/profile/${car.dealer}`, { cache: "no-store" }).catch(() => null),
-        fetch(`${API_BASE}/api/trust/reviews/${car.dealer}`, { cache: "no-store" }).catch(() => null),
-        fetch(`${API_BASE}/api/cars?brand=${car.brand}&bodyType=${car.bodyType}&limit=5`, { cache: "no-store" }).catch(() => null),
+        // Reviews are off (lib/flags.ts): do not fetch them, so they are never serialised.
+        SHOW_DEALER_REVIEWS
+          ? fetch(`${API_BASE}/api/trust/reviews/${car.dealer}`, { cache: "no-store" }).catch(() => null)
+          : Promise.resolve(null),
+        fetch(`${API_BASE}/api/cars?bodyType=${encodeURIComponent(car.bodyType)}&limit=20`, { cache: "no-store" }).catch(() => null),
+        fetch(`${API_BASE}/api/cars?brand=${encodeURIComponent(car.brand)}&limit=10`, { cache: "no-store" }).catch(() => null),
       ]);
 
       if (profRes && profRes.ok) dealerProfile = (await profRes.json()) as ApiPublicDealerProfile;
       if (revRes && revRes.ok) reviews = (await revRes.json()) as ApiReview[];
 
-      if (similarRes && similarRes.ok) {
-        const similarData = (await similarRes.json()) as { cars?: ApiCar[] };
-        const matchedCars = similarData.cars || [];
-
-        // Exclude the currently viewed car from the similar recommendations
-        const currentId = car.id;
-        similarCars = matchedCars.filter(c => c.id !== currentId).slice(0, 4);
+      const pool = new Map<string, ApiCar>();
+      for (const res of [bodyRes, brandRes]) {
+        if (!res || !res.ok) continue;
+        const data = (await res.json()) as { cars?: ApiCar[] };
+        for (const c of data.cars ?? []) if (c.id !== car.id) pool.set(c.id, c);
       }
+      // Closest price first; the current car is never in the list.
+      const basePrice = car.price;
+      similarCars = [...pool.values()]
+        .sort((a, b) => Math.abs(a.price - basePrice) - Math.abs(b.price - basePrice))
+        .slice(0, 4);
     }
   } catch (err) {
     error = "Failed to load car details";
@@ -84,13 +95,15 @@ export default async function CarDetailPage({ params }: { params: Promise<{ id: 
 
   if (error || !car) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center bg-neutral-50 text-center px-4">
-        <span className="text-5xl mb-4">😔</span>
-        <h1 className="text-xl font-black text-neutral-900 mb-2">
+      <div className="flex min-h-[60vh] flex-col items-center justify-center bg-surface px-4 text-center">
+        <h1 className="font-display text-2xl font-bold tracking-tight text-ink-strong">
           {error || "Car not found"}
         </h1>
-        <Link href="/cars" className="mt-4 text-sm font-bold text-primary hover:underline">
-          ← Back to listings
+        <p className="mt-2 max-w-sm text-sm text-ink-muted">
+          This car may have been sold or taken down. The listing page shows what is available now.
+        </p>
+        <Link href="/cars" className="btn btn-cta btn-md mt-6">
+          See all cars
         </Link>
       </div>
     );
@@ -105,7 +118,7 @@ export default async function CarDetailPage({ params }: { params: Promise<{ id: 
     "@type": "Product",
     "name": displayCarName(car),
     "image": car.images?.map(img => img?.url).filter(Boolean) || [],
-    "description": car.description || `Certified used ${car.brand} ${car.title} on KarBik`,
+    "description": scrubDescription(car.description) || `Used ${car.brand} ${car.title} in Hyderabad on KarBik`,
     "sku": car.id,
     "brand": {
       "@type": "Brand",
@@ -118,15 +131,16 @@ export default async function CarDetailPage({ params }: { params: Promise<{ id: 
       "price": car.price,
       "itemCondition": "https://schema.org/UsedCondition",
       "availability": "https://schema.org/InStock",
+      // The dealer is not named in public markup; KarBik is the point of contact.
       "seller": {
-        "@type": "AutoDealer",
-        "name": dealerProfile?.businessName || "Premium Dealer"
+        "@type": "Organization",
+        "name": "KarBik"
       }
     }
   };
 
   return (
-    <div className="min-h-screen bg-neutral-50/50">
+    <div className="min-h-screen bg-surface">
       {/* Head script injection for SEO Product parsing */}
       <script
         type="application/ld+json"
@@ -134,10 +148,10 @@ export default async function CarDetailPage({ params }: { params: Promise<{ id: 
       />
 
       <CarDetailView
-        car={car}
-        initialDealerProfile={dealerProfile}
+        car={toBuyerCar(car)}
+        initialDealerProfile={toBuyerDealer(dealerProfile, car)}
         initialReviews={reviews}
-        similarCars={similarCars}
+        similarCars={similarCars.map(toBuyerCar)}
       />
     </div>
   );

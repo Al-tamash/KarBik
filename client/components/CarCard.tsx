@@ -16,18 +16,7 @@ import { SlidersHorizontal, ShieldCheck, Award, Car as CarIcon, Camera, Heart } 
 import cloudinaryLoader from "@/lib/cloudinary-loader";
 import type { ApiCar } from "@/lib/api-types";
 import { useWishlist } from "@/lib/wishlist";
-
-/**
- * EMI calculation formula (approximate):
- * 80% loan amount, 10.8% annual interest rate, 5-year tenure (60 months)
- * Monthly rate = 10.8 / 12 / 100 = 0.009
- */
-function calculateEMI(price: number): number {
-  const loanAmount = price * 0.8;
-  const monthlyRate = 0.009;
-  const months = 60;
-  return Math.round((loanAmount * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months)));
-}
+import { calculateEmi, emiAssumption } from "@/lib/emi";
 
 /** Lakh / crore, the way Indian buyers read car prices ("₹7.80 Lakh"). */
 function formatPrice(price: number): string {
@@ -113,7 +102,7 @@ export default function CarCard({ car }: { car: ApiCar }) {
     void wishlist.toggle(car.id);
   };
 
-  const emi = calculateEMI(car.price);
+  const emi = calculateEmi(car.price);
   const title = getDisplayTitle(car);
   const variant = car.variant && !car.title?.toLowerCase().includes(car.variant.toLowerCase()) ? car.variant : "";
 
@@ -223,7 +212,7 @@ export default function CarCard({ car }: { car: ApiCar }) {
             </p>
             <p
               className="mt-0.5 text-xs text-ink-muted tabular-nums whitespace-nowrap"
-              title="Estimate only: 80% loan at 10.8% a year for 5 years. KarBik does not offer loans."
+              title={emiAssumption()}
             >
               Est. EMI ₹{emi.toLocaleString("en-IN")}/mo
             </p>

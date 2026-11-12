@@ -97,7 +97,8 @@ Gotchas found the hard way:
 | Home `app/page.tsx` | Redesigned, finish-reviewed, documented (Nov 2026) | Hyderabad area shortcuts and a "Featured" (boosted) rail were left unused by the reviewer's ceiling note |
 | Wishlist `app/wishlist` | Built in a separate session (Nov 2026) | Check it against DESIGN.md when next redesigning |
 | Listing `app/cars` | Redesigned (Nov 2026) | Split to Server Component (SSR) + CarsCatalogClient, live stock faceted filters, sticky quick pills, mobile drawer with live count, 0 anti-patterns |
-| Car detail, compare, dealer storefront, pricing, how-it-works, about, contact, faq, auth, dashboard | Not redesigned | — |
+| Car detail `app/cars/[id]` | Redesigned (Nov 2026), brief `.impeccable/surfaces/app-cars-id-page-tsx.md` | Phone: photo, summary, sticky anchor tabs, sticky bottom bar (price, call back, orange WhatsApp), bottom nav hidden. Desktop: sticky right panel. Sections: Overview, Checks on this car, Features, EMI estimate, How KarBik connects you, Similar cars, FAQ. One EMI formula in `lib/emi.ts`. Registration number and `searchVector` no longer in public car JSON (`lib/public-car.ts`); the page strips dealer name and slug before props reach the client (`lib/buyer-car.ts`). **Dealer reviews are switched off** (`SHOW_DEALER_REVIEWS` in `lib/flags.ts`; while off, reviews are not fetched or serialised and the dealer user id is blanked) until the owner confirms the DB reviews are real. Descriptions are scrubbed of phone numbers, emails and links (`scrubDescription`); a named workshop in a description is a data edit. Open: public car and dealer-profile APIs still return the dealer's business name, slug and address; insurance dates on many cars are already past |
+| Compare, dealer storefront, pricing, how-it-works, about, contact, faq, auth, dashboard | Not redesigned | See Roadmap |
 
 ## Roadmap (agreed Nov 2026)
 
@@ -120,9 +121,8 @@ Rules that apply to every page in the roadmap:
 - **Checks on this car** replaces "KarBik Assured": only recorded RC, accident and service data, "Not provided" where missing.
 - Photos stay hotlinked for now. Every photo needs a failure fallback.
 
-Known drift, recorded by the documenter. Fix each item when its page is redesigned:
-- **Navbar search modal:** a small uppercase label.
-- **Footer wordmark:** set in Inter, not Archivo.
-- **Footer text classes:** `text-body-sm` / `text-heading-sm` are undefined.
+Known drift, recorded by the documenter. Fix each item when its page is redesigned
+(navbar search label, footer wordmark and footer text classes were fixed with the car detail page):
+- **Mobile bottom nav:** its "Account" tab opens `/dashboard`, which is the dealer dashboard; check what a buyer sees there.
 - **Logo:** still the generic car icon; PRODUCT.md says it is open to redesign.
 - **Car photos:** hotlinked from CarDekho (owner's decision for now).

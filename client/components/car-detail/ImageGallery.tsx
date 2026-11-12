@@ -1,315 +1,366 @@
 "use client";
 
-import React, { useState } from "react";
+/**
+ * Gallery for the car detail page.
+ * Phone: an edge-to-edge swipe strip (CSS scroll-snap) with a counter, and a
+ * thumbnail row. From sm: the same strip with arrow buttons and a rounded frame.
+ * Works with 4 photos, 1 photo, or none; a photo that fails to load shows the
+ * placeholder instead of a broken image (photos are hotlinked, see PRODUCT.md).
+ */
+
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import Image from "next/image";
-import { motion, AnimatePresence } from "framer-motion";
-import { ChevronLeft, ChevronRight, Heart, Share2, Copy, ExternalLink, X, Car as CarIcon } from "lucide-react";
+import { ArrowLeft, ChevronLeft, ChevronRight, Copy, Heart, MessageCircle, Share2, SlidersHorizontal, X, Car as CarIcon } from "lucide-react";
 import cloudinaryLoader from "@/lib/cloudinary-loader";
 import type { ApiCar } from "@/lib/api-types";
 import { displayCarName } from "@/lib/car-name";
 
-function toTitleCase(str: unknown): string {
-  if (str === null || str === undefined || str === "") return "";
-  return String(str)
-    .toLowerCase()
-    .split(" ")
-    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-    .join(" ");
+const OVERLAY_BTN =
+  "flex h-11 w-11 items-center justify-center rounded-full bg-surface/95 text-ink shadow-sm transition-colors hover:text-primary-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary-500";
+
+function Placeholder() {
+  return (
+    <div className="flex h-full w-full flex-col items-center justify-center bg-surface-alt text-ink-muted">
+      <CarIcon className="h-12 w-12 text-border-strong" strokeWidth={1.5} aria-hidden />
+      <span className="mt-2 text-sm font-semibold">Photos coming soon</span>
+    </div>
+  );
 }
 
-export default function ImageGallery({ car, toggleWishlist, wishlistLoading, isWishlisted }: {
+export default function ImageGallery({
+  car,
+  isWishlisted,
+  wishlistReady,
+  onToggleWishlist,
+}: {
   car: ApiCar;
-  toggleWishlist: () => void;
-  wishlistLoading: boolean;
   isWishlisted: boolean;
+  wishlistReady: boolean;
+  onToggleWishlist: () => void;
 }) {
-  const [activeImage, setActiveImage] = useState(0);
-  const [showLightbox, setShowLightbox] = useState(false);
-  const [lightboxIndex, setLightboxIndex] = useState(0);
-  const [showSharePopover, setShowSharePopover] = useState(false);
-  const [copiedLink, setCopiedLink] = useState(false);
+  const images = car.images ?? [];
+  const count = images.length;
+  const name = displayCarName(car);
 
-  const hasImages = car?.images && car.images.length > 0;
+  const [active, setActive] = useState(0);
+  const [failed, setFailed] = useState<Set<number>>(new Set());
+  const [lightbox, setLightbox] = useState<number | null>(null);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [copied, setCopied] = useState(false);
+  const [isComparing, setIsComparing] = useState(false);
+  const strip = useRef<HTMLDivElement>(null);
 
-  function lightboxNext() {
-    setLightboxIndex((i) => (i + 1) % car.images.length);
+  /* Compare list lives in localStorage, same keys as the listing card. */
+  useEffect(() => {
+    try {
+      const selected = JSON.parse(localStorage.getItem("compareCars") || "[]") as string[];
+      setIsComparing(selected.includes(car.id));
+    } catch {
+      setIsComparing(false);
+    }
+  }, [car.id]);
+
+  function toggleCompare() {
+    try {
+      let selected = JSON.parse(localStorage.getItem("compareCars") || "[]") as string[];
+      if (isComparing) {
+        selected = selected.filter((id) => id !== car.id);
+        setIsComparing(false);
+      } else {
+        if (selected.length >= 3) {
+          window.alert("You can compare up to 3 cars at a time.");
+          return;
+        }
+        selected.push(car.id);
+        setIsComparing(true);
+      }
+      localStorage.setItem("compareCars", JSON.stringify(selected));
+      window.dispatchEvent(new Event("compareChanged"));
+    } catch {
+      /* storage blocked: compare is simply unavailable */
+    }
   }
-  function lightboxPrev() {
-    setLightboxIndex((i) => (i - 1 + car.images.length) % car.images.length);
+
+  const goTo = useCallback(
+    (index: number) => {
+      const el = strip.current;
+      if (!el || count === 0) return;
+      const next = (index + count) % count;
+      el.scrollTo({ left: next * el.clientWidth, behavior: "smooth" });
+      setActive(next);
+    },
+    [count],
+  );
+
+  function onScroll() {
+    const el = strip.current;
+    if (!el || !el.clientWidth) return;
+    setActive(Math.round(el.scrollLeft / el.clientWidth));
   }
+
+  /* Lightbox: Esc closes, arrows move. */
+  useEffect(() => {
+    if (lightbox === null) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setLightbox(null);
+      if (e.key === "ArrowRight") setLightbox((i) => (i === null ? i : (i + 1) % count));
+      if (e.key === "ArrowLeft") setLightbox((i) => (i === null ? i : (i - 1 + count) % count));
+    };
+    document.body.style.overflow = "hidden";
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [lightbox, count]);
+
+  async function share() {
+    if (typeof navigator.share === "function") {
+      try {
+        await navigator.share({ title: name, url: window.location.href });
+        return;
+      } catch {
+        /* dismissed: fall through to the menu */
+      }
+    }
+    setShareOpen((o) => !o);
+  }
+
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      /* clipboard blocked */
+    }
+  }
+
+  function shareWhatsApp() {
+    const text = `Check out this ${name} on KarBik: ${window.location.href}`;
+    window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+    setShareOpen(false);
+  }
+
+  const showThumbs = count > 1;
 
   return (
-    <>
-      {/* Main Relative Container for the entire Gallery component */}
-      <div className="relative w-full flex flex-col gap-4">
-        {/* 
-          Main Active Image Viewport:
-          - We removed the outside 'flex items-center gap-4' and external buttons to prevent left-right clutter.
-          - We added 'group/gallery' to easily control desktop hover states on the child overlay buttons.
-          - We use 'bg-neutral-100' for a clean, premium background that matches our light design theme.
-        */}
-        {/* aspect-16/10 simplifies standard aspect ratio under Tailwind CSS v4 dynamic sizing */}
+    <div className="-mx-4 sm:mx-0">
+      {/* Photo strip */}
+      <div className="relative bg-surface-alt sm:overflow-hidden sm:rounded-2xl">
         <div
-          className="relative w-full aspect-16/10 overflow-hidden rounded-xl bg-neutral-100 cursor-zoom-in border border-border shadow-md group/gallery"
-          onClick={() => {
-            setLightboxIndex(activeImage);
-            setShowLightbox(true);
-          }}
+          ref={strip}
+          onScroll={onScroll}
+          className="flex aspect-[4/3] snap-x snap-mandatory overflow-x-auto overscroll-x-contain [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:aspect-[16/10]"
         >
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeImage}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.3 }}
-              className="absolute inset-0 w-full h-full"
-            >
-              {hasImages ? (
-                /* 
-                  - We removed the heavy, blurry background 'ambient clone' that looked like AI template clutter.
-                  - We updated the main Image class from 'object-contain' to 'object-cover'.
-                  - This ensures the car image fits beautifully edge-to-edge with no gray/white side bars.
-                */
-                <Image
-                  loader={cloudinaryLoader}
-                  src={car.images[activeImage]?.url || ""}
-                  alt={car.title}
-                  fill
-                  sizes="(max-width: 1024px) 100vw, 800px"
-                  className="object-cover object-center z-10"
-                  priority
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-surface-alt"><CarIcon className="h-16 w-16 text-border-strong" strokeWidth={1.5} aria-hidden /></div>
-              )}
-            </motion.div>
-          </AnimatePresence>
-
-          {/* 
-            Absolute Overlay Arrows (Inside the active image box):
-            - They are absolute positioned so they do NOT compress or shrink our image container.
-            - On mobile, they are always visible (opacity-100).
-            - On desktop (md), they are hidden by default (opacity-0) and cleanly fade in on hover (md:group-hover/gallery:opacity-100).
-          */}
-          {hasImages && car.images.length > 1 && (
-            <>
+          {count === 0 ? (
+            <div className="h-full w-full shrink-0">
+              <Placeholder />
+            </div>
+          ) : (
+            images.map((img, i) => (
               <button
-                type="button" aria-label="Previous photo"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveImage((prev) => (prev - 1 + car.images.length) % car.images.length);
-                }}
-                className="absolute left-4 top-1/2 -translate-y-1/2 z-20 h-11 w-11 rounded-full bg-surface/90 hover:bg-surface text-ink flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 opacity-100 md:opacity-0 md:group-hover/gallery:opacity-100 duration-200"
+                key={`${img.url}-${i}`}
+                type="button"
+                onClick={() => !failed.has(i) && setLightbox(i)}
+                aria-label={`Open photo ${i + 1} of ${count} full screen`}
+                className="relative h-full w-full shrink-0 snap-center cursor-zoom-in focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary-500"
               >
-                <ChevronLeft className="h-5 w-5" />
+                {failed.has(i) ? (
+                  <Placeholder />
+                ) : (
+                  <Image
+                    loader={cloudinaryLoader}
+                    src={img.url}
+                    alt={`${name}, photo ${i + 1}`}
+                    fill
+                    sizes="(max-width: 1024px) 100vw, 800px"
+                    className="object-cover"
+                    priority={i === 0}
+                    onError={() => setFailed((s) => new Set(s).add(i))}
+                  />
+                )}
               </button>
-              <button
-                type="button" aria-label="Next photo"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setActiveImage((prev) => (prev + 1) % car.images.length);
-                }}
-                className="absolute right-4 top-1/2 -translate-y-1/2 z-20 h-11 w-11 rounded-full bg-surface/90 hover:bg-surface text-ink flex items-center justify-center transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 opacity-100 md:opacity-0 md:group-hover/gallery:opacity-100 duration-200"
-              >
-                <ChevronRight className="h-5 w-5" />
-              </button>
-            </>
+            ))
           )}
+        </div>
 
-          {/* Wishlist & Share buttons positioned over the gallery */}
-          <div className="absolute top-4 right-4 flex gap-2 z-10">
+        {/* Back, compare, save, share */}
+        <div className="pointer-events-none absolute inset-x-3 top-3 z-10 flex items-start justify-between">
+          <Link href="/cars" aria-label="Back to all cars" className={`${OVERLAY_BTN} pointer-events-auto`}>
+            <ArrowLeft className="h-5 w-5" aria-hidden />
+          </Link>
+          <div className="pointer-events-auto flex gap-2">
             <button
-              type="button" aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"} aria-pressed={isWishlisted}
-              onClick={(e) => {
-                e.stopPropagation();
-                toggleWishlist();
-              }}
-              disabled={wishlistLoading}
-              className="h-11 w-11 sm:h-9 sm:w-9 rounded-full bg-surface border border-border flex items-center justify-center shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
+              type="button"
+              onClick={toggleCompare}
+              aria-pressed={isComparing}
+              aria-label={isComparing ? "Remove from comparison" : "Add to comparison"}
+              className={`${OVERLAY_BTN} ${isComparing ? "!bg-primary-600 !text-white" : ""}`}
             >
-              <Heart
-                className={`h-4 w-4 transition-all ${
-                  isWishlisted
-                    ? "fill-danger-500 text-danger-500"
-                    : "text-ink-muted"
-                }`}
-              />
+              <SlidersHorizontal className="h-5 w-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={onToggleWishlist}
+              disabled={!wishlistReady}
+              aria-pressed={isWishlisted}
+              aria-label={isWishlisted ? "Remove from wishlist" : "Save to wishlist"}
+              className={`${OVERLAY_BTN} ${isWishlisted ? "!text-danger-600" : ""}`}
+            >
+              <Heart className={`h-5 w-5 ${isWishlisted ? "fill-danger-600" : ""}`} aria-hidden />
             </button>
             <div className="relative">
-              <button
-                type="button" aria-label="Share this car"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowSharePopover((p) => !p);
-                }}
-                className="h-11 w-11 sm:h-9 sm:w-9 rounded-full bg-surface border border-border flex items-center justify-center shadow-sm hover:shadow transition-all active:scale-95 cursor-pointer"
-              >
-                <Share2 className="h-4 w-4 text-ink-muted" />
+              <button type="button" onClick={share} aria-label="Share this car" aria-expanded={shareOpen} className={OVERLAY_BTN}>
+                <Share2 className="h-5 w-5" aria-hidden />
               </button>
-              <AnimatePresence>
-                {showSharePopover && (
-                  <>
-                    <div
-                      className="fixed inset-0 z-10"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setShowSharePopover(false);
-                      }}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.95, y: 8 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.95, y: 8 }}
-                      className="absolute right-0 mt-2 w-44 bg-surface border border-border rounded-xl p-2 shadow-xl z-20"
+              {shareOpen && (
+                <>
+                  <button
+                    type="button"
+                    aria-label="Close share menu"
+                    onClick={() => setShareOpen(false)}
+                    className="fixed inset-0 z-10 cursor-default"
+                  />
+                  <div className="absolute right-0 z-20 mt-2 w-48 rounded-xl border border-border bg-surface p-1 shadow-lg">
+                    <button
+                      type="button"
+                      onClick={copyLink}
+                      className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-ink hover:bg-surface-alt"
                     >
-                      <p className="text-xs font-bold text-ink-subtle uppercase px-2.5 py-1 mb-1 tracking-wider">
-                        Share
-                      </p>
-                      <button
-                        type="button" aria-label="Copy link"
-                        onClick={async (e) => {
-                          e.stopPropagation();
-                          try {
-                            await navigator.clipboard.writeText(
-                              window.location.href
-                            );
-                            setCopiedLink(true);
-                            setTimeout(() => setCopiedLink(false), 2000);
-                          } catch {}
-                        }}
-                        className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-ink hover:bg-surface-alt rounded-lg text-left transition-colors cursor-pointer"
-                      >
-                        <Copy className="h-3.5 w-3.5" />
-                        {copiedLink ? "Copied!" : "Copy Link"}
-                      </button>
-                      <button
-                        type="button" aria-label="Share on WhatsApp"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          const text = `Check out this ${displayCarName(car)} on KarBik: ${window.location.href}`;
-                          window.open(
-                            `https://api.whatsapp.com/send?text=${encodeURIComponent(text)}`,
-                            "_blank"
-                          );
-                          setShowSharePopover(false);
-                        }}
-                        className="w-full flex items-center gap-2 px-2.5 py-2 text-xs font-semibold text-ink hover:bg-surface-alt rounded-lg text-left transition-colors cursor-pointer"
-                      >
-                        <ExternalLink className="h-3.5 w-3.5" />
-                        Share to WhatsApp
-                      </button>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+                      <Copy className="h-4 w-4" aria-hidden />
+                      {copied ? "Link copied" : "Copy link"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={shareWhatsApp}
+                      className="flex min-h-11 w-full items-center gap-2 rounded-lg px-3 text-left text-sm font-semibold text-ink hover:bg-surface-alt"
+                    >
+                      <MessageCircle className="h-4 w-4" aria-hidden />
+                      Share on WhatsApp
+                    </button>
+                  </div>
+                </>
+              )}
             </div>
           </div>
         </div>
+
+        {/* Arrows (sm+) and counter */}
+        {count > 1 && (
+          <>
+            <button
+              type="button"
+              onClick={() => goTo(active - 1)}
+              aria-label="Previous photo"
+              className={`${OVERLAY_BTN} absolute left-3 top-1/2 z-10 hidden -translate-y-1/2 sm:flex`}
+            >
+              <ChevronLeft className="h-5 w-5" aria-hidden />
+            </button>
+            <button
+              type="button"
+              onClick={() => goTo(active + 1)}
+              aria-label="Next photo"
+              className={`${OVERLAY_BTN} absolute right-3 top-1/2 z-10 hidden -translate-y-1/2 sm:flex`}
+            >
+              <ChevronRight className="h-5 w-5" aria-hidden />
+            </button>
+            <span className="absolute bottom-3 right-3 z-10 rounded-md bg-graphite/75 px-2 py-1 text-xs font-semibold text-white tabular-nums">
+              {active + 1} / {count}
+            </span>
+          </>
+        )}
       </div>
 
-      {/* Thumbnail Strip positioned below the main image box */}
-      {hasImages && car.images.length > 1 && (
-        <div className="w-full">
-          {/* We use a simple flex row for exactly 4 thumbnails instead of a scrolling overflow strip */}
-          {/* This matches Spinny's clean aesthetic and looks extremely intentional and professional */}
-          {/* grid-cols-4: the four thumbnails share the available width, so the strip can
-              never be wider than the screen (fixed 96px buttons forced a 444px page on phones) */}
-          <div className="grid grid-cols-4 gap-2 sm:gap-3 pb-1">
-            {car.images.slice(0, 4).map((img, i) => (
-              <button
-                key={i}
-                type="button"
-                onClick={() => setActiveImage(i)}
-                className={`relative w-full h-16 rounded-lg overflow-hidden border-2 transition-all cursor-pointer ${ // shrink-0 keeps thumbnail box static, preventing it from compressing inside the flex strip
-                  i === activeImage
-                    ? "border-primary-600 opacity-100"
-                    : "border-transparent opacity-60 hover:opacity-90"
-                }`}
-              >
+      {/* Thumbnails */}
+      {showThumbs && (
+        <div className="mt-2 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:px-0 [&::-webkit-scrollbar]:hidden">
+          {images.map((img, i) => (
+            <button
+              key={`${img.url}-t-${i}`}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Show photo ${i + 1}`}
+              aria-current={i === active}
+              className={`relative h-14 w-20 shrink-0 overflow-hidden rounded-lg bg-surface-alt ring-2 transition-shadow ${
+                i === active ? "ring-primary-600" : "ring-transparent hover:ring-border-strong"
+              }`}
+            >
+              {!failed.has(i) && (
                 <Image
                   loader={cloudinaryLoader}
-                  src={img?.url || ""}
-                  alt={`Photo ${i + 1}`}
+                  src={img.url}
+                  alt=""
                   fill
-                  sizes="(max-width: 640px) 25vw, 120px"
+                  sizes="80px"
                   className="object-cover"
+                  onError={() => setFailed((s) => new Set(s).add(i))}
                 />
-                {/* +N Photos overlay on the 4th thumbnail (index 3) when there are more than 4 images */}
-                {i === 3 && car.images.length > 4 && (
-                  <div className="absolute inset-0 bg-black/60 flex flex-col items-center justify-center text-white text-xs font-bold transition-all hover:bg-black/50">
-                    <span>+{car.images.length - 4}</span>
-                    <span className="text-xs uppercase tracking-wider font-medium">Photos</span>
-                  </div>
-                )}
-              </button>
-            ))}
-          </div>
+              )}
+            </button>
+          ))}
         </div>
       )}
 
-      {/* ─── Fullscreen Lightbox ──────────────────────────────────────────── */}
-      <AnimatePresence>
-        {showLightbox && hasImages && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-100 bg-black/95 flex items-center justify-center" // z-100 uses Tailwind CSS v4's dynamic z-index support without arbitrary bracket syntax
-            onClick={() => setShowLightbox(false)}
+      {/* Full-screen viewer */}
+      {lightbox !== null && count > 0 && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label={`${name} photos`}
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-graphite/95"
+          onClick={() => setLightbox(null)}
+        >
+          <button
+            type="button"
+            aria-label="Close photo viewer"
+            onClick={() => setLightbox(null)}
+            className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
           >
+            <X className="h-5 w-5" aria-hidden />
+          </button>
+          {count > 1 && (
             <button
-              type="button" aria-label="Close photo viewer"
-              onClick={() => setShowLightbox(false)}
-              className="absolute top-5 right-5 h-11 w-11 rounded-full bg-surface/10 text-white flex items-center justify-center hover:bg-surface/20 transition-colors cursor-pointer z-10"
-            >
-              <X className="h-5 w-5" />
-            </button>
-
-            <button
-              type="button" aria-label="Previous photo"
+              type="button"
+              aria-label="Previous photo"
               onClick={(e) => {
                 e.stopPropagation();
-                lightboxPrev();
+                setLightbox((i) => (i === null ? i : (i - 1 + count) % count));
               }}
-              className="absolute left-4 h-11 w-11 rounded-full bg-surface/10 text-white flex items-center justify-center hover:bg-surface/20 transition-colors cursor-pointer z-10"
+              className="absolute left-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
             >
-              <ChevronLeft className="h-5 w-5" />
+              <ChevronLeft className="h-5 w-5" aria-hidden />
             </button>
-
-            <div
-              className="relative w-full max-w-5xl max-h-[85vh] px-16"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {/* aspect-16/10 specifies clean aspect ratio for the fullscreen lightbox modal container */}
-              <div className="relative aspect-16/10 w-full">
-                <Image
-                  loader={cloudinaryLoader}
-                  src={car.images[lightboxIndex]?.url || ""}
-                  alt={`${car.title} - Photo ${lightboxIndex + 1}`}
-                  fill
-                  sizes="90vw"
-                  className="object-contain"
-                />
-              </div>
-              <p className="text-center text-white/50 text-xs mt-4">
-                {lightboxIndex + 1} / {car.images.length}
-              </p>
-            </div>
-
+          )}
+          <div className="relative h-[80vh] w-full max-w-5xl px-14" onClick={(e) => e.stopPropagation()}>
+            <Image
+              loader={cloudinaryLoader}
+              src={images[lightbox].url}
+              alt={`${name}, photo ${lightbox + 1}`}
+              fill
+              sizes="90vw"
+              className="object-contain"
+            />
+          </div>
+          {count > 1 && (
             <button
-              type="button" aria-label="Next photo"
+              type="button"
+              aria-label="Next photo"
               onClick={(e) => {
                 e.stopPropagation();
-                lightboxNext();
+                setLightbox((i) => (i === null ? i : (i + 1) % count));
               }}
-              className="absolute right-4 h-11 w-11 rounded-full bg-surface/10 text-white flex items-center justify-center hover:bg-surface/20 transition-colors cursor-pointer z-10"
+              className="absolute right-3 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-white/10 text-white hover:bg-white/20"
             >
-              <ChevronRight className="h-5 w-5" />
+              <ChevronRight className="h-5 w-5" aria-hidden />
             </button>
-          </motion.div>
-        )}
-      </AnimatePresence>
-    </>
+          )}
+          <p className="absolute bottom-4 text-sm text-white/70 tabular-nums">
+            {lightbox + 1} / {count}
+          </p>
+        </div>
+      )}
+    </div>
   );
 }

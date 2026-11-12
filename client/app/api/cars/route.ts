@@ -17,6 +17,7 @@ import {
   validateFiles,
 } from "@/lib/form";
 import { uploadCarImage } from "@/lib/cloudinary-server";
+import { stripPrivateCarFields } from "@/lib/public-car";
 import { keepOwnedImages } from "@/lib/asset-ownership";
 import { publiclyVisible, UNVERIFIED_LIVE_LISTING_QUOTA } from "@/lib/car-visibility";
 
@@ -140,7 +141,7 @@ export async function GET(request: Request) {
 
     return Response.json({
       cars: rows.map((row) => ({
-        ...row.car,
+        ...stripPrivateCarFields(row.car),
         dealerProfile: row.dealerProfile ?? null,
       })),
       total,

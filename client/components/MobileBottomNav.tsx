@@ -36,8 +36,11 @@ export default function MobileBottomNav() {
     }
   ];
 
+  // The car detail page has its own sticky price + "Ask on WhatsApp" bar in this spot.
+  if (/^\/cars\/[^/]+\/?$/.test(pathname)) return null;
+
   return (
-    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/95 backdrop-blur-md border-t border-neutral-200 shadow-lg px-4 py-2 flex justify-around items-center pb-safe-bottom select-none">
+    <nav className="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface border-t border-border shadow-lg px-4 py-2 flex justify-around items-center pb-safe-bottom select-none">
       {navItems.map((item) => {
         const Icon = item.icon;
         // Strict active state check or sub-path match
@@ -52,11 +55,11 @@ export default function MobileBottomNav() {
             href={item.href}
             className={`flex flex-col items-center justify-center gap-1.5 py-1 px-3.5 rounded-xl transition-all duration-200 active:scale-95 cursor-pointer ${
               isActive 
-                ? "text-primary-600 font-bold" 
-                : "text-neutral-500 font-medium hover:text-neutral-900"
+                ? "text-primary-700 font-bold"
+                : "text-ink-muted font-medium hover:text-ink-strong"
             }`}
           >
-            <div className={`p-1.5 rounded-lg transition-colors ${isActive ? "bg-primary-50 text-primary-600" : "bg-transparent text-neutral-500"}`}>
+            <div className={`p-1.5 rounded-lg transition-colors ${isActive ? "bg-primary-50 text-primary-700" : "bg-transparent text-ink-muted"}`}>
               <Icon className="h-5 w-5 shrink-0" />
             </div>
             <span className="text-xs tracking-tight">{item.label}</span>

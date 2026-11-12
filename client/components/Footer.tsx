@@ -18,11 +18,11 @@ export default function Footer() {
           
           {/* Column 1: Brand Info & Socials */}
           <div className="space-y-4">
-            <Link href="/" className="flex items-center gap-2 text-xl font-extrabold tracking-tight text-white select-none group">
+            <Link href="/" className="flex items-center gap-2 font-display text-2xl font-bold tracking-tight text-white select-none group">
               <Car className="h-6 w-6 text-primary-400 group-hover:scale-110 transition-transform duration-300" />
               <span>Kar<span className="text-primary-400">Bik</span></span>
             </Link>
-            <p className="text-body-sm leading-relaxed text-neutral-400">
+            <p className="text-sm leading-relaxed text-neutral-400">
               A Hyderabad marketplace for used cars from local dealers. Browse listings and talk to KarBik support, who connect you with the dealer. Free for buyers.
             </p>
             {/* Trust Seal */}
@@ -34,8 +34,8 @@ export default function Footer() {
 
           {/* Column 2: Quick Links */}
           <div className="space-y-4">
-            <h3 className="text-white font-bold text-heading-sm tracking-tight border-b border-neutral-800 pb-2">Quick Links</h3>
-            <ul className="space-y-2.5 text-body-sm">
+            <h3 className="text-white font-bold text-base tracking-tight border-b border-neutral-800 pb-2">Quick Links</h3>
+            <ul className="space-y-2.5 text-sm">
               {[
                 { name: "Browse Used Cars", href: "/cars" },
                 { name: "How It Works", href: "/how-it-works" },
@@ -57,8 +57,8 @@ export default function Footer() {
 
           {/* Column 3: For Dealers */}
           <div className="space-y-4">
-            <h3 className="text-white font-bold text-heading-sm tracking-tight border-b border-neutral-800 pb-2">For Car Dealers</h3>
-            <ul className="space-y-2.5 text-body-sm">
+            <h3 className="text-white font-bold text-base tracking-tight border-b border-neutral-800 pb-2">For Car Dealers</h3>
+            <ul className="space-y-2.5 text-sm">
               {[
                 { name: "Dealer Dashboard", href: "/dashboard" },
                 { name: "Upgrade Membership", href: "/pricing" },
@@ -77,8 +77,8 @@ export default function Footer() {
 
           {/* Column 4: Contact & Locations */}
           <div className="space-y-4">
-            <h3 className="text-white font-bold text-heading-sm tracking-tight border-b border-neutral-800 pb-2">Get in Touch</h3>
-            <ul className="space-y-3.5 text-body-sm text-neutral-400">
+            <h3 className="text-white font-bold text-base tracking-tight border-b border-neutral-800 pb-2">Get in Touch</h3>
+            <ul className="space-y-3.5 text-sm text-neutral-400">
               <li className="flex gap-3">
                 <Mail className="h-5 w-5 text-primary-400 shrink-0 mt-0.5" />
                 <div>

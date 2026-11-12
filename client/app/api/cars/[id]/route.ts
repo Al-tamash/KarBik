@@ -4,6 +4,7 @@ import { cars, dealerProfiles } from "@/lib/db/schema";
 import { updateCarSchema, stripUndefined } from "@autobazaar/shared";
 import { apiHandler, getSessionUser, requireDealer } from "@/lib/guards";
 import { parseFormData, validateFiles } from "@/lib/form";
+import { stripPrivateCarFields } from "@/lib/public-car";
 import {
   deleteFromCloudinary,
   uploadCarImage,
@@ -61,7 +62,9 @@ export async function GET(
       .where(eq(dealerProfiles.user, car.dealer))
       .limit(1);
 
-    return Response.json({ ...car, views, dealerIsSample: dealerRow?.isSample ?? false });
+    // The registration number goes only to the owning dealer and to admins.
+    const visible = isOwner || isAdmin ? car : stripPrivateCarFields(car);
+    return Response.json({ ...visible, views, dealerIsSample: dealerRow?.isSample ?? false });
   });
 }
 

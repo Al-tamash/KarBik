@@ -374,8 +374,8 @@ export default function Navbar() {
 
               {/* Popular Searches */}
               <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-ink-subtle select-none">
-                  Popular Brand Filters
+                <h4 className="text-sm font-semibold text-ink-muted select-none">
+                  Popular brands
                 </h4>
                 <div className="flex flex-wrap gap-2.5">
                   {["Maruti", "Tata", "Toyota", "Kia", "Hyundai", "Mahindra"].map((brand: string) => (

@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { SlidersHorizontal, X, ArrowRight } from "lucide-react";
 
@@ -12,6 +13,8 @@ import { SlidersHorizontal, X, ArrowRight } from "lucide-react";
  */
 export default function CompareBar() {
   const [count, setCount] = useState(0);
+  const pathname = usePathname();
+  const onCarPage = /^\/cars\/[^/]+\/?$/.test(pathname);
 
   const updateCount = () => {
     const selected = JSON.parse(localStorage.getItem("compareCars") || "[]");
@@ -39,7 +42,10 @@ export default function CompareBar() {
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] w-[90%] max-w-lg"
+          // Phones: clear the bottom nav, or the taller sticky bar on a car's page.
+          className={`fixed left-1/2 z-[100] w-[90%] max-w-lg -translate-x-1/2 lg:bottom-8 ${
+            onCarPage ? "bottom-36" : "bottom-24"
+          }`}
         >
           <div className="bg-neutral-900 text-white rounded-2xl p-4 flex items-center justify-between shadow-xl border border-white/10 backdrop-blur-xl">
             <div className="flex items-center gap-4 pl-4">
