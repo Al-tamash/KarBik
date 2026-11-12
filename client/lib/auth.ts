@@ -1,6 +1,9 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
+import { after } from "next/server";
 import { db, schema } from "@/lib/db";
+import { sendPasswordResetEmail } from "@/lib/auth-mail";
+import { normalizeIndianMobile } from "@/lib/car-format";
 
 // Roles a person may pick for THEMSELVES at sign-up. "admin" is deliberately
 // absent: it is only ever granted by a direct database update
@@ -40,6 +43,20 @@ export const auth = betterAuth({
 
   emailAndPassword: {
     enabled: true,
+    resetPasswordTokenExpiresIn: 60 * 60,
+    // A reset usually means a lost phone or a shared password: sign every other device out.
+    revokeSessionsOnPasswordReset: true,
+    // Not awaited: an account that exists would otherwise answer more slowly than one that
+    // does not, which tells a stranger who is registered. `after` finishes the send once
+    // the response has gone out.
+    sendResetPassword: async ({ user, url }) => {
+      const send = () => sendPasswordResetEmail({ to: user.email, name: user.name, url });
+      try {
+        after(send);
+      } catch {
+        void send();
+      }
+    },
   },
 
   baseURL: APP_URL,
@@ -77,7 +94,8 @@ export const auth = betterAuth({
             data: {
               ...user,
               role: safeRole,
-              phone: requestedPhone || null,
+              // Direct API sign-ups send whatever they like; store only a real Indian mobile number.
+          phone: normalizeIndianMobile(typeof requestedPhone === "string" ? requestedPhone : null),
             },
           };
         },

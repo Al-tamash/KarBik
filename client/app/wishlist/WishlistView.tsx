@@ -84,7 +84,7 @@ export default function WishlistView() {
             ) : (
               <>
                 Saved in this browser only.{" "}
-                <Link href="/login" className="font-semibold text-primary-700 hover:underline">
+                <Link href="/login?next=/wishlist" className="font-semibold text-primary-700 hover:underline">
                   Log in
                 </Link>{" "}
                 to keep them on your account.
@@ -157,7 +157,7 @@ function EmptyState({ signedIn }: { signedIn: boolean }) {
       {!signedIn && (
         <p className="mt-4 text-sm text-ink-muted">
           Saved cars on another device?{" "}
-          <Link href="/login" className="font-semibold text-primary-700 hover:underline">
+          <Link href="/login?next=/wishlist" className="font-semibold text-primary-700 hover:underline">
             Log in
           </Link>
         </p>

@@ -15,6 +15,8 @@ export default function CompareBar() {
   const [count, setCount] = useState(0);
   const pathname = usePathname();
   const onCarPage = /^\/cars\/[^/]+\/?$/.test(pathname);
+  // The compare page is the list itself; a bar pointing at it would be noise.
+  const onComparePage = pathname === "/compare";
 
   const updateCount = () => {
     const selected = JSON.parse(localStorage.getItem("compareCars") || "[]");
@@ -37,7 +39,7 @@ export default function CompareBar() {
 
   return (
     <AnimatePresence>
-      {count > 0 && (
+      {count > 0 && !onComparePage && (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}

@@ -27,6 +27,7 @@ after(async () => {
 async function register(page: Page, who: { name: string; email: string; password: string }, role: "buyer" | "dealer") {
   await page.goto(BASE_URL + "/register", { waitUntil: "networkidle" });
   await page.fill("#reg-name", who.name);
+  await page.fill("#reg-phone", "9876543210");
   await page.fill("#reg-email", who.email);
   await page.fill("#reg-password", who.password);
   if (role === "dealer") {

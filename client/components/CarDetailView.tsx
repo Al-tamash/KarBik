@@ -13,15 +13,14 @@
  * The dealer is never named here (PRODUCT.md): support names them after the lead.
  */
 
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useAppSession, authClient } from "@/lib/auth-client";
 import type { ApiCar, ApiReview, BuyerDealerSummary } from "@/lib/api-types";
 import { displayCarName } from "@/lib/car-name";
-import { normalizeIndianMobile } from "@/lib/car-format";
 import { useWishlist } from "@/lib/wishlist";
 import { SHOW_DEALER_REVIEWS } from "@/lib/flags";
+import { useLeadFlow } from "@/lib/use-lead-flow";
 
 import ImageGallery from "./car-detail/ImageGallery";
 import SummaryPanel from "./car-detail/SummaryPanel";
@@ -36,8 +35,7 @@ import HowItWorks from "./car-detail/HowItWorks";
 import DealerReviews from "./car-detail/DealerReviews";
 import SimilarCars from "./car-detail/SimilarCars";
 import FaqList, { type Faq } from "./car-detail/FaqList";
-import LeadSheet, { type AuthForm } from "./car-detail/LeadSheet";
-import type { InquiryUi } from "./car-detail/ContactActions";
+import LeadSheet from "./car-detail/LeadSheet";
 
 /* Every answer describes what KarBik actually does: no invented warranties,
    bank partnerships or promises on the dealer's behalf. */
@@ -75,7 +73,6 @@ export default function CarDetailView({
   initialReviews: ApiReview[];
   similarCars?: ApiCar[];
 }) {
-  const { data: session } = useAppSession();
   const searchParams = useSearchParams();
 
   const dealer = initialDealerProfile;
@@ -85,39 +82,19 @@ export default function CarDetailView({
   const [hasReviewed, setHasReviewed] = useState(false);
   const [canReview, setCanReview] = useState(false);
 
-  /* Inquiry / CRM */
-  const [inquiry, setInquiry] = useState({ name: "", phone: "", message: "" });
-  const [sendingInquiry, setSendingInquiry] = useState(false);
-  const [inquiryStatus, setInquiryStatus] = useState("");
-  const [inquiryMessage, setInquiryMessage] = useState("");
-  const [hasInquired, setHasInquired] = useState(false);
-
-  /* Lead gate */
-  const [showAuthModal, setShowAuthModal] = useState(false);
-  const [authTab, setAuthTab] = useState("signup");
-  const [authForm, setAuthForm] = useState<AuthForm>({ name: "", phone: "", email: "", password: "" });
-  const [authLoading, setAuthLoading] = useState(false);
-  const [authError, setAuthError] = useState("");
-  const [pendingAction, setPendingAction] = useState("");
+  /* Lead flow (sign-in gate, inquiry, WhatsApp) is shared with the compare page. */
+  const lead = useLeadFlow();
+  const isLoggedIn = lead.isLoggedIn;
+  const ui = lead.uiFor(car.id);
+  const hasInquired = ui.sent;
+  const name = displayCarName(car);
+  const leadTarget = { id: car.id, label: name };
+  const handleWhatsAppClick = () => void lead.request(leadTarget, "whatsapp");
+  const handleRequestCallback = () => void lead.request(leadTarget, "callback");
 
   /* Wishlist: same store as the listing-card hearts and the header count */
   const wishlist = useWishlist();
   const isWishlisted = wishlist.has(car.id);
-
-  const isLoggedIn = !!session?.user;
-
-  /* Sync session into inquiry form */
-  useEffect(() => {
-    if (session?.user) {
-      const userPhone = (session.user as { phone?: string })?.phone || "";
-      setInquiry((prev) => ({
-        ...prev,
-        name: session.user.name || prev.name || "",
-        phone: userPhone || prev.phone || "",
-      }));
-      if (userPhone) setAuthForm((p) => ({ ...p, phone: userPhone }));
-    }
-  }, [session]);
 
   /* Remember this car as recently viewed (no dealer fields are stored) */
   useEffect(() => {
@@ -188,172 +165,6 @@ export default function CarDetailView({
     void wishlist.toggle(car.id);
   }
 
-  async function submitInquiryData(phone: string, name: string, customMessage: string) {
-    setSendingInquiry(true);
-    setInquiryStatus("");
-    setInquiryMessage("");
-    try {
-      const res = await fetch(`/api/inquiries`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          car: car.id,
-          channel: "callback",
-          name: name || inquiry.name || "Buyer",
-          phone,
-          message:
-            customMessage || inquiry.message || `Interested in ${displayCarName(car)}. Please connect for a test drive.`,
-        }),
-        credentials: "include",
-      });
-      if (!res.ok) {
-        const d = (await res.json()) as { message?: string };
-        throw new Error(d.message || "Failed to submit inquiry.");
-      }
-      setInquiryStatus("success");
-      setInquiryMessage("Request received. KarBik support will call you shortly to confirm, then connect you with the dealer.");
-      setHasInquired(true);
-      return true;
-    } catch (err) {
-      setInquiryStatus("error");
-      setInquiryMessage((err as Error).message);
-      return false;
-    } finally {
-      setSendingInquiry(false);
-    }
-  }
-
-  // Registers the lead FIRST, then opens WhatsApp with a server-issued link: the dealer's
-  // number never reaches the browser, and WhatsApp only opens once the lead is stored.
-  async function connectOnWhatsApp(phone: string, buyerName: string) {
-    // Open a blank tab synchronously (inside the click) so popup blockers allow it.
-    const waTab = window.open("", "_blank");
-    setSendingInquiry(true);
-    setInquiryStatus("");
-    setInquiryMessage("");
-    try {
-      const res = await fetch(`/api/inquiries`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          car: car.id,
-          channel: "whatsapp",
-          name: buyerName || inquiry.name || "Buyer",
-          phone,
-          message: "Requested details via WhatsApp",
-        }),
-        credentials: "include",
-      });
-      const data = (await res.json().catch(() => ({}))) as { message?: string; whatsappUrl?: string | null };
-      if (!res.ok) throw new Error(data.message || "Failed to submit inquiry.");
-
-      setHasInquired(true);
-      setInquiryStatus("success");
-      if (data.whatsappUrl) {
-        setInquiryMessage("Request received. Continue the chat with KarBik support on WhatsApp.");
-        if (waTab) {
-          waTab.location.href = data.whatsappUrl;
-        } else {
-          // Popup blocked (e.g. tab opened after the sign-up round trip). The lead is stored,
-          // so hand the buyer to WhatsApp in this tab instead.
-          window.location.assign(data.whatsappUrl);
-        }
-      } else {
-        waTab?.close();
-        setInquiryMessage("Request received. KarBik support will contact you shortly.");
-      }
-    } catch (err) {
-      waTab?.close();
-      setInquiryStatus("error");
-      setInquiryMessage((err as Error).message);
-    } finally {
-      setSendingInquiry(false);
-    }
-  }
-
-  async function handleWhatsAppClick() {
-    if (!isLoggedIn || !inquiry.phone) {
-      setPendingAction("whatsapp");
-      setShowAuthModal(true);
-      return;
-    }
-    await connectOnWhatsApp(inquiry.phone, session?.user?.name || "Buyer");
-  }
-
-  async function handleRequestCallback() {
-    if (!isLoggedIn) {
-      setPendingAction("inquiry");
-      setShowAuthModal(true);
-      return;
-    }
-    const phone = inquiry.phone || (session?.user as { phone?: string })?.phone;
-    if (!phone) {
-      setPendingAction("inquiry");
-      setShowAuthModal(true);
-      return;
-    }
-    await submitInquiryData(phone, session?.user?.name || "Buyer", "Callback requested");
-  }
-
-  async function handleAuthSubmit(e?: React.FormEvent<HTMLFormElement>) {
-    if (e) e.preventDefault();
-    setAuthLoading(true);
-    setAuthError("");
-    try {
-      // Already signed in: only confirm the number, then finish the pending action.
-      if (isLoggedIn) {
-        const normalizedPhone = normalizeIndianMobile(authForm.phone);
-        if (!normalizedPhone) {
-          setAuthError("Enter a valid 10-digit Indian mobile number.");
-          setAuthLoading(false);
-          return;
-        }
-        setInquiry((prev) => ({ ...prev, phone: normalizedPhone }));
-        setShowAuthModal(false);
-        const buyerName = session?.user?.name || "Buyer";
-        if (pendingAction === "inquiry") {
-          await submitInquiryData(normalizedPhone, buyerName, inquiry.message);
-        } else if (pendingAction === "whatsapp") {
-          await connectOnWhatsApp(normalizedPhone, buyerName);
-        }
-        return;
-      }
-
-      if (authTab === "signup") {
-        const normalizedPhone = normalizeIndianMobile(authForm.phone);
-        if (!normalizedPhone) {
-          setAuthError("Enter a valid 10-digit Indian mobile number.");
-          setAuthLoading(false);
-          return;
-        }
-        const { error } = await authClient.signUp.email({
-          email: authForm.email,
-          password: authForm.password,
-          name: authForm.name,
-          phone: normalizedPhone,
-        } as Parameters<typeof authClient.signUp.email>[0] & { phone?: string });
-        if (error) throw new Error(error.message || "Sign up failed.");
-      } else {
-        const { error } = await authClient.signIn.email({ email: authForm.email, password: authForm.password });
-        if (error) throw new Error(error.message || "Sign in failed.");
-      }
-      setShowAuthModal(false);
-      const verifiedPhone = authForm.phone;
-      const buyerName = authForm.name || "Buyer";
-      if (pendingAction === "inquiry") {
-        await submitInquiryData(verifiedPhone, buyerName, inquiry.message);
-      } else if (pendingAction === "whatsapp") {
-        await connectOnWhatsApp(verifiedPhone, buyerName);
-      }
-      setAuthForm({ name: "", phone: "", email: "", password: "" });
-      setPendingAction("");
-    } catch (err) {
-      setAuthError((err as Error).message || "Authentication failed.");
-    } finally {
-      setAuthLoading(false);
-    }
-  }
-
   async function handleReviewSubmit(e?: React.FormEvent<HTMLFormElement>) {
     if (e) e.preventDefault();
     setSubmittingReview(true);
@@ -379,15 +190,6 @@ export default function CarDetailView({
     }
   }
 
-  const closeSheet = useCallback(() => setShowAuthModal(false), []);
-
-  const ui: InquiryUi = {
-    status: inquiryStatus,
-    message: inquiryMessage,
-    sent: hasInquired,
-    sending: sendingInquiry,
-  };
-
   /* ─── Which sections exist for this car ───────────────────────────────── */
   const features = (car.features ?? {}) as Record<string, string[] | undefined>;
   const hasFeatures = Object.values(features).some((list) => Array.isArray(list) && list.length > 0);
@@ -404,8 +206,6 @@ export default function CarDetailView({
     ],
     [hasFeatures, showSimilar],
   );
-
-  const name = displayCarName(car);
 
   return (
     <div className="bg-surface pb-32 lg:pb-12">
@@ -511,19 +311,7 @@ export default function CarDetailView({
 
       <StickyCtaBar car={car} ui={ui} onWhatsApp={handleWhatsAppClick} onCallback={handleRequestCallback} />
 
-      <LeadSheet
-        open={showAuthModal}
-        onClose={closeSheet}
-        isLoggedIn={isLoggedIn}
-        authTab={authTab}
-        setAuthTab={setAuthTab}
-        form={authForm}
-        setForm={setAuthForm}
-        error={authError}
-        loading={authLoading}
-        pendingAction={pendingAction}
-        onSubmit={handleAuthSubmit}
-      />
+      <LeadSheet {...lead.sheetProps} />
     </div>
   );
 }

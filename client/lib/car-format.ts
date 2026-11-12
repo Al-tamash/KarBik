@@ -39,3 +39,29 @@ export function normalizeIndianMobile(phone: string | null | undefined): string 
   if (!/^[6-9]\d{9}$/.test(without)) return null;
   return without;
 }
+
+const MONTHS: Record<string, number> = {
+  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
+};
+
+/** "Comprehensive till Aug 2026" → true when that month has already ended. */
+export function insuranceHasLapsed(text: string, now: Date = new Date()): boolean {
+  const m = text.match(/till\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/i);
+  if (!m) return false;
+  const month = MONTHS[m[1].toLowerCase()];
+  if (month === undefined) return false;
+  const endOfMonth = new Date(Number(m[2]), month + 1, 0, 23, 59, 59);
+  return endOfMonth < now;
+}
+
+/**
+ * What a mobile-number field keeps as the buyer types or pastes. A pasted "+91 98765 43210"
+ * or an autofilled "098765 43210" must become 9876543210; cutting it to 10 digits first
+ * would turn the former into a different, valid-looking number (9198765432).
+ */
+export function cleanMobileInput(raw: string): string {
+  let digits = String(raw || "").replace(/\D/g, "");
+  if (digits.length === 12 && digits.startsWith("91")) digits = digits.slice(2);
+  else if (digits.length === 11 && digits.startsWith("0")) digits = digits.slice(1);
+  return digits.slice(0, 10);
+}

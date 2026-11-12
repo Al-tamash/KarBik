@@ -10,7 +10,9 @@ import React, { useEffect, useRef } from "react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { X } from "lucide-react";
 
-export type AuthForm = { name: string; phone: string; email: string; password: string };
+import AuthFields, { type AuthValues } from "@/components/auth/AuthFields";
+
+export type AuthForm = AuthValues;
 
 export default function LeadSheet({
   open,
@@ -23,6 +25,7 @@ export default function LeadSheet({
   error,
   loading,
   pendingAction,
+  subject,
   onSubmit,
 }: {
   open: boolean;
@@ -35,6 +38,8 @@ export default function LeadSheet({
   error: string;
   loading: boolean;
   pendingAction: string;
+  /** What the buyer is asking about, e.g. "Maruti Baleno". Defaults to "this car". */
+  subject?: string;
   onSubmit: (e?: React.FormEvent<HTMLFormElement>) => void;
 }) {
   const reduce = useReducedMotion();
@@ -81,6 +86,12 @@ export default function LeadSheet({
     };
   }, [open, onClose]);
 
+  /* After signing in with no saved number the sheet turns into "Confirm your mobile number";
+     the field that had focus is gone, so focus the new one. */
+  useEffect(() => {
+    if (open && isLoggedIn) panel.current?.querySelector<HTMLElement>("#lead-phone")?.focus();
+  }, [open, isLoggedIn]);
+
   const goal = pendingAction === "whatsapp" ? "open WhatsApp" : "request the call back";
   const submitLabel = loading
     ? "Please wait…"
@@ -123,8 +134,8 @@ export default function LeadSheet({
                 </h2>
                 <p id="lead-sheet-desc" className="mt-1 text-sm text-ink-muted">
                   {isLoggedIn
-                    ? "KarBik support will use this number to reach you about this car."
-                    : "One account lets KarBik support reach you about this car. It also keeps spam out."}
+                    ? `KarBik support will use this number to reach you about ${subject ?? "this car"}.`
+                    : `One account lets KarBik support reach you about ${subject ?? "this car"}. It also keeps spam out.`}
                 </p>
               </div>
               <button
@@ -176,70 +187,13 @@ export default function LeadSheet({
                   <p className="mt-1.5 text-xs text-ink-muted">Saved to your profile so next time it is one tap.</p>
                 </div>
               ) : (
-                <>
-                  {authTab === "signup" && (
-                    <>
-                      <div>
-                        <label htmlFor="lead-name" className="label">
-                          Full name
-                        </label>
-                        <input
-                          id="lead-name"
-                          type="text"
-                          autoComplete="name"
-                          value={form.name}
-                          onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                          className="input"
-                          required
-                        />
-                      </div>
-                      <div>
-                        <label htmlFor="lead-phone-new" className="label">
-                          Mobile number
-                        </label>
-                        <input
-                          id="lead-phone-new"
-                          type="tel"
-                          inputMode="numeric"
-                          autoComplete="tel-national"
-                          placeholder="10-digit mobile number"
-                          value={form.phone}
-                          onChange={(e) => setForm((p) => ({ ...p, phone: e.target.value.replace(/\D/g, "").slice(0, 10) }))}
-                          className="input"
-                          required
-                        />
-                      </div>
-                    </>
-                  )}
-                  <div>
-                    <label htmlFor="lead-email" className="label">
-                      Email
-                    </label>
-                    <input
-                      id="lead-email"
-                      type="email"
-                      autoComplete="email"
-                      value={form.email}
-                      onChange={(e) => setForm((p) => ({ ...p, email: e.target.value }))}
-                      className="input"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <label htmlFor="lead-password" className="label">
-                      Password
-                    </label>
-                    <input
-                      id="lead-password"
-                      type="password"
-                      autoComplete={authTab === "signup" ? "new-password" : "current-password"}
-                      value={form.password}
-                      onChange={(e) => setForm((p) => ({ ...p, password: e.target.value }))}
-                      className="input"
-                      required
-                    />
-                  </div>
-                </>
+                <AuthFields
+                  mode={authTab === "signup" ? "signup" : "signin"}
+                  idPrefix="lead"
+                  forgotHref="/forgot-password"
+                  values={form}
+                  onChange={(patch) => setForm((p) => ({ ...p, ...patch }))}
+                />
               )}
 
               {error && (
@@ -253,7 +207,7 @@ export default function LeadSheet({
               </button>
 
               <p className="text-center text-xs text-ink-muted">
-                By continuing you allow KarBik and the dealer to contact you on this number.
+                By continuing you allow KarBik support to contact you on this number.
               </p>
             </form>
           </motion.div>

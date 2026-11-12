@@ -7,7 +7,7 @@
         "rule": "overused-font",
         "value": "arial",
         "createdAt": "2026-11-07T10:38:32.538Z",
-        "reason": "Claude: transactional email HTML (lib/contact-mail.ts) must use a web-safe stack; email clients do not load web fonts, so Arial,sans-serif is the correct choice, not a design decision"
+        "reason": "Transactional email HTML: mail clients cannot load web fonts, so Arial is the safe stack; same as lib/lead-alerts.ts. Assistant judgement, not user confirmed."
       },
       {
         "rule": "design-system-font",
@@ -17,6 +17,12 @@
         ],
         "createdAt": "2026-11-09T13:45:43.912Z",
         "reason": "Decision-page sketches of the unchosen directions; their fonts are the alternatives shown to the owner, not shipped UI"
+      },
+      {
+        "rule": "design-system-font",
+        "value": "arial",
+        "createdAt": "2026-11-12T11:03:04.600Z",
+        "reason": "Same email HTML in lib/auth-mail.ts: not site UI, so the DESIGN.md type system does not apply. Assistant judgement, not user confirmed."
       }
     ]
   }

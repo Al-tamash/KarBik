@@ -29,7 +29,10 @@ import {
   type LeadChannel,
 } from "@/lib/lead-events";
 
-const LEAD_SOURCES = ["car_detail", "dealer_profile", "whatsapp", "callback"];
+// "compare" = the buyer asked from the compare page. Support sees it as a badge in the
+// admin list (leadSource is free text, so no migration), which says which cars were
+// weighed against each other.
+const LEAD_SOURCES = ["car_detail", "dealer_profile", "whatsapp", "callback", "compare"];
 
 /**
  * What the BUYER gets back. Deliberately a small allow-list: the inquiry row
@@ -88,11 +91,16 @@ export async function POST(request: Request) {
         : "web";
     const requestedSource =
       typeof body.leadSource === "string" ? body.leadSource : "";
-    const leadSource = wantsWhatsApp
-      ? "whatsapp"
-      : LEAD_SOURCES.includes(requestedSource)
-        ? requestedSource
-        : "car_detail";
+    // A WhatsApp tap is recorded as "whatsapp" (channel and source are the same thing
+    // for support), except from the compare page, where where-it-came-from matters more.
+    const leadSource =
+      requestedSource === "compare"
+        ? "compare"
+        : wantsWhatsApp
+          ? "whatsapp"
+          : LEAD_SOURCES.includes(requestedSource)
+            ? requestedSource
+            : "car_detail";
 
     const normalizedPhone = normalizeIndianMobile(phone);
 

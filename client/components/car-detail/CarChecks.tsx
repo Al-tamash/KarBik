@@ -1,6 +1,7 @@
 import React from "react";
 import { AlertTriangle, Check, Minus, ShieldCheck } from "lucide-react";
 import type { ApiCar } from "@/lib/api-types";
+import { insuranceHasLapsed } from "@/lib/car-format";
 
 /**
  * "Checks on this car": what is recorded, who recorded it, and "Not provided"
@@ -12,20 +13,6 @@ import type { ApiCar } from "@/lib/api-types";
 type Tone = "checked" | "reported" | "warn" | "missing";
 
 type Row = { key: string; title: string; status: string; note: string; tone: Tone };
-
-const MONTHS: Record<string, number> = {
-  jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
-};
-
-/** "Comprehensive till Aug 2026" → true when that month has already ended. */
-function insuranceHasLapsed(text: string, now: Date = new Date()): boolean {
-  const m = text.match(/till\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/i);
-  if (!m) return false;
-  const month = MONTHS[m[1].toLowerCase()];
-  if (month === undefined) return false;
-  const endOfMonth = new Date(Number(m[2]), month + 1, 0, 23, 59, 59);
-  return endOfMonth < now;
-}
 
 function iconFor(tone: Tone) {
   const base = "mt-0.5 h-5 w-5 shrink-0";
