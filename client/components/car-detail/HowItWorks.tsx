@@ -1,7 +1,9 @@
 import React from "react";
 
+export type Step = { title: string; body: string };
+
 /** The real lead flow in three steps (PRODUCT.md, Operating Context). No claims beyond it. */
-const stepsFor = (subject: string) => [
+const stepsFor = (subject: string): Step[] => [
   {
     title: "Tell KarBik which car you like",
     body: "Message us on WhatsApp or ask for a call back. It is free for buyers.",
@@ -19,10 +21,10 @@ const stepsFor = (subject: string) => [
 /* Stacked on phones; three columns from sm so the steps use the full width of the
    section instead of hugging the left edge. No phone number here: the WhatsApp and
    Call back buttons are already on screen. */
-export default function HowItWorks({ subject = "this car" }: { subject?: string }) {
+export function StepList({ steps, roomy = false }: { steps: Step[]; roomy?: boolean }) {
   return (
     <ol className="grid gap-6 sm:grid-cols-3 sm:gap-8">
-      {stepsFor(subject).map((s, i) => (
+      {steps.map((s, i) => (
         <li key={s.title} className="flex gap-4 sm:flex-col sm:gap-3">
           <span
             aria-hidden
@@ -32,10 +34,15 @@ export default function HowItWorks({ subject = "this car" }: { subject?: string 
           </span>
           <div>
             <h3 className="text-base font-bold leading-snug text-ink-strong sm:text-lg">{s.title}</h3>
-            <p className="mt-1 text-sm text-ink-muted">{s.body}</p>
+            {/* roomy: on the reading pages the body is 16px like the rest of the page. */}
+            <p className={`mt-1 text-ink-muted ${roomy ? "text-base" : "text-sm"}`}>{s.body}</p>
           </div>
         </li>
       ))}
     </ol>
   );
+}
+
+export default function HowItWorks({ subject = "this car" }: { subject?: string }) {
+  return <StepList steps={stepsFor(subject)} />;
 }

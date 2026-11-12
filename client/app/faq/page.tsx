@@ -1,204 +1,146 @@
-"use client";
+import Link from "next/link";
+import type { Metadata } from "next";
+import { ChevronDown } from "lucide-react";
+import InfoPage, { InfoSection } from "@/components/info/InfoPage";
+import { EMI_DEFAULT_DOWN_PERCENT, EMI_DEFAULT_MONTHS, EMI_RATE_PERCENT } from "@/lib/emi";
 
-/**
- * WHAT: Dedicated FAQ page for KarBik.
- * WHY: Reduces customer support load, builds pre-purchase trust for both buyers and dealers,
- *      and boosts search engine rankings (great for Google's FAQ Schema and local queries).
- */
-import React, { useState } from "react";
-import { ChevronRight, HelpCircle, Shield, Store, CreditCard, Sparkles } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+export const metadata: Metadata = {
+  title: "Frequently asked questions",
+  description:
+    "Answers for KarBik buyers and dealers: what RC Verified means, how support connects you with a dealer, boosting a listing and payments.",
+  alternates: { canonical: "/faq" },
+  openGraph: {
+    title: "KarBik FAQ",
+    description:
+      "Answers for KarBik buyers and dealers: what RC Verified means, how support connects you with a dealer, boosting a listing and payments.",
+    url: "/faq",
+  },
+};
+
+type Faq = { q: string; a: string };
+
+/* Every answer restates something the product really does (PRODUCT.md). Plain text, so the
+   same strings feed the page and the FAQPage structured data. */
+const GROUPS: { id: string; title: string; items: Faq[] }[] = [
+  {
+    id: "buyers",
+    title: "Buying a car",
+    items: [
+      {
+        q: "What does RC Verified mean?",
+        a: "RC Verified means the KarBik team has looked at the car's registration certificate (RC) and checked that its details match the listing. It is not a guarantee about ownership, pending challans, loans or police cases. Check the papers yourself, and at the RTO, before you pay.",
+      },
+      {
+        q: "How do I contact the dealer?",
+        a: "You do not contact the dealer directly. Tap WhatsApp or Request call back on a car. KarBik support talks to you first, then connects you with the dealer.",
+      },
+      {
+        q: "Can I see a car and take a test drive?",
+        a: "Viewing and test drives are arranged with the dealer after KarBik support connects you. Ask on the car page to start.",
+      },
+      {
+        q: "Are the prices negotiable?",
+        a: "Each dealer sets their own price. After KarBik support has connected you, you can talk about the price with the dealer.",
+      },
+      {
+        q: "Does every car have an inspection report?",
+        a: "No. Some dealers upload one. When they do, the car page links to it. If a car has none, ask support what you want checked before you visit.",
+      },
+      {
+        q: "What is the Est. EMI on a car?",
+        a: `An estimate from a standard formula: a ${100 - EMI_DEFAULT_DOWN_PERCENT}% loan at ${EMI_RATE_PERCENT}% a year for ${EMI_DEFAULT_MONTHS / 12} years. KarBik does not offer loans or approve them; your bank decides the rate and the amount.`,
+      },
+    ],
+  },
+  {
+    id: "dealers",
+    title: "For dealers",
+    items: [
+      {
+        q: "How do I list my cars?",
+        a: "Create a dealer account on the register page. Then add car details and photos from your dashboard; AI can draft the description. Your cars also appear on your public KarBik page.",
+      },
+      {
+        q: "How do enquiries reach me?",
+        a: "KarBik support talks to each buyer first, then forwards the enquiry to you. You see it in your dashboard, with a push alert when notifications are on.",
+      },
+      {
+        q: "What is the QR code?",
+        a: "Your dashboard has a QR code for your public page. Print it for your showroom; scanning it opens your current listings.",
+      },
+      {
+        q: "How does boosting a listing work?",
+        a: "A boosted car is shown at the top of browse results for the boost period, and its card carries a Featured badge. You can boost with plan credits (Starter and Pro) or pay per boost.",
+      },
+    ],
+  },
+  {
+    id: "general",
+    title: "General",
+    items: [
+      {
+        q: "What is KarBik's role in a sale?",
+        a: "KarBik is a marketplace that introduces buyers to local dealers in Hyderabad. Support talks to the buyer first, then connects them with the dealer. Paperwork and payment for the car happen between you and the dealer.",
+      },
+      {
+        q: "How are dealer plans paid for?",
+        a: "Dealer plans and boosts are paid through Razorpay. KarBik does not store your card, bank or UPI details.",
+      },
+      {
+        q: "How do I reach KarBik support?",
+        a: "Use the contact page: WhatsApp, call, email or the message form.",
+      },
+    ],
+  },
+];
+
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: GROUPS.flatMap((g) => g.items).map((f) => ({
+    "@type": "Question",
+    name: f.q,
+    acceptedAnswer: { "@type": "Answer", text: f.a },
+  })),
+};
 
 export default function FAQPage() {
-  const [activeCategory, setActiveCategory] = useState("buyers");
-  const [expandedIndex, setExpandedIndex] = useState<number | null>(null);
-
-  const categories = [
-    { id: "buyers", label: "For Buyers", icon: Shield },
-    { id: "dealers", label: "For Dealers", icon: Store },
-    { id: "general", label: "General & Payment", icon: CreditCard }
-  ];
-
-  const faqData = {
-    buyers: [
-      {
-        q: "What does 'RTO Verified' mean?",
-        a: "An “RC checked” badge means the KarBik team has looked at the car’s registration certificate (RC) and checked that its details match the listing. It is not a guarantee about ownership, pending challans, loans or police cases. Always verify the papers yourself, and at the RTO, before you pay."
-      },
-      {
-        q: "How does the physical car inspection work?",
-        a: "Dealers can upload a professional inspection report with each listing — inspected cars carry an Inspected badge and the report is downloadable from the car page. Prefer cars marked Inspected, and ask the dealer anything the report doesn't cover."
-      },
-      {
-        q: "Can I test drive a car before making a payment?",
-        a: "You can ask to see the car in person and take a test drive. Tap WhatsApp or request a call back on the car page: KarBik support will talk to you and connect you with the dealer to fix a time."
-      },
-      {
-        q: "Are the prices listed on KarBik negotiable?",
-        a: "Each dealer sets their own prices, and many are open to a fair discussion. Once KarBik support has connected you with the dealer, you can talk about the price with them directly."
-      }
-    ],
-    dealers: [
-      {
-        q: "How do I list my cars on KarBik?",
-        a: "To list your stock, create a dealer account on our registration page. Once registered, you can immediately add car details, upload showroom photos, and write auto-descriptions. You will also get access to your dealer CRM dashboard to manage buyer leads."
-      },
-      {
-        q: "What is the QR Code Standee feature?",
-        a: "Every verified dealer gets a unique QR Code generated inside their dashboard. You can download and print this code to place as physical standees inside your showroom. Walk-in buyers can scan the QR code using their phones to instantly view your complete digital inventory, recent listings, and verified reviews."
-      },
-      {
-        q: "How does listing boosting work?",
-        a: "A boosted car is shown at the top of browse results and in the homepage “Featured Collection” for the boost period. Boosting is available through plan credits (Starter and Pro) or pay-per-use Razorpay orders."
-      }
-    ],
-    general: [
-      {
-        q: "What is KarBik's role in transactions?",
-        a: "KarBik is a marketplace that introduces buyers to local dealers in Hyderabad. Our support team talks to the buyer first, then connects them with the dealer. We provide listings, inspection reports where dealers upload them, digital showrooms and CRM tools, but the final paperwork and payment happen directly between you and the dealership."
-      },
-      {
-        q: "Is it safe to pay for plans on this platform?",
-        a: "Yes. All dealer subscriptions and boost payments are securely processed through Razorpay—India's leading PCI-DSS compliant payment gateway. We do not store any credit card, bank, or UPI details on our servers."
-      },
-      {
-        q: "How do I contact customer support?",
-        a: "Call or WhatsApp KarBik support on 94947 20878, or email support@karbik.com."
-      }
-    ]
-  };
-
-  const handleTabChange = (cat: string) => {
-    setActiveCategory(cat);
-    setExpandedIndex(null);
-  };
-
-  const currentFaqs = faqData[activeCategory as keyof typeof faqData];
-
   return (
-    <div className="bg-surface-alt min-h-screen font-sans py-16 md:py-24">
-      <div className="max-w-4xl mx-auto px-4 sm:px-6">
-        
-        {/* Left-aligned Editorial Header */}
-        <div className="text-left mb-12">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-primary-50 text-primary-700 border border-primary-100 mb-4 select-none">
-            <HelpCircle className="h-3.5 w-3.5 text-primary-600" />
-            <span>Support Directory</span>
+    <InfoPage
+      title="Frequently asked questions"
+      intro="Short answers about buying a car through KarBik and about listing as a dealer."
+    >
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd).replace(/</g, "\\u003c") }}
+      />
+
+      {GROUPS.map((group) => (
+        <InfoSection key={group.id} id={group.id} title={group.title}>
+          <div className="-mt-2 divide-y divide-border border-y border-border">
+            {group.items.map((item) => (
+              <details key={item.q} className="group">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-3 text-base font-semibold text-ink-strong marker:hidden [&::-webkit-details-marker]:hidden">
+                  {item.q}
+                  <ChevronDown
+                    className="h-5 w-5 shrink-0 text-ink-muted transition-transform group-open:rotate-180"
+                    aria-hidden
+                  />
+                </summary>
+                <p className="pb-4 text-base leading-relaxed text-ink-muted">{item.a}</p>
+              </details>
+            ))}
           </div>
-          <h1 className="text-4xl font-display font-bold text-ink-strong tracking-tight leading-none mb-3">
-            Frequently Asked Questions
-          </h1>
-          <p className="text-base text-ink-muted max-w-xl leading-relaxed">
-            Got questions about purchasing verified cars, RTO reports, or setting up a digital showroom? We have answers.
-          </p>
-        </div>
+        </InfoSection>
+      ))}
 
-        {/* Categories Tab Grid */}
-        <div className="grid grid-cols-3 gap-3 mb-10">
-          {categories.map((cat: { id: string; label: string; icon: React.ComponentType<{ className?: string }> }) => {
-            const CatIcon = cat.icon;
-            const isSelected = activeCategory === cat.id;
-
-            return (
-              <button
-                key={cat.id}
-                onClick={() => handleTabChange(cat.id)}
-                className={`flex flex-col sm:flex-row items-center justify-center gap-2 py-4 px-3 rounded-2xl border text-center sm:text-left transition-all duration-200 cursor-pointer ${
-                  isSelected
-                    ? "bg-primary-600 text-white border-primary-600 shadow-md scale-[1.01]"
-                    : "bg-surface text-ink-muted border-border hover:border-border-strong hover:bg-surface-alt/60"
-                }`}
-              >
-                <CatIcon className={`h-5 w-5 shrink-0 ${isSelected ? "text-white" : "text-ink-muted"}`} />
-                <span className="text-xs sm:text-sm font-bold tracking-tight">{cat.label}</span>
-              </button>
-            );
-          })}
-        </div>
-
-        {/* FAQs Accordion Block */}
-        <div className="flex flex-col gap-4">
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={activeCategory}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              transition={{ duration: 0.2 }}
-              className="flex flex-col gap-3.5"
-            >
-              {currentFaqs.map((faq: { q: string; a: string }, index: number) => {
-                const isOpen = expandedIndex === index;
-
-                return (
-                  <div
-                    key={index}
-                    className="rounded-2xl border border-border bg-surface overflow-hidden shadow-xs hover:border-primary-300/80 transition-all duration-200"
-                  >
-                    <button
-                      type="button"
-                      onClick={() => setExpandedIndex(isOpen ? null : index)}
-                      className="w-full flex items-center justify-between px-6 py-5 text-left hover:bg-surface-alt/30 transition-colors cursor-pointer"
-                    >
-                      <h3 className="text-base font-bold text-ink pr-4 leading-snug">
-                        {faq.q}
-                      </h3>
-                      <ChevronRight
-                        className={`h-5 w-5 text-ink-subtle shrink-0 transition-transform duration-250 ${
-                          isOpen ? "rotate-90 text-primary-500" : ""
-                        }`}
-                      />
-                    </button>
-                    
-                    <AnimatePresence initial={false}>
-                      {isOpen && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          transition={{ duration: 0.25, ease: "easeInOut" }}
-                        >
-                          <div className="px-6 pb-6 border-t border-border">
-                            <p className="text-sm text-ink-muted leading-relaxed pt-5">
-                              {faq.a}
-                            </p>
-                          </div>
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-                  </div>
-                );
-              })}
-            </motion.div>
-          </AnimatePresence>
-        </div>
-
-        {/* Still Have Questions CTA */}
-        <div className="mt-14 bg-neutral-900 rounded-2xl p-8 md:p-10 border border-neutral-800 relative overflow-hidden text-left shadow-xl select-none">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-primary-600/10 blur-3xl rounded-full translate-x-1/3 -translate-y-1/3 pointer-events-none" />
-          <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-            <div>
-              <div className="flex items-center gap-1.5 text-primary-400 text-xs font-bold mb-2">
-                <Sparkles className="h-4 w-4 text-primary-500" />
-                <span>Customer Assistance</span>
-              </div>
-              <h3 className="text-xl md:text-2xl font-extrabold text-white tracking-tight leading-tight mb-2">
-                Still have questions?
-              </h3>
-              <p className="text-xs text-ink-subtle max-w-md leading-relaxed">
-                Can&apos;t find the answers you&apos;re looking for? Reach out directly to our support agents and we will get back to you.
-              </p>
-            </div>
-            <a
-              href="/contact"
-              className="inline-flex items-center justify-center bg-primary-600 hover:bg-primary-700 text-white px-6 py-3 rounded-xl font-bold text-xs tracking-wider uppercase transition-all shadow-md active:scale-[0.98]"
-            >
-              Contact Support
-            </a>
-          </div>
-        </div>
-
-      </div>
-    </div>
+      <p className="mt-12 border-t border-border pt-8 text-base text-ink">
+        Did not find your answer?{" "}
+        <Link href="/contact" className="font-semibold text-primary-600 underline underline-offset-2">
+          Contact KarBik support
+        </Link>
+        .
+      </p>
+    </InfoPage>
   );
 }

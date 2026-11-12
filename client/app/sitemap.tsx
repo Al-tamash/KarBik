@@ -23,7 +23,7 @@ type SitemapEntry = {
 export default async function sitemap(): Promise<SitemapEntry[]> {
   const lastModified = new Date();
 
-  const routes: SitemapEntry[] = ["", "/cars", "/pricing", "/compare"].map(
+  const routes: SitemapEntry[] = ["", "/cars", "/pricing", "/compare", "/about", "/contact", "/faq", "/how-it-works"].map(
     (route) => ({
       url: `${APP_URL}${route}`,
       lastModified,
