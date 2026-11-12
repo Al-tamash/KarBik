@@ -61,7 +61,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       description,
       url: `${API_BASE}/dealer/${slug}`,
       siteName: "KarBik",
-      images: bannerUrl ? [{ url: bannerUrl, alt: name }] : [],
+      images: bannerUrl ? [{ url: bannerUrl, alt: name }] : [{ url: "/opengraph-image", width: 1200, height: 630, alt: "KarBik" }],
       locale: "en_IN",
       type: "website",
     },

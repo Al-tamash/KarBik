@@ -31,19 +31,20 @@ export async function generateMetadata({ searchParams }: CarsPageProps): Promise
   const brand = typeof params.brand === "string" ? params.brand : "";
   const bodyType = typeof params.bodyType === "string" ? params.bodyType.toUpperCase() : "";
 
-  let title = "Used Cars in Hyderabad | Verified Hyderabad Dealers | KarBik";
+  // The root layout's title template adds " | KarBik".
+  let title = "Used cars in Hyderabad";
   if (brand && bodyType) {
-    title = `Used ${brand} ${bodyType}s in Hyderabad | KarBik`;
+    title = `Used ${brand} ${bodyType}s in Hyderabad`;
   } else if (brand) {
-    title = `Used ${brand} Cars in Hyderabad | KarBik`;
+    title = `Used ${brand} cars in Hyderabad`;
   } else if (bodyType) {
-    title = `Used ${bodyType}s in Hyderabad | KarBik`;
+    title = `Used ${bodyType}s in Hyderabad`;
   }
 
   return {
     title,
     description:
-      "Browse certified pre-owned cars from verified dealers in Hyderabad. Real photos, RC verified papers, and direct support.",
+      "Browse used cars from local dealers in Hyderabad. Filter by brand, price, fuel and body type, compare cars, and ask KarBik support to connect you with the dealer.",
   };
 }
 

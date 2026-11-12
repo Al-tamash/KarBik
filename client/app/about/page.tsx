@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     description:
       "KarBik is a Hyderabad marketplace for used cars from local dealers. Support talks to you first, then connects you with the dealer.",
     url: "/about",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "KarBik" }],
   },
 };
 

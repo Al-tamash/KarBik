@@ -1,7 +1,7 @@
 {
   "name": "KarBik",
   "short_name": "KarBik",
-  "description": "Premium Car Dealer Marketplace",
+  "description": "Used cars from local dealers in Hyderabad",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",

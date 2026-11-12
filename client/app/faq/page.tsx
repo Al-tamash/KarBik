@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     description:
       "Answers for KarBik buyers and dealers: what RC Verified means, how support connects you with a dealer, boosting a listing and payments.",
     url: "/faq",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "KarBik" }],
   },
 };
 

@@ -12,6 +12,7 @@ export const metadata: Metadata = {
     title: "Contact KarBik",
     description: "Reach KarBik support on WhatsApp, by phone or email, or send a message.",
     url: "/contact",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "KarBik" }],
   },
 };
 

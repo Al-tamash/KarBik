@@ -57,35 +57,29 @@ const themeBootstrap = `(function(){try{var t=localStorage.getItem('ab-theme');v
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000"),
   title: {
-    default: "KarBik — Premium Car Marketplace",
+    default: "KarBik: used cars from local dealers in Hyderabad",
     template: "%s | KarBik",
   },
+  // Site-wide fallback text. PRODUCT.md: claims literally true, no superlatives, nothing
+  // "certified", no reviews or inspection promises (not every car has a report).
   description:
-    "India's most trusted marketplace to buy and sell certified used cars with inspection reports and dealer reviews.",
-  keywords: ["used cars india", "buy second hand cars", "sell car online", "car dealer marketplace"],
+    "KarBik is a Hyderabad marketplace for used cars from local dealers. Browse and compare cars, tell KarBik support which one you like, and support connects you with the dealer. Free for buyers.",
+  keywords: ["used cars hyderabad", "second hand cars hyderabad", "used car dealers hyderabad", "compare used cars"],
   authors: [{ name: "KarBik Team" }],
   manifest: "/manifest.json",
+  // The share image comes from app/opengraph-image.tsx and app/twitter-image.tsx.
   openGraph: {
-    title: "KarBik — Buy & Sell Cars with Trust",
-    description: "The premium marketplace for certified used cars.",
+    title: "KarBik: used cars from local dealers in Hyderabad",
+    description: "Browse and compare used cars. KarBik support connects you with the dealer. Free for buyers.",
     url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
     siteName: "KarBik",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "KarBik Marketplace",
-      },
-    ],
     locale: "en_IN",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "KarBik — Premium Car Marketplace",
-    description: "Certified used cars with inspection reports.",
-    images: ["/og-image.png"],
+    title: "KarBik: used cars from local dealers in Hyderabad",
+    description: "Browse and compare used cars. KarBik support connects you with the dealer. Free for buyers.",
   },
   robots: {
     index: true,

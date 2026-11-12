@@ -36,7 +36,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
       openGraph: {
         title: carTitle,
         description: `Used car in Hyderabad. Price: ${formatPrice(car.price)}. Ask KarBik support to connect you with the dealer.`,
-        images: firstImage ? [{ url: firstImage }] : [],
+        images: firstImage ? [{ url: firstImage }] : [{ url: "/opengraph-image", width: 1200, height: 630, alt: "KarBik" }],
       },
     };
   } catch (error) {

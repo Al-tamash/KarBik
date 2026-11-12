@@ -13,6 +13,7 @@ export const metadata: Metadata = {
     description:
       "Find a car, check what is recorded, tell KarBik support, then meet the dealer. And how dealers list cars and receive enquiries.",
     url: "/how-it-works",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630, alt: "KarBik" }],
   },
 };
 
