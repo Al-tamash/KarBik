@@ -19,6 +19,7 @@ KarBik is a Hyderabad marketplace for used cars from local dealers. Buyers brows
 
 - Local only: Hyderabad dealers, Hyderabad neighbourhoods.
 - Every lead is human-checked: buyers never contact a dealer directly; KarBik support verifies and forwards each lead (flag `ROUTE_ALL_LEADS_VIA_SUPPORT`, lib/lead-routing.ts). Dealer phone numbers are never shown.
+- Dealer identity stays behind KarBik: buyer pages (cards, car detail, compare) show "Verified dealer · Hyderabad" only. No dealer name, street address or phone before support connects the lead, because a name plus an address lets a buyer skip KarBik. The public dealer storefront (`/dealer/[slug]`) is the dealer's own page: it keeps the name and city but drops the street address and "visit our showroom" copy, and its contact path is "Ask KarBik support".
 - Trust badges that are literally true: "RC checked" only on admin-verified cars; "Verified" dealer only after KYC document review.
 
 ## Operating Context

@@ -268,6 +268,8 @@ Confident, flat fills with no gradients.
 - **Border:** 1px hairline, hairline-strong on hover.
 - **Internal Padding:** 16px; search card 16px phone, 20px from sm.
 
+**The Cards Are For Repeating Things Rule.** A card is for a repeating item a buyer compares: a car, a similar car, a plan. A page section is never wrapped in a card; it gets an Archivo heading, a hairline divider and spacing. Spec rows, checks, description, FAQ and dealer info are typographic rows, not tiles. No bento grids, no glass or gradient panels, no icon-in-a-circle feature cards.
+
 ### Listing Card (signature)
 The unit a buyer scans in a second: 4:3 photo, one-line title (year brand model), optional variant in muted text, one spec line built only from filled fields, then the price pinned to the bottom with "Est. EMI ₹X/mo" beneath and its assumptions in a tooltip. Over the photo: top-left a white "Featured" (paid boost) or "Sample listing" tag; top-right round compare and save toggles (36px, white at 95%); bottom-left the RC Green "RC Verified" badge only when true; bottom-right a translucent graphite photo count. The dealer is not named on the card. No placeholder photos: a missing image shows a car outline and "Photos coming soon".
 
@@ -306,4 +308,7 @@ The dealer pitch and the footer are the only dark blocks on a light page: Graphi
 - **Don't** reference raw neutral utilities for surfaces, borders or text in pages; use the semantic roles so dark mode holds.
 - **Don't** use radii of 24px or more, arbitrary radius values, or extra-large shadows on cards.
 - **Don't** lift non-listing tiles, forms or dashboards on hover.
+- **Don't** wrap a page section in a card, or use bento grids, glass or gradient panels, or icon-circle feature tiles.
+- **Don't** name a dealer, print a showroom address or show a phone number on any buyer page. Say "Verified dealer · Hyderabad"; support names the dealer after the lead.
+- **Don't** use "Premium", "Certified" or "Assured" as a label unless it names a check KarBik actually does.
 - **Don't** use generated or stock location photography; photos are real listings.

@@ -62,8 +62,9 @@ extends this world; it does not start a new one.
   become grids. The reference implementation is `client/components/FeaturedCars.tsx`.
 - **Listing card = what a buyer scans in a second:** photo, title, km · fuel ·
   gearbox, price in lakh ("₹7.80 Lakh"), "Est. EMI" with its assumptions in a
-  tooltip. No dealer name on the card. KarBik support connects the buyer, so
-  the dealer is named on the listing page. (`client/components/CarCard.tsx`)
+  tooltip. No dealer name on the card or the car detail page: both say
+  "Verified dealer · Hyderabad", and KarBik support names the dealer after the
+  lead (decided Nov 2026, see PRODUCT.md). (`client/components/CarCard.tsx`)
 - **Badges only when true:** "RC Verified" only when `rcVerified`; "Featured" only when boosted.
 - **No car appears twice on one page.** The hero car is removed from the rail.
 - **Sections that add browsing without repeating cars:** body type (real stock
@@ -97,6 +98,27 @@ Gotchas found the hard way:
 | Wishlist `app/wishlist` | Built in a separate session (Nov 2026) | Check it against DESIGN.md when next redesigning |
 | Listing `app/cars` | Redesigned (Nov 2026) | Split to Server Component (SSR) + CarsCatalogClient, live stock faceted filters, sticky quick pills, mobile drawer with live count, 0 anti-patterns |
 | Car detail, compare, dealer storefront, pricing, how-it-works, about, contact, faq, auth, dashboard | Not redesigned | — |
+
+## Roadmap (agreed Nov 2026)
+
+Buyer funnel first, dealer side after. Order:
+
+1. **Car detail** (with the navbar/footer drift fix), full loop.
+2. **Compare**, full loop. Sticky first column on phones, "Show only differences" toggle, per-car "Ask KarBik" CTA, empty state with real cars, no "Best/Winner" badges.
+3. **Login/register**, full loop. One shared auth component: full page on `/login` and `/register`, bottom sheet inside the lead flow.
+4. **Dealer storefront.** Drop street address, "visit our showroom" and "Premium/certified" copy. Contact is "Ask KarBik support".
+5. **Contact, FAQ, how-it-works, about**, light loop (one benchmark, captures, detect, finish review at the end), on one shared page template.
+6. **Pricing, dashboard, billing, admin** (dealer side), last.
+
+Rules that apply to every page in the roadmap:
+- **Section audit.** Each surface brief starts with what is there, what is missing, whether the section flow is right, and what to drop. Add a section directly when it rests on real data or an existing flow. A section that needs new backend, or a new claim (testimonials, stats, ratings, warranty, delivery), goes to a "proposed, not built" list for the owner.
+- **Platform review per page.** While on a page, also check navigation, tokens, loading/empty/error states, accessibility (44px targets, contrast, focus), SEO and share cards, and dark mode. Fix cross-cutting drift when you meet it.
+- **Competitor research before section flow** on a buyer page. Show the owner a keep / improve / drop / add table and build after approval.
+- **Cards only for repeating items** (see DESIGN.md, The Cards Are For Repeating Things Rule).
+- **Lead gate stays** (login + phone verification before WhatsApp or call-back), redesigned as a minimal bottom sheet with no backend change.
+- **Car detail on phones:** hide the bottom nav, show a sticky bar with price, Est. EMI, WhatsApp (the one orange) and Call back. Keep the EMI calculator as an estimate only, same formula as the card, no bank logos or approval claims.
+- **Checks on this car** replaces "KarBik Assured": only recorded RC, accident and service data, "Not provided" where missing.
+- Photos stay hotlinked for now. Every photo needs a failure fallback.
 
 Known drift, recorded by the documenter. Fix each item when its page is redesigned:
 - **Navbar search modal:** a small uppercase label.
