@@ -57,6 +57,7 @@ import FeaturesGrid from "./car-detail/FeaturesGrid";
 import FAQAccordion from "./car-detail/FAQAccordion";
 import ContactCard from "./car-detail/ContactCard";
 import { displayCarName } from "@/lib/car-name";
+import { useWishlist } from "@/lib/wishlist";
 
 
 
@@ -163,9 +164,10 @@ export default function CarDetailView({
   const [authError, setAuthError] = useState("");
   const [pendingAction, setPendingAction] = useState("");
 
-  /* Wishlist */
-  const [isWishlisted, setIsWishlisted] = useState(false);
-  const [wishlistLoading, setWishlistLoading] = useState(false);
+  /* Wishlist: same store as the listing-card hearts and the header count */
+  const wishlist = useWishlist();
+  const isWishlisted = wishlist.has(car.id);
+  const wishlistLoading = !wishlist.ready;
 
   /* Share popover (moved to ImageGallery) */
   /* FAQ accordion (moved to FAQAccordion) */
@@ -262,18 +264,6 @@ export default function CarDetailView({
     };
   }, [isLoggedIn, car?.dealer, hasInquired]);
 
-  /* Check wishlist on mount */
-  useEffect(() => {
-    if (isLoggedIn && car?.id) {
-      fetch(`/api/wishlist/check/${car.id}`, {
-        credentials: "include",
-      })
-        .then((r) => r.json())
-        .then((d: { isWishlisted?: boolean }) => setIsWishlisted(Boolean(d.isWishlisted)))
-        .catch(() => {});
-    }
-  }, [isLoggedIn, car?.id]);
-
   /* Trigger call action automatically if navigated via Call Button on Listing Page */
   // WHAT: Listens for query parameter ?action=call on page load.
   // WHY: Forces user authentication and registers a callback lead before
@@ -295,26 +285,9 @@ export default function CarDetailView({
 
   /* ─── Actions ─────────────────────────────────────────────────────────── */
 
-  async function toggleWishlist() {
-    if (!isLoggedIn) {
-      setPendingAction("wishlist");
-      setShowAuthModal(true);
-      return;
-    }
-    setWishlistLoading(true);
-    try {
-      const res = await fetch(`/api/wishlist/toggle/${car.id}`, {
-        method: "POST",
-        credentials: "include",
-      });
-      if (res.ok) {
-        const d = (await res.json()) as { isWishlisted?: boolean };
-        setIsWishlisted(Boolean(d.isWishlisted));
-      }
-    } catch (e) {
-    } finally {
-      setWishlistLoading(false);
-    }
+  // Works signed out too (saved in this browser, merged into the account on sign-in).
+  function toggleWishlist() {
+    void wishlist.toggle(car.id);
   }
 
   async function submitInquiryData(phone: string, name: string, customMessage: string) {
@@ -495,17 +468,6 @@ export default function CarDetailView({
         await submitInquiryData(verifiedPhone, buyerName, inquiry.message);
       } else if (pendingAction === "whatsapp") {
         await connectOnWhatsApp(verifiedPhone, buyerName);
-      } else if (pendingAction === "wishlist") {
-        try {
-          const r = await fetch(`/api/wishlist/toggle/${car.id}`, {
-            method: "POST",
-            credentials: "include",
-          });
-          if (r.ok) {
-            const d = await r.json();
-            setIsWishlisted(d.isWishlisted);
-          }
-        } catch {}
       }
       setAuthForm({ name: "", phone: "", email: "", password: "" });
       setPendingAction("");
@@ -950,11 +912,7 @@ export default function CarDetailView({
               <div className="flex items-center justify-between px-6 py-5 border-b border-border">
                 <div>
                   <h3 className="text-lg font-bold text-ink-strong">
-                    {isLoggedIn
-                      ? "Confirm Mobile Number"
-                      : pendingAction === "wishlist"
-                      ? "Save to Wishlist"
-                      : "Confirm Your Identity"}
+                    {isLoggedIn ? "Confirm Mobile Number" : "Confirm Your Identity"}
                   </h3>
                   <p className="text-xs text-ink-muted mt-0.5">
                     {isLoggedIn
