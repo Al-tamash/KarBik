@@ -4,6 +4,8 @@ import { cars, dealerProfiles, reviews } from "@/lib/db/schema";
 import { apiHandler } from "@/lib/guards";
 import { toPublicDealerProfile } from "@/lib/dealer-public";
 import { publiclyVisible } from "@/lib/car-visibility";
+import { stripPrivateCarFields } from "@/lib/public-car";
+import { SHOW_DEALER_REVIEWS } from "@/lib/flags";
 
 // GET /api/dealers/:slug — public: dealer micro-website data
 export async function GET(
@@ -38,17 +40,25 @@ export async function GET(
         .from(cars)
         .where(and(eq(cars.dealer, profile.user), publiclyVisible))
         .orderBy(desc(cars.createdAt)),
-      db
-        .select()
-        .from(reviews)
-        .where(eq(reviews.dealer, profile.user))
-        .orderBy(desc(reviews.createdAt)),
+      // Reviews are switched off (lib/flags.ts): do not even read them.
+      SHOW_DEALER_REVIEWS
+        ? db
+            .select()
+            .from(reviews)
+            .where(eq(reviews.dealer, profile.user))
+            .orderBy(desc(reviews.createdAt))
+        : Promise.resolve([]),
     ]);
 
     return Response.json({
-      // Public route: never include phone / WhatsApp / KYC document.
+      // Public route: never include phone / WhatsApp / KYC document / street address.
       profile: toPublicDealerProfile(profile),
-      cars: dealerCars,
+      // Same rule as /api/cars: no registration number, no search column.
+      // ...and no dealer user id: the storefront names its dealer by slug.
+      cars: dealerCars.map((car) => {
+        const { dealer: _dealer, ...rest } = stripPrivateCarFields(car);
+        return rest;
+      }),
       reviews: dealerReviews,
     });
   });

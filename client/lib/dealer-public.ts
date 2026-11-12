@@ -1,10 +1,13 @@
 import type { DealerProfileRow } from "@/lib/db/schema";
 import type { ApiPublicDealerProfile } from "@/lib/api-types";
+import { SHOW_DEALER_BANNER, SHOW_DEALER_REVIEWS } from "@/lib/flags";
 
 /**
  * Strip everything a buyer must not see before a dealer profile leaves the
- * server on a public route: the contact phone, the WhatsApp number and the
- * KYC document. Contact only happens through a recorded inquiry.
+ * server on a public route: the contact phone, the WhatsApp number, the KYC
+ * document, the street address, the social links and the free-text "about"
+ * (which dealers fill with an address and claims). Contact only happens through
+ * a recorded inquiry.
  *
  * Fields are listed explicitly (allow-list) so a column added to
  * `dealer_profiles` later is private by default.
@@ -13,23 +16,17 @@ export function toPublicDealerProfile(
   profile: DealerProfileRow
 ): ApiPublicDealerProfile {
   return {
-    id: profile.id,
-    user: profile.user,
     businessName: profile.businessName,
     slug: profile.slug,
     city: profile.city,
-    about: profile.about,
-    address: profile.address,
-    bannerImage: profile.bannerImage,
+    // Off with the flag: the stored banners are not the dealers' own showrooms.
+    bannerImage: SHOW_DEALER_BANNER ? profile.bannerImage : null,
     isVerified: profile.isVerified,
     isSample: profile.isSample,
-    averageRating: profile.averageRating,
-    totalReviews: profile.totalReviews,
+    // Ratings stay out of the public JSON while reviews are switched off (lib/flags.ts).
+    averageRating: SHOW_DEALER_REVIEWS ? profile.averageRating : 0,
+    totalReviews: SHOW_DEALER_REVIEWS ? profile.totalReviews : 0,
     microWebsiteEnabled: profile.microWebsiteEnabled,
-    socialLinks: {
-      instagram: profile.socialLinks?.instagram ?? "",
-      facebook: profile.socialLinks?.facebook ?? "",
-    },
   };
 }
 

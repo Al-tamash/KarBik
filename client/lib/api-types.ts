@@ -115,12 +115,7 @@ export type ApiDealerProfile = ApiDealerSummary & {
  * document. Buyers reach the dealer only through a recorded inquiry.
  */
 export type ApiPublicDealerProfile = ApiDealerSummary & {
-  id: string;
-  user: string;
-  about: string;
-  address: string;
   bannerImage: CloudFile | null;
-  socialLinks: Pick<SocialLinks, "instagram" | "facebook">;
   microWebsiteEnabled: boolean;
 };
 

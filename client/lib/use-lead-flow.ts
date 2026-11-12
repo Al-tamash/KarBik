@@ -23,8 +23,16 @@ import type { AuthForm } from "@/components/car-detail/LeadSheet";
 import type { InquiryUi } from "@/components/car-detail/ContactActions";
 
 export type LeadAction = "whatsapp" | "callback";
-/** What a lead is about: the car's id and the name the buyer knows it by. */
-export type LeadTarget = { id: string; label: string };
+/**
+ * What a lead is about: the name the buyer knows it by, and either a car (`id` is the car
+ * id) or a whole showroom (`kind: "dealer"`, `id` is the storefront slug).
+ */
+export type LeadTarget = { id: string; label: string; kind?: "car" | "dealer" };
+
+/** The part of the POST body that says what the lead is about. */
+function targetFields(target: LeadTarget) {
+  return target.kind === "dealer" ? { dealerSlug: target.id } : { car: target.id };
+}
 
 type Notice = { carId: string; status: "success" | "error"; message: string };
 
@@ -70,12 +78,16 @@ export function useLeadFlow({ leadSource }: { leadSource?: string } = {}) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          car: target.id,
+          ...targetFields(target),
           channel: "callback",
           ...(leadSource ? { leadSource } : {}),
           name: buyerName || "Buyer",
           phone: buyerPhone,
-          message: message || `Interested in ${target.label}. Please connect for a test drive.`,
+          message:
+            message ||
+            (target.kind === "dealer"
+              ? `Interested in cars at ${target.label}. Please connect me.`
+              : `Interested in ${target.label}. Please connect for a test drive.`),
         }),
         credentials: "include",
       });
@@ -106,7 +118,7 @@ export function useLeadFlow({ leadSource }: { leadSource?: string } = {}) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          car: target.id,
+          ...targetFields(target),
           channel: "whatsapp",
           ...(leadSource ? { leadSource } : {}),
           name: buyerName || "Buyer",
@@ -159,7 +171,7 @@ export function useLeadFlow({ leadSource }: { leadSource?: string } = {}) {
     if (action === "whatsapp") {
       await submitWhatsApp(target, knownPhone, buyerName);
     } else {
-      await submitCallback(target, knownPhone, buyerName, "Callback requested");
+      await submitCallback(target, knownPhone, buyerName, target.kind === "dealer" ? undefined : "Callback requested");
     }
   }
 

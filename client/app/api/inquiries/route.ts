@@ -1,4 +1,4 @@
-import { and, eq, gte, sql } from "drizzle-orm";
+import { and, eq, gte, isNull, sql } from "drizzle-orm";
 import { db } from "@/lib/db";
 import {
   cars,
@@ -20,6 +20,7 @@ import {
 } from "@/lib/lead-routing";
 import { publiclyVisible } from "@/lib/car-visibility";
 import { buildWhatsAppUrl } from "@/lib/dealer-public";
+import { dealerDisplayName } from "@/lib/dealer-name";
 import { displayCarName } from "@/lib/car-name";
 import { describeCar } from "@/lib/whatsapp-message";
 import {
@@ -75,7 +76,30 @@ export async function POST(request: Request) {
       body.car !== "00000000-0000-0000-0000-000000000000"
         ? body.car
         : null;
-    const directDealerId = typeof body.dealer === "string" ? body.dealer : "";
+    // A car id that is present but malformed is an error, not a silent switch to a showroom lead.
+    if (body.car !== undefined && body.car !== null && body.car !== "" && !carId) {
+      return Response.json({ message: "Car listing not found" }, { status: 404 });
+    }
+    // A showroom lead names its dealer by storefront slug only. Dealer user ids are not an
+    // input: the dealer of a car lead comes from the car, the dealer of a showroom lead from
+    // the slug, so an id read from anywhere else cannot be used to aim a lead.
+    let directDealerId = "";
+    const dealerSlug =
+      typeof body.dealerSlug === "string" ? body.dealerSlug.toLowerCase().trim().slice(0, 80) : "";
+    if (!carId && dealerSlug) {
+      if (!/^[a-z0-9-]+$/.test(dealerSlug)) {
+        return Response.json({ message: "Dealer page not found" }, { status: 404 });
+      }
+      const [bySlug] = await db
+        .select({ user: dealerProfiles.user })
+        .from(dealerProfiles)
+        .where(and(eq(dealerProfiles.slug, dealerSlug), eq(dealerProfiles.microWebsiteEnabled, true)))
+        .limit(1);
+      if (!bySlug) {
+        return Response.json({ message: "Dealer page not found" }, { status: 404 });
+      }
+      directDealerId = bySlug.user;
+    }
     const name = (typeof body.name === "string" ? body.name : "")
       .trim()
       .slice(0, 100);
@@ -166,6 +190,9 @@ export async function POST(request: Request) {
       .from(dealerProfiles)
       .where(eq(dealerProfiles.user, targetDealerId))
       .limit(1);
+    if (!carId && !dealerRow) {
+      return Response.json({ message: "Dealer page not found" }, { status: 404 });
+    }
     const isSample = dealerRow?.isSample ?? false;
 
     // Every lead waits for KarBik support first (buyers never reach a dealer
@@ -178,13 +205,17 @@ export async function POST(request: Request) {
     async function whatsappUrlFor(inquiryId: string): Promise<string | null> {
       if (!wantsWhatsApp) return null;
       const ref = inquiryId.slice(0, 8);
-      const dealerName = dealerRow?.businessName?.trim();
+      // A car lead never names the dealer (buyers learn it from support). A lead from a
+      // storefront is about that showroom, whose name the buyer is already looking at.
+      const supportSubject = carId
+        ? whatsappSubject
+        : `cars at ${dealerDisplayName(dealerRow?.businessName) || "this showroom"}`;
       return viaSupport
         ? buildWhatsAppUrl(
             SUPPORT_PHONE,
             isSample
-              ? `Hi KarBik, I'm interested in ${whatsappSubject} (a sample listing, ref ${ref}). Please help me find similar cars.`
-              : `Hi KarBik, I'm interested in ${whatsappSubject}${dealerName ? ` from ${dealerName}` : ""} (ref ${ref}). Please connect me with the dealer.`
+              ? `Hi KarBik, I'm interested in ${supportSubject} (a sample listing, ref ${ref}). Please help me find similar cars.`
+              : `Hi KarBik, I'm interested in ${supportSubject} (ref ${ref}). Please connect me with the dealer.`
           )
         : buildWhatsAppUrl(
             dealerRow?.phone,
@@ -200,7 +231,8 @@ export async function POST(request: Request) {
     if (carId) {
       duplicateConditions.push(eq(inquiries.car, carId));
     } else {
-      duplicateConditions.push(eq(inquiries.dealer, targetDealerId));
+      // A showroom lead only repeats an earlier showroom lead, not a lead about one of the cars.
+      duplicateConditions.push(eq(inquiries.dealer, targetDealerId), isNull(inquiries.car));
     }
 
     const [duplicate] = await db

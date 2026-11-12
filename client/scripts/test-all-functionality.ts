@@ -60,9 +60,9 @@ async function testApi() {
   const dataD1 = await resD1.json();
   assert(dataD1.profile.businessName === "Apex Motors - Certified Pre-Owned Jubilee Hills", "Dealer 1 business name matches");
   assert(dataD1.profile.city === "Hyderabad", "Dealer 1 city is Hyderabad");
-  assert(dataD1.profile.address.includes("Jubilee Hills"), "Dealer 1 address is in Jubilee Hills");
+  assert(dataD1.profile.address === undefined, "Dealer 1 street address is not in the public JSON");
   assert(dataD1.cars.length === 20, `Dealer 1 has 20 cars (got ${dataD1.cars.length})`);
-  assert(dataD1.reviews.length === 5, `Dealer 1 has 5 reviews (got ${dataD1.reviews.length})`);
+  assert(dataD1.reviews.length === 0, `Dealer 1 reviews are off in the public JSON (got ${dataD1.reviews.length})`);
 
   // 5. Dealer 2: Heritage Autocraft (Banjara Hills)
   console.log("\n5. Testing Dealer 2: Heritage Autocraft Banjara Hills");
@@ -71,9 +71,9 @@ async function testApi() {
   const dataD2 = await resD2.json();
   assert(dataD2.profile.businessName === "Heritage Autocraft - Banjara Hills Pre-Owned", "Dealer 2 business name matches");
   assert(dataD2.profile.city === "Hyderabad", "Dealer 2 city is Hyderabad");
-  assert(dataD2.profile.address.includes("Banjara Hills"), "Dealer 2 address is in Banjara Hills");
+  assert(dataD2.profile.address === undefined, "Dealer 2 street address is not in the public JSON");
   assert(dataD2.cars.length === 15, `Dealer 2 has 15 cars (got ${dataD2.cars.length})`);
-  assert(dataD2.reviews.length === 3, `Dealer 2 has 3 reviews (got ${dataD2.reviews.length})`);
+  assert(dataD2.reviews.length === 0, `Dealer 2 reviews are off in the public JSON (got ${dataD2.reviews.length})`);
 
   // 6. Dealer 3: Southgate Motors (Gachibowli)
   console.log("\n6. Testing Dealer 3: Southgate Motors Gachibowli");
@@ -82,9 +82,9 @@ async function testApi() {
   const dataD3 = await resD3.json();
   assert(dataD3.profile.businessName === "Southgate Motors - Gachibowli Tech Hub", "Dealer 3 business name matches");
   assert(dataD3.profile.city === "Hyderabad", "Dealer 3 city is Hyderabad");
-  assert(dataD3.profile.address.includes("Gachibowli"), "Dealer 3 address is in Gachibowli");
+  assert(dataD3.profile.address === undefined, "Dealer 3 street address is not in the public JSON");
   assert(dataD3.cars.length === 15, `Dealer 3 has 15 cars (got ${dataD3.cars.length})`);
-  assert(dataD3.reviews.length === 3, `Dealer 3 has 3 reviews (got ${dataD3.reviews.length})`);
+  assert(dataD3.reviews.length === 0, `Dealer 3 reviews are off in the public JSON (got ${dataD3.reviews.length})`);
 }
 
 async function testPages() {
