@@ -1,27 +1,18 @@
 /**
- * WHAT: We are updating client/app/page.js.
- * WHY: We are splitting the homepage into Server and Client components for SEO optimization.
+ * Homepage — search and real cars first, explanation last.
+ * Direction: the category standard (Cars24 / Spinny / CarDekho level),
+ * recorded in .impeccable/surfaces/app-page-tsx.md.
  */
 
 import Link from "next/link";
 import Image from "next/image";
-import { 
-  ShieldCheck, Store, 
-  MessageSquare, ArrowRight, Car,
-  ChevronRight
-} from "lucide-react";
+import { ShieldCheck, BadgeCheck, MessageCircle, ChevronRight, Store } from "lucide-react";
 
 import type { ApiCar } from "@/lib/api-types";
 import { API_BASE } from "@/lib/api-base";
+import { SUPPORT_PHONE, SUPPORT_PHONE_DISPLAY } from "@/lib/lead-routing";
 import HeroSearchWidget from "@/components/HeroSearchWidget";
 import FeaturedCars from "@/components/FeaturedCars";
-import JustArrivedCars from "@/components/JustArrivedCars";
-
-import Reveal from "@/components/Reveal";
-import TrustStatsStrip from "@/components/TrustStatsStrip";
-
-// Connect to the unified server API using the public environment variable
-
 
 export const metadata = {
   title: "Used Cars in Hyderabad from Local Dealers | KarBik",
@@ -29,402 +20,391 @@ export const metadata = {
   keywords: ["used cars in hyderabad", "second hand cars hyderabad", "pre-owned cars hyderabad", "verified car dealers hyderabad"],
 };
 
-export default async function Home() {
+const QUICK_LINKS: Array<{ label: string; href: string }> = [
+  { label: "SUVs", href: "/cars?bodyType=suv" },
+  { label: "Sedans", href: "/cars?bodyType=sedan" },
+  { label: "Hatchbacks", href: "/cars?bodyType=hatchback" },
+  { label: "Automatic", href: "/cars?transmission=automatic" },
+  { label: "Diesel", href: "/cars?fuelType=diesel" },
+  { label: "Electric", href: "/cars?fuelType=electric" },
+  { label: "Under ₹10 L", href: "/cars?maxPrice=1000000" },
+  { label: "Above ₹20 L", href: "/cars?minPrice=2000000" },
+];
 
-  // Fetch real stats from the API — we use limit=1 to minimize payload
-  // and only read the `total` field from the response
-  let stats = { totalCars: 0, loaded: false };
-  try {
-    const res = await fetch(`${API_BASE}/api/cars?limit=1`, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      stats = { totalCars: data.total || 0, loaded: true };
-    } else {
-      stats.loaded = true;
-    }
-  } catch (err) {
-    stats.loaded = true;
-  }
+// Logos we hold. Brands come from the live stock (/api/cars/brands), so no
+// tile opens an empty page; a brand without a logo gets a wordmark.
+const BRAND_LOGOS: Record<string, string> = {
+  Hyundai: "/images/company-logo-img/hyundai.png",
+  Tata: "/images/company-logo-img/tata.png",
+  Kia: "/images/company-logo-img/kia-logo.avif",
+  Mahindra: "/images/company-logo-img/mahindra-logo.jpg",
+  Toyota: "/images/company-logo-img/toy.jpg",
+  Honda: "/images/company-logo-img/honda.jpg",
+  MG: "/images/company-logo-img/mg-motors-logo.png",
+};
 
-  // Hero backdrop — real inventory photography (boosted listings sort first).
-  // Falls back to a calm gradient when no photos exist yet.
-  let heroImage: string | null = null;
-  let heroCaption: string | null = null;
-  // Same response also seeds the homepage listing sections, so they are in the HTML (no placeholders).
-  let initialCars: ApiCar[] = [];
+const BODY_TYPES = [
+  { label: "SUV", value: "suv" },
+  { label: "Sedan", value: "sedan" },
+  { label: "Hatchback", value: "hatchback" },
+  { label: "MUV", value: "muv" },
+] as const;
+
+// Bands follow the live stock: nothing is listed under ₹5 L yet.
+const BUDGETS = [
+  { label: "Under ₹10 Lakh", href: "/cars?maxPrice=1000000" },
+  { label: "₹10–15 Lakh", href: "/cars?minPrice=1000000&maxPrice=1500000" },
+  { label: "₹15–20 Lakh", href: "/cars?minPrice=1500000&maxPrice=2000000" },
+  { label: "Above ₹20 Lakh", href: "/cars?minPrice=2000000" },
+];
+
+const FAQS = [
+  {
+    q: "Is KarBik free for buyers?",
+    a: "Yes. Browsing, comparing cars and talking to KarBik support cost you nothing.",
+  },
+  {
+    q: "Can I call the dealer directly?",
+    a: "No. Tap WhatsApp or ask for a call back. KarBik support talks to you first, then connects you with the dealer. Dealer phone numbers are not shown on the site.",
+  },
+  {
+    q: "Who owns the cars on KarBik?",
+    a: "Hyderabad car dealers. Every car is listed by a dealer; KarBik runs the marketplace and the support desk.",
+  },
+  {
+    q: "What does “RC Verified” mean?",
+    a: "KarBik has checked the registration certificate of that car. Cars without the badge have not been checked yet.",
+  },
+  {
+    q: "What does “Verified dealer” mean?",
+    a: "KarBik has reviewed the dealer’s business documents.",
+  },
+  {
+    q: "Where do I see the car and take a test drive?",
+    a: "At the dealer in Hyderabad. KarBik support sets up the visit once you have picked a car.",
+  },
+];
+
+type BodyTile = { label: string; value: string; image: string };
+
+async function getJson<T>(path: string, fallback: T): Promise<T> {
   try {
-    const res = await fetch(`${API_BASE}/api/cars?limit=8`, { cache: 'no-store' });
-    if (res.ok) {
-      const data = await res.json();
-      type HeroCar = { images?: Array<{ url?: string }>; city?: string; dealerProfile?: { businessName?: string } | null };
-      const carsList: HeroCar[] = data.cars ?? [];
-      initialCars = (data.cars ?? []) as ApiCar[];
-      const heroCar = carsList.find((c) => (c.images?.length ?? 0) > 0);
-      heroImage = heroCar?.images?.[0]?.url ?? null;
-      if (heroCar) {
-        const bits = [heroCar.dealerProfile?.businessName, heroCar.city].filter(Boolean);
-        heroCaption = bits.length > 0 ? bits.join(", ") : null;
-      }
-    }
+    const res = await fetch(`${API_BASE}${path}`, { cache: "no-store" });
+    return res.ok ? ((await res.json()) as T) : fallback;
   } catch {
-    // Keep the gradient fallback
+    return fallback;
   }
+}
 
-  // Premium brand logo cards with local asset references
-  const popularBrands = [
-    { name: "Maruti Suzuki", searchBrand: "Maruti", logo: "svg" },
-    { name: "Tata", searchBrand: "Tata", logo: "/images/company-logo-img/tata.png" },
-    { name: "Kia", searchBrand: "Kia", logo: "/images/company-logo-img/kia-logo.avif" },
-    { name: "Toyota", searchBrand: "Toyota", logo: "/images/company-logo-img/toy.jpg" },
-    { name: "Hyundai", searchBrand: "Hyundai", logo: "/images/company-logo-img/hyundai.png" },
-    { name: "Mahindra", searchBrand: "Mahindra", logo: "/images/company-logo-img/mahindra-logo.jpg" },
-    { name: "Honda", searchBrand: "Honda", logo: "/images/company-logo-img/honda.jpg" },
-    { name: "MG Motors", searchBrand: "MG", logo: "/images/company-logo-img/mg-motors-logo.png" },
-    { name: "Renault", searchBrand: "Renault", logo: "/images/company-logo-img/renault-logo.png" },
-    { name: "Ford", searchBrand: "Ford", logo: "/images/company-logo-img/ford-logo.jpg" },
-  ];
+const STEPS = [
+  { title: "Pick a car", body: "Browse listings from Hyderabad dealers, compare up to three cars and save the ones you like." },
+  { title: "Tell KarBik support", body: "Tap WhatsApp or ask for a call back. Support talks to you first about the car you chose." },
+  { title: "Meet the dealer", body: "KarBik connects you with the dealer for a visit and test drive. Free for buyers." },
+];
+
+function formatLakh(price: number): string {
+  const lakh = price / 100000;
+  return `₹${lakh >= 100 ? (lakh / 100).toFixed(2) + " Cr" : lakh.toFixed(2) + " L"}`;
+}
+
+export default async function Home() {
+  // One request feeds the hero photo and the listing rail; the hero car (a
+  // boosted listing when there is one) is taken out of the rail so no car shows
+  // twice. Body-type tiles use a real photo from that category, one not already
+  // in the rail where possible. On failure the rail fetches on the client and
+  // the hero shows the support panel.
+  const [carsData, brandList, ...bodyLists] = await Promise.all([
+    getJson<{ cars?: ApiCar[] }>("/api/cars?limit=9", {}),
+    getJson<string[]>("/api/cars/brands", []),
+    ...BODY_TYPES.map((t) => getJson<{ cars?: ApiCar[] }>(`/api/cars?bodyType=${t.value}&limit=6`, {})),
+  ]);
+  const fetchedCars: ApiCar[] = (carsData as { cars?: ApiCar[] }).cars ?? [];
+  const withPhoto = fetchedCars.filter((c) => (c.images?.length ?? 0) > 0);
+  const heroCar = withPhoto.find((c) => c.isBoosted) ?? withPhoto[0] ?? null;
+  const initialCars = fetchedCars.filter((c) => c.id !== heroCar?.id).slice(0, 8);
+  // Brands we hold a logo for (the mass-market names) lead; the rest follow A–Z.
+  const brandRank = (b: string) => (b.toLowerCase().startsWith("maruti") ? 0 : BRAND_LOGOS[b] ? 1 : 2);
+  const brands = (Array.isArray(brandList) ? (brandList as string[]) : [])
+    .slice()
+    .sort((a, b) => brandRank(a) - brandRank(b) || a.localeCompare(b));
+  const railIds = new Set(initialCars.map((c) => c.id));
+  const bodyTiles: BodyTile[] = BODY_TYPES.flatMap((t, i) => {
+    const list = ((bodyLists[i] as { cars?: ApiCar[] })?.cars ?? []).filter((c) => (c.images?.length ?? 0) > 0);
+    const pick = list.find((c) => !railIds.has(c.id)) ?? list[0];
+    return pick ? [{ label: t.label, value: t.value, image: pick.images[0].url }] : [];
+  });
+
+  const heroTitle = heroCar ? [heroCar.year, heroCar.brand, heroCar.model].filter(Boolean).join(" ") || heroCar.title : "";
+  const waText = encodeURIComponent("Hi KarBik, I'm looking for a used car in Hyderabad.");
+  const waHref = `https://wa.me/91${SUPPORT_PHONE}?text=${waText}`;
+
+  // What the badges mean (true statements only). Phones show it after the car
+  // rail so the first screen reaches a car; wider screens show it under the hero.
+  const trustStrip = (
+    <ul className="grid gap-x-8 gap-y-3 border-y border-border py-4 text-sm text-ink sm:grid-cols-3">
+    <li className="flex items-start gap-2">
+      <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success-700" aria-hidden />
+      <span><strong className="font-semibold text-ink-strong">RC Verified</strong> only on cars whose registration KarBik has checked</span>
+    </li>
+    <li className="flex items-start gap-2">
+      <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" aria-hidden />
+      <span><strong className="font-semibold text-ink-strong">Verified dealer</strong> after KarBik reviews their documents</span>
+    </li>
+    <li className="flex items-start gap-2">
+      <MessageCircle className="mt-0.5 h-4 w-4 shrink-0 text-primary-600" aria-hidden />
+      <span>
+        WhatsApp or call{" "}
+        <a href={waHref} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary-700 underline-offset-4 hover:underline tabular-nums">
+          {SUPPORT_PHONE_DISPLAY}
+        </a>
+      </span>
+    </li>
+        </ul>
+  );
 
   return (
-    <div className="bg-bg min-h-screen font-sans">
+    <div className="bg-bg min-h-screen">
+      {/* ─── Quick category strip ─── */}
+      <nav aria-label="Popular searches" className="border-b border-border bg-surface">
+        <div className="mx-auto flex max-w-7xl gap-1 overflow-x-auto px-4 sm:px-6 scrollbar-hide">
+          {QUICK_LINKS.map((q) => (
+            <Link
+              key={q.label}
+              href={q.href}
+              className="whitespace-nowrap px-3 py-3 text-sm font-semibold text-ink-muted transition-colors hover:text-primary-700"
+            >
+              {q.label}
+            </Link>
+          ))}
+        </div>
+      </nav>
 
-      {/* ═══════════════════════════════════════════════
-          SECTION 1 — Photo-Led Editorial Hero
-          Full-bleed REAL inventory photography (boosted listings first).
-          The headline sits on a solid bg wash anchored to the bottom so it
-          stays legible in both colour modes. No gradients-for-decoration,
-          no glass, no stock showroom renders.
-      ═══════════════════════════════════════════════ */}
-      <section className="relative w-full overflow-hidden border-b border-border">
-        <div className="absolute inset-0" aria-hidden>
-          {heroImage ? (
-            <>
-              {/* Server Component — no custom loader prop here (functions cannot
-                  cross the RSC boundary). res.cloudinary.com is whitelisted in
-                  next.config.mjs, so the default optimizer handles it. */}
-              <Image
-                src={heroImage}
-                alt=""
-                fill
-                priority
-                sizes="100vw"
-                className="object-cover"
-              />
-              {/* Readability wash — opaque at the text zone (bottom), lets the photo breathe up top */}
-              <div className="absolute inset-0 bg-linear-to-t from-bg via-bg/90 to-bg/40" />
-            </>
-          ) : (
-            <div className="absolute inset-0 bg-linear-to-br from-primary-50/60 via-surface to-bg" />
-          )}
+      {/* ─── Hero: search first, a real car beside it ─── */}
+      <section className="mx-auto grid max-w-7xl items-center gap-8 px-4 pb-4 pt-6 sm:px-6 md:pt-12 lg:grid-cols-[1.05fr_1fr] lg:gap-12">
+        <div className="min-w-0">
+          {/* Headline matches headline ramp token (1.875rem / text-3xl) up to display token (3.5rem) on desktop */}
+          <h1 className="font-display text-3xl font-bold leading-[1.05] tracking-tight text-ink-strong text-balance sm:text-5xl lg:text-[3.5rem]">
+            Used cars from <span className="text-primary-600">Hyderabad dealers</span>
+          </h1>
+          <p className="mt-3 max-w-xl text-base leading-relaxed text-ink-muted sm:text-lg">
+            Free for buyers. KarBik support talks to you first, then connects you with the dealer.
+          </p>
+          <div className="mt-5 sm:mt-6">
+            <HeroSearchWidget initialBrands={brands} />
+          </div>
         </div>
 
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 pt-14 md:pt-24 pb-12 md:pb-16">
-          <div className="max-w-2xl flex flex-col items-start gap-6">
-
-            {/* Live-inventory caption — ties the photo to a real listing */}
-            {heroImage && (
-              <span className="inline-flex items-center gap-2 rounded-full bg-surface/95 border border-border px-3.5 py-1.5 text-xs font-semibold text-ink-muted shadow-xs">
-                <span className="h-1.5 w-1.5 rounded-full bg-success-500 animate-pulse" aria-hidden />
-                {stats.totalCars > 0 && (
-                  <strong className="font-bold text-ink">{stats.totalCars}+ cars</strong>
-                )}
-                {heroCaption && <span className="truncate">· real photos from {heroCaption}</span>}
+        {heroCar ? (
+          <Link
+            href={`/cars/${heroCar.id}`}
+            // Desktop only: on phones the search card is the hero and the car rail follows.
+            className="group relative hidden aspect-[5/4] overflow-hidden rounded-2xl bg-surface-alt shadow-card lg:block"
+          >
+            <Image
+              src={heroCar.images[0].url}
+              alt={heroTitle}
+              fill
+              priority
+              // Non-Cloudinary hosts (stimg.cardekho.com) refuse server-side fetches,
+              // so the optimizer 400s; load those directly like CarCard does.
+              unoptimized={!heroCar.images[0].url.includes("res.cloudinary.com")}
+              sizes="(max-width: 1024px) 100vw, 46vw"
+              className="object-cover transition-transform duration-700 ease-out group-hover:scale-[1.02]"
+            />
+            <div className="absolute inset-x-4 bottom-4 flex items-end justify-between gap-3 rounded-xl bg-surface/95 p-4 shadow-lg">
+              <div className="min-w-0">
+                <p className="truncate text-sm font-semibold text-ink-strong">{heroTitle}</p>
+                <p className="mt-0.5 text-2xl font-extrabold tracking-tight text-ink-strong tabular-nums">{formatLakh(heroCar.price)}</p>
+              </div>
+              <span className="inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-primary-700">
+                View car <ChevronRight className="h-4 w-4" aria-hidden />
               </span>
-            )}
-
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-display font-bold text-ink-strong tracking-tight leading-[1.08] text-balance">
-              Hyderabad’s Marketplace<br />
-              for <span className="text-primary-600">Used Cars</span> from Local Dealers
-            </h1>
-
-            <p className="text-base md:text-lg text-ink leading-relaxed max-w-xl">
-              Browse listings, compare cars and tell KarBik support which one you like, on WhatsApp or by call back. We connect you with the dealer. Free for buyers. Look for the “RC checked” and “Verified dealer” badges for extra confidence.
-            </p>
-
-            {/* Solid search panel — overlaps the photo edge */}
-            <div className="w-full">
-              <HeroSearchWidget />
             </div>
-
-            {/* Data-backed trust badges */}
-            <div className="flex flex-wrap gap-3 mt-2">
-              {stats.loaded && stats.totalCars > 0 && (
-                <div className="flex items-center gap-1.5 bg-surface border border-border px-3.5 py-1.5 rounded-full text-ink text-xs font-semibold shadow-xs">
-                  <Car className="h-3.5 w-3.5 text-primary-600" />
-                  <span>{stats.totalCars}+ Cars Listed</span>
-                </div>
-              )}
-              <div className="flex items-center gap-1.5 bg-surface border border-border px-3.5 py-1.5 rounded-full text-ink text-xs font-semibold shadow-xs">
-                <Store className="h-3.5 w-3.5 text-success-600" />
-                <span>Free for buyers</span>
-              </div>
-              <div className="flex items-center gap-1.5 bg-surface border border-border px-3.5 py-1.5 rounded-full text-ink text-xs font-semibold shadow-xs">
-                <ShieldCheck className="h-3.5 w-3.5 text-primary-600" />
-                <span>WhatsApp support: 94947 20878</span>
-              </div>
-            </div>
-            </div>
+          </Link>
+        ) : (
+          <div className="rounded-2xl border border-border bg-surface p-6 shadow-card">
+            <p className="font-display text-2xl font-bold text-ink-strong">Talk to KarBik support</p>
+            <p className="mt-2 text-ink-muted">Tell us the car and budget you have in mind.</p>
+            <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg mt-5 rounded-xl">
+              <MessageCircle className="h-5 w-5" aria-hidden /> WhatsApp {SUPPORT_PHONE_DISPLAY}
+            </a>
           </div>
+        )}
       </section>
 
-      {/* ═══════════════════════════════════════════════
-          SECTION 2 — Hyderabad Regional Car Hubs
-          Structured editorial layout + highly readable solid cards
-      ═══════════════════════════════════════════════ */}
-      <section className="py-16 md:py-20 bg-bg border-b border-border">
-        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-left mb-10">
-            <h2 className="text-3xl font-display font-bold text-ink-strong tracking-tight">Popular Hyderabad Car Hubs</h2>
-            <p className="text-sm text-ink-muted mt-1 max-w-xl">
-              Physical dealership zones verified by the KarBik team. Browse stocks in your neighborhood.
-            </p>
-          </div>
-
-          {/* Snapping cards carousel — redesigned for high contrast and extreme readability */}
-          <div className="flex overflow-x-auto pb-6 -mx-4 px-4 sm:-mx-6 sm:px-6 gap-6 snap-x snap-mandatory scrollbar-hide">
-            
-            {/* Kukatpally Miyapur */}
-            <Link 
-              href="/cars?location=Kukatpally"
-              className="min-w-[280px] sm:min-w-[320px] bg-surface rounded-2xl overflow-hidden snap-center group cursor-pointer border border-border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
-            >
-              <div className="h-36 w-full relative overflow-hidden bg-surface-alt">
-                <Image alt="Kukatpally Miyapur Showrooms" className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCAvfYHsO0CGQTppXbbMsrZZEbDi4fRoD2ZWcpQTrik2ZjRCvrXnsBHyOr1PrP2ev9PvnTo5isZLr3hWg6W5zyzklN_-tk9laVXNiFBrC_RkRHzJqHx0o6r8Laf9DnswaDFiELTa2vsHW7MU-7_Qi07LgtcguqZIYjaKFhtXpX-UNL7SMgCfH7SxMK3kz0KlLMOKh6R5B8LtDsoFtCsfgp4oJoJz7zeK6rAHF2CDapjhvLn4xPL96Hf8-OgGyFZqJSQe4cDWEE5_fA" fill sizes="(max-width: 640px) 100vw, 320px" />
-              </div>
-              <div className="p-5 text-left border-t border-border flex-1 flex flex-col justify-between">
-                <div>
-                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-50 text-primary-700 border border-primary-100 mb-2 uppercase tracking-wider">Automotive Corridor</span>
-                  <h3 className="text-base font-bold text-ink-strong group-hover:text-primary-600 transition-colors">Kukatpally & Miyapur</h3>
-                  <p className="text-xs text-ink-muted mt-1">Multi-brand showrooms & yards</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* Secunderabad Minister Road */}
-            <Link 
-              href="/cars?location=Minister Road"
-              className="min-w-[280px] sm:min-w-[320px] bg-surface rounded-2xl overflow-hidden snap-center group cursor-pointer border border-border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
-            >
-              <div className="h-36 w-full relative overflow-hidden bg-surface-alt">
-                <Image alt="Secunderabad Minister Road Stock" className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCEi3ZedMlzyvI8Twe8yFzh4WJmKsbWMgrIOM30hcqKCtlXRtId8W-tCdMoBQOtc2YBtSR47Y90Ye8W_Q4x_Ihdkg6aozTMf3BWRCykxwU2AE1AS7cz8ZbrT5E61UKyZaKMLQB63b__XgcrZJjgNuyiqm_FuA0C_0e5vGYHTqxAAZ64Qd-4IDvMAMEhpy3md6fDCkFOtEziWeFxTgcSl6kePlyJtjlENZb0IqnmAM6tHqT5n80QDkREMfUWjE378mdi0xcA1xfPn54" fill sizes="(max-width: 640px) 100vw, 320px" />
-              </div>
-              <div className="p-5 text-left border-t border-border flex-1 flex flex-col justify-between">
-                <div>
-                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-50 text-primary-700 border border-primary-100 mb-2 uppercase tracking-wider">Established Market</span>
-                  <h3 className="text-base font-bold text-ink-strong group-hover:text-primary-600 transition-colors">Secunderabad</h3>
-                  <p className="text-xs text-ink-muted mt-1">Established dealer corridor</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* Madhapur Gachibowli */}
-            <Link 
-              href="/cars?location=Madhapur"
-              className="min-w-[280px] sm:min-w-[320px] bg-surface rounded-2xl overflow-hidden snap-center group cursor-pointer border border-border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
-            >
-              <div className="h-36 w-full relative overflow-hidden bg-surface-alt">
-                <Image alt="Madhapur Jubilee Hills Showrooms" className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDnKTY6eDTR_hjgETEyc3xOdJhDD7C1WC6vMW8AjXKfsViJ9ALfHhzu9fqXZOi5wdy56TP7We63pHjIoTTD05e4SwZh6l0MEZWePLiLYsD7G70sdr_dDRIe2e2CJ69RtmV3nQr9NMkOStO-wTuuSWkDDYkFW7D_9ctjjdwWRyKPQJm8w6JlYLxQNLeS8GO1cy7j_qJ6Rf5TyAWeBaKP6tNoJh861lR0C4VT1FkvLxdsNLHLAC_oFl6BaQEBC_MyI7TV52xhVoH9Zlk" fill sizes="(max-width: 640px) 100vw, 320px" />
-              </div>
-              <div className="p-5 text-left border-t border-border flex-1 flex flex-col justify-between">
-                <div>
-                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-50 text-primary-700 border border-primary-100 mb-2 uppercase tracking-wider">Premium & Luxury</span>
-                  <h3 className="text-base font-bold text-ink-strong group-hover:text-primary-600 transition-colors">Madhapur & Gachibowli</h3>
-                  <p className="text-xs text-ink-muted mt-1">Premium & luxury inventory</p>
-                </div>
-              </div>
-            </Link>
-
-            {/* LB Nagar Dilsukhnagar */}
-            <Link 
-              href="/cars?location=LB Nagar"
-              className="min-w-[280px] sm:min-w-[320px] bg-surface rounded-2xl overflow-hidden snap-center group cursor-pointer border border-border shadow-sm hover:shadow-md transition-all duration-300 flex flex-col"
-            >
-              <div className="h-36 w-full relative overflow-hidden bg-surface-alt">
-                <Image alt="LB Nagar Family Car Hub" className="w-full h-full object-cover group-hover:scale-102 transition-transform duration-500 pointer-events-none" src="https://lh3.googleusercontent.com/aida-public/AB6AXuB8FFM3nizduDUGWP-YMj2Gs2Sl8an6W0GyuIb8VfrgTTh-bUfJK8Le5elberIg7e2wUTu87DbvwoqPvyJbmOM_bU6mIqn1T9EYtpxtvBaYUHRk55tpvqrs0lSiPnXgcZVHHt4gyMqow9m8sjUX0PKWCG1q9SMOCCY9kMmh_cODtJxEmpDGatcAkSKWfTt6ZSYk1YJb6MJXmIOs-lP9thEon48COOLuDuzZWZzsVxcUYAHHFCKqC70xUk3hCnPEGf1wiGv70S2lt5A" fill sizes="(max-width: 640px) 100vw, 320px" />
-              </div>
-              <div className="p-5 text-left border-t border-border flex-1 flex flex-col justify-between">
-                <div>
-                  <span className="inline-flex px-2.5 py-0.5 rounded-full text-xs font-bold bg-primary-50 text-primary-700 border border-primary-100 mb-2 uppercase tracking-wider">Budget-Friendly</span>
-                  <h3 className="text-base font-bold text-ink-strong group-hover:text-primary-600 transition-colors">LB Nagar & Dilsukhnagar</h3>
-                  <p className="text-xs text-ink-muted mt-1">Budget-friendly family options</p>
-                </div>
-              </div>
-            </Link>
-          </div>
-        </Reveal>
+      <section aria-label="How KarBik checks cars" className="mx-auto hidden max-w-7xl px-4 sm:block sm:px-6">
+        {trustStrip}
       </section>
 
-      <TrustStatsStrip initialCount={stats.loaded ? stats.totalCars : null} />
+      {/* ─── Listings ─── */}
+      <FeaturedCars initialCars={initialCars.length > 0 ? initialCars : undefined} />
 
-      {/* ═══════════════════════════════════════════════
-          SECTION 3 — Premium Brand Directory
-          Elegant brand logos matching the requested brand slider mockup
-      ═══════════════════════════════════════════════ */}
-      <section className="py-16 bg-surface border-b border-border">
-        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="text-left mb-8">
-            <h2 className="text-3xl font-display font-bold text-ink-strong tracking-tight">Browse by Premium Brand</h2>
-            <p className="text-sm text-ink-muted mt-1 max-w-xl">
-              Explore trusted inventory immediately filtered by popular global and local manufacturers.
-            </p>
-          </div>
+      <section aria-label="How KarBik checks cars" className="px-4 pb-8 sm:hidden">
+        {trustStrip}
+      </section>
 
-          {/* Premium brand cards list with horizontal scroll / sliding grid support */}
-          <div className="relative">
-            <div className="flex overflow-x-auto pb-4 gap-5 snap-x snap-mandatory scrollbar-thin scrollbar-thumb-border-strong scrollbar-track-transparent">
-              {popularBrands.map((brand) => (
+      {/* ─── Browse by body type (real photos from stock) ─── */}
+      {bodyTiles.length > 0 && (
+        <section className="border-t border-border bg-surface py-10 md:py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-ink-strong md:text-3xl">Browse by body type</h2>
+            <div className="-mx-4 mt-5 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-4 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0">
+              {bodyTiles.map((t) => (
                 <Link
-                  key={brand.name}
-                  href={`/cars?brand=${brand.searchBrand}`}
-                  className="min-w-[145px] sm:min-w-[165px] flex-1 flex flex-col justify-between items-center p-5 rounded-2xl border border-border bg-surface hover:border-primary-500 hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 group snap-center"
+                  key={t.value}
+                  href={`/cars?bodyType=${t.value}`}
+                  className="group w-[44%] shrink-0 snap-start overflow-hidden rounded-2xl border border-border bg-surface transition-colors hover:border-primary-400 sm:w-auto"
                 >
-                  {/* Brand Logo Container */}
-                  <div className="relative h-16 w-full flex items-center justify-center bg-transparent">
-                    {brand.logo === "svg" ? (
-                      <svg viewBox="0 0 24 24" className="w-11 h-11 mx-auto transition-transform duration-300 group-hover:scale-105" style={{ fill: "var(--color-ink-subtle)" }}>
-                        <path d="M17.369 19.995C13.51 22.39 12 24 12 24L.105 15.705s5.003-3.715 9.186-.87l5.61 3.882.683-.453L.106 7.321s2.226-.65 6.524-3.315C10.49 1.609 12 0 12 0l11.895 8.296s-5.003 3.715-9.187.87L9.1 5.281l-.683.454L23.893 16.68s-2.224.649-6.524 3.315Z"/>
-                      </svg>
-                    ) : (
-                      <Image
-                        src={brand.logo}
-                        alt={`${brand.name} Logo`}
-                        fill
-                        sizes="165px"
-                        className="object-contain !p-2 mx-auto transition-transform duration-300 group-hover:scale-105"
-                      />
-                    )}
-                  </div>
-                  
-                  {/* Brand Name */}
-                  <span className="text-xs sm:text-sm font-semibold text-ink group-hover:text-primary-600 transition-colors mt-4 text-center">
-                    {brand.name}
+                  <span className="relative block aspect-[4/3] overflow-hidden bg-surface-alt">
+                    <Image
+                      src={t.image}
+                      alt=""
+                      fill
+                      unoptimized={!t.image.includes("res.cloudinary.com")}
+                      sizes="(max-width: 640px) 44vw, 25vw"
+                      className="object-cover transition-transform duration-500 ease-out group-hover:scale-[1.04]"
+                    />
+                  </span>
+                  <span className="flex items-center justify-between px-3 py-3 text-base font-bold text-ink-strong group-hover:text-primary-700">
+                    {t.label}
+                    <ChevronRight className="h-4 w-4 text-ink-muted" aria-hidden />
                   </span>
                 </Link>
               ))}
             </div>
           </div>
-        </Reveal>
-      </section>
+        </section>
+      )}
 
-      <FeaturedCars initialCars={initialCars.length > 0 ? initialCars.slice(0, 6) : undefined} />
-      <JustArrivedCars initialCars={initialCars.length > 0 ? initialCars.slice(0, 4) : undefined} />
-
-      {/* ═══════════════════════════════════════════════
-          SECTION 5 — Why Choose KarBik (Trust)
-          Asymmetrical layout blocks
-      ═══════════════════════════════════════════════ */}
-      <section className="py-20 bg-surface">
-        <Reveal className="max-w-7xl mx-auto px-4 sm:px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
-            
-            {/* Left Column: Editorial Block */}
-            <div className="lg:col-span-5 text-left space-y-4">
-              {/* Redundant section badge removed */}
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-ink-strong tracking-tight leading-tight">
-                Hyderabad’s Most Transparent Pre-Owned Car Network
-              </h2>
-              <p className="text-sm text-ink-muted leading-relaxed">
-                KarBik isn&apos;t just another listing site. We bridge the trust gap in the pre-owned vehicle ecosystem with rigorous physical verification and seamless communication channels.
-              </p>
-            </div>
-
-            {/* Right Column: Stacked Step Sequence */}
-            <div className="lg:col-span-7 space-y-8 text-left">
-              
-              {/* Step 1 */}
-              <div className="flex gap-6 items-start pb-6 border-b border-border">
-                <span className="text-3xl md:text-4xl font-black text-primary-600/20 tracking-tight select-none">
-                  01
-                </span>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <ShieldCheck className="h-4 w-4 text-primary-600" />
-                    “RC checked” badge on verified cars
-                  </h3>
-                  {/* Applied max-width cap to respect typographic line length guidelines (~65ch) */}
-                  <p className="text-xs text-ink-muted leading-relaxed max-w-md">
-                    When KarBik has checked a car’s registration papers, it carries an “RC checked” badge. Look for it before you visit the dealer.
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 2 */}
-              <div className="flex gap-6 items-start pb-6 border-b border-border">
-                <span className="text-3xl md:text-4xl font-black text-primary-600/20 tracking-tight select-none">
-                  02
-                </span>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <Store className="h-4 w-4 text-primary-600" />
-                    Dealers reviewed by KarBik
-                  </h3>
-                  {/* Applied max-width cap to respect typographic line length guidelines (~65ch) */}
-                  <p className="text-xs text-ink-muted leading-relaxed max-w-md">
-                    Dealers earn a “Verified” badge after KarBik reviews their documents. Buyers who contacted a dealer can leave a review.
-                  </p>
-                </div>
-              </div>
-
-              {/* Step 3 */}
-              <div className="flex gap-6 items-start">
-                <span className="text-3xl md:text-4xl font-black text-primary-600/20 tracking-tight select-none">
-                  03
-                </span>
-                <div className="space-y-1">
-                  <h3 className="text-lg font-bold text-ink flex items-center gap-2">
-                    <MessageSquare className="h-4 w-4 text-primary-600" />
-                    KarBik connects you with the dealer
-                  </h3>
-                  {/* Applied max-width cap to respect typographic line length guidelines (~65ch) */}
-                  <p className="text-xs text-ink-muted leading-relaxed max-w-md">
-                    Tap WhatsApp for a pre-filled message to KarBik support, or ask for a call back. Support talks to you first, then connects you with the dealer.
-                  </p>
-                </div>
-              </div>
-
-            </div>
-
-          </div>
-        </Reveal>
-      </section>
-
-      
-
-      {/* ═══════════════════════════════════════════════
-          SECTION 6 — Dealer Success Radial Glow Card
-          Dark showroom aesthetic, asymmetric split
-      ═══════════════════════════════════════════════ */}
-      <section className="py-12 px-4 sm:px-6">
-        <Reveal className="max-w-7xl mx-auto bg-neutral-900 rounded-2xl overflow-hidden relative border border-neutral-800 shadow-xl">
-          <div className="relative z-10 flex flex-col lg:flex-row items-center justify-between p-8 md:p-14 gap-8">
-            <div className="max-w-xl text-left">
-              {/* Redundant section badge removed */}
-              <h2 className="text-3xl md:text-4xl font-display font-bold text-white tracking-tight leading-tight mb-4">
-                Grow Your Showroom Digitally
-              </h2>
-              <p className="text-sm text-neutral-300 leading-relaxed mb-8">
-                Set up your digital storefront, scan custom physical QR standees, and receive real WhatsApp leads from buyers near you.
-              </p>
-              <Link 
-                href="/register?role=dealer"
-                className="inline-flex items-center gap-2 bg-primary-600 hover:bg-primary-700 text-white px-7 py-3 rounded-xl font-bold text-sm tracking-wide transition-all shadow-md active:scale-[0.98]"
+      {/* ─── Browse by budget ─── */}
+      <section className="py-10 md:py-14">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-ink-strong md:text-3xl">Browse by budget</h2>
+          <div className="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-4 sm:gap-5">
+            {BUDGETS.map((b) => (
+              <Link
+                key={b.label}
+                href={b.href}
+                className="group flex min-h-16 items-center justify-between gap-2 rounded-2xl border border-border bg-surface px-4 py-4 transition-colors hover:border-primary-400"
               >
-                <span>Partner With Us</span>
-                <ChevronRight className="h-4 w-4" />
+                <span className="whitespace-nowrap text-sm font-bold text-ink-strong tabular-nums group-hover:text-primary-700 sm:text-base">{b.label}</span>
+                <ChevronRight className="h-4 w-4 shrink-0 text-ink-muted" aria-hidden />
               </Link>
-            </div>
+            ))}
+          </div>
+        </div>
+      </section>
 
-            <div className="hidden lg:block w-[40%] relative">
-              <div className="absolute inset-0 bg-linear-to-t from-neutral-900 via-transparent to-transparent z-10 pointer-events-none" />
-              <Image
-                alt="Dealer Growth Success Showroom"
-                className="rounded-2xl shadow-xl rotate-2 scale-105 border border-white/10"
-                src="https://lh3.googleusercontent.com/aida-public/AB6AXuCDGJhL44B7T7EhIivXwErHccW5S4yDZKXT_dW33qsFbvgc0aRWJRsYhZYreyyRcSHxAvMj0scCK6VTNgPdJwZdcAuRtsTEHrHxc9r8WMN0OSQME46gL3OP4TPahDG9ND70O2NgvgOqREYJTArFrojQ0lfqwM6CdLNQ4rVLY3TcCFxiCZD_VnRQAWPAA8-2IN0gdJAZ4yMFK6yx2HRsTU36o_XDMKREVb17CR94BEpMHWvMUfv4pJ1WNjXxrQJriwUxr7ohU2Bkkms"
-                width={720}
-                height={480}
-              />
+      {/* ─── Browse by brand (only brands in stock) ─── */}
+      {brands.length > 0 && (
+        <section className="border-t border-border bg-surface py-10 md:py-14">
+          <div className="mx-auto max-w-7xl px-4 sm:px-6">
+            <h2 className="font-display text-2xl font-bold tracking-tight text-ink-strong md:text-3xl">Browse by brand</h2>
+            <div className="-mx-4 mt-5 grid auto-cols-[30%] grid-flow-col grid-rows-2 gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:auto-cols-auto sm:grid-flow-row sm:grid-cols-5 sm:grid-rows-none sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-8">
+              {brands.map((brand) => {
+                const logo = BRAND_LOGOS[brand];
+                const isMaruti = brand.toLowerCase().startsWith("maruti");
+                return (
+                  <Link
+                    key={brand}
+                    href={`/cars?brand=${encodeURIComponent(brand)}`}
+                    className="group flex min-h-24 flex-col items-center justify-center gap-2 rounded-2xl border border-border bg-surface px-2 py-3 transition-colors hover:border-primary-400"
+                  >
+                    {/* Logos sit on one white plate in both themes; brands without a logo show their name once */}
+                    {(isMaruti || logo) && (
+                      <span className="relative flex h-10 w-16 items-center justify-center rounded-lg bg-white">
+                        {isMaruti ? (
+                          <svg viewBox="0 0 24 24" className="h-7 w-7 fill-neutral-500" aria-hidden>
+                            <path d="M17.369 19.995C13.51 22.39 12 24 12 24L.105 15.705s5.003-3.715 9.186-.87l5.61 3.882.683-.453L.106 7.321s2.226-.65 6.524-3.315C10.49 1.609 12 0 12 0l11.895 8.296s-5.003 3.715-9.187.87L9.1 5.281l-.683.454L23.893 16.68s-2.224.649-6.524 3.315Z" />
+                          </svg>
+                        ) : (
+                          // Logos are 2-17 KB files; serving them as-is skips the optimizer,
+                          // which stalled on the JPG/AVIF ones in testing.
+                          <Image src={logo as string} alt="" fill unoptimized sizes="64px" className="object-contain p-1" />
+                        )}
+                      </span>
+                    )}
+                    <span
+                      className={`text-center font-semibold group-hover:text-primary-700 ${
+                        isMaruti || logo ? "text-sm text-ink" : "text-base font-bold text-ink-strong"
+                      }`}
+                    >
+                      {brand}
+                    </span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
-        </Reveal>
+        </section>
+      )}
+
+      {/* ─── How buying works ─── */}
+      <section className="py-12 md:py-16">
+        <div className="mx-auto grid max-w-7xl gap-8 px-4 sm:px-6 lg:grid-cols-[1fr_2fr] lg:gap-12">
+          <div>
+            <h2 className="font-display text-2xl font-bold tracking-tight text-ink-strong md:text-3xl">How buying on KarBik works</h2>
+            <p className="mt-3 max-w-sm text-ink-muted">You never have to chase a dealer. KarBik support handles the first conversation.</p>
+            <a href={waHref} target="_blank" rel="noopener noreferrer" className="btn btn-whatsapp btn-lg mt-6 rounded-xl">
+              <MessageCircle className="h-5 w-5" aria-hidden /> WhatsApp KarBik
+            </a>
+          </div>
+          <ol className="grid gap-4 sm:grid-cols-3">
+            {STEPS.map((step, i) => (
+              // A numbered list at every width: the order carries the meaning.
+              <li key={step.title} className="flex gap-4">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary-50 text-sm font-bold text-primary-700 tabular-nums">
+                  {i + 1}
+                </span>
+                <div>
+                  <h3 className="text-lg font-bold text-ink-strong">{step.title}</h3>
+                  <p className="mt-1 text-sm leading-relaxed text-ink-muted">{step.body}</p>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </div>
+      </section>
+
+      {/* ─── Questions buyers ask ─── */}
+      <section className="border-t border-border bg-surface py-10 md:py-14">
+        <div className="mx-auto grid max-w-7xl gap-6 px-4 sm:px-6 lg:grid-cols-[1fr_2fr] lg:gap-12">
+          <h2 className="font-display text-2xl font-bold tracking-tight text-ink-strong md:text-3xl">Questions buyers ask</h2>
+          <div className="divide-y divide-border border-y border-border">
+            {FAQS.map((f) => (
+              <details key={f.q} className="group">
+                <summary className="flex min-h-14 cursor-pointer list-none items-center justify-between gap-4 py-4 text-base font-semibold text-ink-strong [&::-webkit-details-marker]:hidden">
+                  {f.q}
+                  <ChevronRight className="h-5 w-5 shrink-0 text-ink-muted transition-transform duration-200 group-open:rotate-90" aria-hidden />
+                </summary>
+                <p className="max-w-[65ch] pb-4 leading-relaxed text-ink-muted">{f.a}</p>
+              </details>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ─── For dealers ─── */}
+      <section className="px-4 py-12 sm:px-6">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 rounded-2xl bg-neutral-900 p-8 dark:ring-1 dark:ring-neutral-700 md:flex-row md:items-center md:justify-between md:p-10">
+          <div className="max-w-xl">
+            <h2 className="flex items-center gap-3 font-display text-2xl font-bold tracking-tight text-white md:text-3xl">
+              <Store className="h-7 w-7 shrink-0 text-neutral-300" aria-hidden />
+              Car dealer in Hyderabad? List your cars on KarBik
+            </h2>
+            <p className="mt-2 text-neutral-300">
+              Get a storefront page and buyer leads that KarBik support has already spoken to. Monthly plans, no auto-renewal.
+            </p>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link href="/register?role=dealer" className="btn btn-lg rounded-xl bg-white text-neutral-900 hover:bg-neutral-100">
+              Register as dealer
+            </Link>
+            <Link href="/pricing" className="btn btn-lg rounded-xl border border-neutral-600 text-white hover:bg-neutral-800">
+              See plans
+            </Link>
+          </div>
+        </div>
       </section>
     </div>
   );

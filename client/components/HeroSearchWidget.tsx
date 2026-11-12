@@ -1,102 +1,129 @@
 "use client";
 
-import { useState, useEffect } from "react";
+/**
+ * HeroSearchWidget: the homepage's primary action.
+ * Tabs (budget / brand / body type) with one-tap chips, then "Show cars".
+ * Every chip maps to a filter the /cars page and /api/cars actually support.
+ */
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 
+type Tab = "budget" | "brand" | "body";
 
+type Chip = { label: string; params: Record<string, string> };
 
-export default function HeroSearchWidget() {
+const BUDGET_CHIPS: Chip[] = [
+  // Bands follow the live inventory (nothing listed under ₹5 L yet), so no chip opens an empty page.
+  { label: "Under ₹10 L", params: { maxPrice: "1000000" } },
+  { label: "₹10–15 L", params: { minPrice: "1000000", maxPrice: "1500000" } },
+  { label: "₹15–20 L", params: { minPrice: "1500000", maxPrice: "2000000" } },
+  { label: "Above ₹20 L", params: { minPrice: "2000000" } },
+];
+
+const BODY_CHIPS: Chip[] = [
+  { label: "Hatchback", params: { bodyType: "hatchback" } },
+  { label: "Sedan", params: { bodyType: "sedan" } },
+  { label: "SUV", params: { bodyType: "suv" } },
+  { label: "MUV", params: { bodyType: "muv" } },
+];
+
+const TABS: Array<{ id: Tab; label: string }> = [
+  { id: "budget", label: "By budget" },
+  { id: "brand", label: "By brand" },
+  { id: "body", label: "By body type" },
+];
+
+interface HeroSearchWidgetProps {
+  initialBrands?: string[];
+}
+
+export default function HeroSearchWidget({ initialBrands }: HeroSearchWidgetProps = {}) {
   const router = useRouter();
+  const [tab, setTab] = useState<Tab>("budget");
+  const [selected, setSelected] = useState<Chip | null>(null);
+  // Pre-seed brands from server props if available, eliminating the "Loading brands…" delay
+  const [brands, setBrands] = useState<string[]>(
+    initialBrands && initialBrands.length > 0 ? initialBrands.slice(0, 10) : []
+  );
 
-  const [brands, setBrands] = useState<string[]>([]);
-  const [searchBrand, setSearchBrand] = useState("");
-  const [searchBudget, setSearchBudget] = useState("");
-  const [searchLocation, setSearchLocation] = useState("");
-
-  // Fetch unique brand list from backend for the hero dropdown
   useEffect(() => {
+    // Skip client fetch if server component already populated initialBrands
+    if (initialBrands && initialBrands.length > 0) return;
+
     fetch(`/api/cars/brands`)
       .then((res) => res.json())
-      .then((data) => setBrands(Array.isArray(data) ? data : []))
+      .then((data) => setBrands(Array.isArray(data) ? data.slice(0, 10) : []))
       .catch(() => {});
-  }, []);
+  }, [initialBrands]);
 
-  // Handle advanced search redirection based on selected criteria
-  const handleHeroSearch = () => {
-    const params = new URLSearchParams();
-    if (searchBrand && searchBrand !== "Any Brand") params.set("brand", searchBrand);
-    if (searchBudget && searchBudget !== "Any Budget") params.set("maxPrice", searchBudget);
-    if (searchLocation && searchLocation !== "All Hyderabad") params.set("location", searchLocation);
-    router.push(`/cars?${params.toString()}`);
+  const brandChips: Chip[] = brands.map((b) => ({ label: b, params: { brand: b } }));
+  const chips = tab === "budget" ? BUDGET_CHIPS : tab === "brand" ? brandChips : BODY_CHIPS;
+
+  const showCars = () => {
+    const params = new URLSearchParams(selected?.params ?? {});
+    const qs = params.toString();
+    router.push(qs ? `/cars?${qs}` : "/cars");
   };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ type: "spring", stiffness: 100, delay: 0.3 }}
-      className="w-full max-w-5xl bg-surface rounded-2xl p-4 md:p-5 shadow-xl border border-border flex flex-col md:flex-row gap-3 md:gap-4 items-end text-ink"
-    >
-      {/* Brand / Make selector */}
-      <div className="w-full text-left">
-        <label htmlFor="hero-brand" className="block text-xs font-bold uppercase tracking-wider text-ink-muted mb-1.5">Brand / Make</label>
-        <select id="hero-brand" 
-          value={searchBrand}
-          onChange={(e) => setSearchBrand(e.target.value)}
-          className="select w-full bg-surface-alt border border-border rounded-lg p-2.5 text-sm text-ink-strong focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-        >
-          <option value="">Any Brand</option>
-          {brands.map((brand) => (
-            <option key={brand} value={brand}>{brand}</option>
-          ))}
-        </select>
+    <div className="w-full rounded-2xl border border-border bg-surface p-4 sm:p-5 shadow-card">
+      <div role="tablist" aria-label="Search cars" className="flex gap-1.5 overflow-x-auto scrollbar-hide">
+        {TABS.map((t) => {
+          const active = tab === t.id;
+          return (
+            <button
+              key={t.id}
+              type="button"
+              role="tab"
+              aria-selected={active}
+              onClick={() => {
+                setTab(t.id);
+                setSelected(null);
+              }}
+              className={`whitespace-nowrap rounded-full px-4 py-2 text-sm font-semibold transition-colors ${
+                active ? "bg-ink-strong text-surface" : "text-ink-muted hover:bg-surface-alt hover:text-ink-strong"
+              }`}
+            >
+              {t.label}
+            </button>
+          );
+        })}
       </div>
 
-      {/* Budget range selector */}
-      <div className="w-full text-left">
-        <label htmlFor="hero-budget" className="block text-xs font-bold uppercase tracking-wider text-ink-muted mb-1.5">Budget</label>
-        <select id="hero-budget" 
-          value={searchBudget}
-          onChange={(e) => setSearchBudget(e.target.value)}
-          className="select w-full bg-surface-alt border border-border rounded-lg p-2.5 text-sm text-ink-strong focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-        >
-          <option value="">Any Budget</option>
-          <option value="300000">Under ₹3 Lakh</option>
-          <option value="500000">Under ₹5 Lakh</option>
-          <option value="1000000">Under ₹10 Lakh</option>
-          <option value="2000000">Under ₹20 Lakh</option>
-          <option value="5000000">Under ₹50 Lakh</option>
-        </select>
+      <div role="tabpanel" className="mt-4 flex min-h-[3rem] flex-wrap gap-2">
+        {chips.length === 0 ? (
+          <span className="self-center text-sm text-ink-muted">Loading brands…</span>
+        ) : (
+          chips.map((chip) => {
+            const on = selected?.label === chip.label;
+            return (
+              <button
+                key={chip.label}
+                type="button"
+                aria-pressed={on}
+                onClick={() => setSelected(on ? null : chip)}
+                className={`min-h-11 rounded-xl border px-4 text-sm font-semibold tabular-nums transition-colors ${
+                  on
+                    ? "border-primary-600 bg-primary-50 text-primary-700"
+                    : "border-border-strong bg-surface text-ink hover:border-primary-400"
+                }`}
+              >
+                {chip.label}
+              </button>
+            );
+          })
+        )}
       </div>
 
-      {/* Regional area selector */}
-      <div className="w-full text-left">
-        <label htmlFor="hero-area" className="block text-xs font-bold uppercase tracking-wider text-ink-muted mb-1.5">Area</label>
-        <select id="hero-area" 
-          value={searchLocation}
-          onChange={(e) => setSearchLocation(e.target.value)}
-          className="select w-full bg-surface-alt border border-border rounded-lg p-2.5 text-sm text-ink-strong focus:outline-none focus:border-primary-500 focus:ring-2 focus:ring-primary-100"
-        >
-          <option value="">All Hyderabad</option>
-          <option value="Kukatpally">Kukatpally</option>
-          <option value="Gachibowli">Gachibowli</option>
-          <option value="Madhapur">Madhapur</option>
-          <option value="Begumpet">Begumpet</option>
-          <option value="LB Nagar">LB Nagar</option>
-          <option value="Minister Road">Minister Road</option>
-        </select>
-      </div>
-
-      {/* Trigger redirect search */}
-      <button 
-        onClick={handleHeroSearch}
-        className="w-full md:w-auto btn btn-primary px-6 md:px-8 py-2.5 md:py-3 rounded-lg flex items-center justify-center gap-2 cursor-pointer transition-transform active:scale-[0.98]"
+      <button
+        type="button"
+        onClick={showCars}
+        className="btn btn-cta btn-full mt-4 rounded-xl py-3.5 text-base font-bold"
       >
-        <Search className="h-4 w-4" />
-        <span>Search Cars</span>
+        <Search className="h-4 w-4" aria-hidden />
+        {selected ? `Show ${selected.label} cars` : "Show all cars"}
       </button>
-    </motion.div>
+    </div>
   );
 }

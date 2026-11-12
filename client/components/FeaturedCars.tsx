@@ -19,12 +19,12 @@ export default function FeaturedCars({ initialCars }: { initialCars?: ApiCar[] }
 
   const quickFilters = [
     { label: "All", query: {} },
-    { label: "Under ₹3L", query: { maxPrice: 300000 } },
-    { label: "Under ₹5L", query: { maxPrice: 500000 } },
-    { label: "Under ₹10L", query: { maxPrice: 1000000 } },
     { label: "SUV", query: { bodyType: "suv" } },
     { label: "Sedan", query: { bodyType: "sedan" } },
     { label: "Hatchback", query: { bodyType: "hatchback" } },
+    { label: "Automatic", query: { transmission: "automatic" } },
+    { label: "Electric", query: { fuelType: "electric" } },
+    { label: "Under ₹10 L", query: { maxPrice: 1000000 } },
   ];
 
   const fetchCars = useCallback(async () => {
@@ -38,7 +38,7 @@ export default function FeaturedCars({ initialCars }: { initialCars?: ApiCar[] }
       });
     }
 
-    params.set("limit", "6");
+    params.set("limit", "8");
 
     try {
       const res = await fetch(`/api/cars?${params.toString()}`);
@@ -82,42 +82,43 @@ export default function FeaturedCars({ initialCars }: { initialCars?: ApiCar[] }
     show: { opacity: 1, y: 0, transition: { type: "spring", stiffness: 100, damping: 20 } }
   };
 
-  const skeletonCards = Array(6).fill(null);
+  const skeletonCards = Array(8).fill(null);
+  const activeQuery = quickFilters.find((f) => f.label === activeFilter)?.query ?? {};
+  const activeQs = new URLSearchParams(
+    Object.entries(activeQuery).map(([k, v]) => [k, String(v)]),
+  ).toString();
+  const activeHref = activeQs ? `/cars?${activeQs}` : "/cars";
 
   return (
-    <section className="py-20 bg-surface-alt border-t border-border">
+    <section className="pt-6 pb-8 md:py-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
-        <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-6">
-          <div className="text-left">
-            <h2 className="text-3xl font-extrabold text-ink-strong tracking-tight mt-1">
-              {activeFilter === "All" ? "Featured Collection" : `${activeFilter} Vehicles`}
-            </h2>
-            <p className="text-sm text-ink-muted mt-1 max-w-md">
-              Freshly listed pre-owned vehicles from local dealers in Hyderabad.
-            </p>
-          </div>
-          
-          <Link 
-            href="/cars"
-            className="inline-flex items-center gap-1 text-xs font-extrabold text-primary-600 tracking-wider uppercase hover:gap-2 transition-all"
+        <div className="flex items-baseline justify-between gap-3 mb-4 sm:mb-5">
+          <h2 className="text-xl sm:text-2xl md:text-3xl font-display font-bold text-ink-strong tracking-tight">
+            Cars for sale in Hyderabad
+          </h2>
+          <Link
+            href={activeHref}
+            className="inline-flex shrink-0 items-center gap-0.5 text-sm font-semibold text-primary-700 hover:underline underline-offset-4"
           >
-            View All Listings <ChevronRight className="h-4 w-4" />
+            View all<span className="hidden sm:inline">&nbsp;cars</span> <ChevronRight className="h-4 w-4" aria-hidden />
           </Link>
         </div>
 
-        {/* Quick filter selection pills */}
-        <div className="flex gap-2.5 overflow-x-auto pb-4 mb-8 scrollbar-hide border-b border-border/50">
+        {/* Quick filters */}
+        <div role="tablist" aria-label="Filter cars" className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 mb-4 scrollbar-hide sm:mx-0 sm:mb-6 sm:px-0">
           {quickFilters.map((filter) => {
             const isSelected = activeFilter === filter.label;
             return (
               <button
                 key={filter.label}
+                role="tab"
+                aria-selected={isSelected}
                 onClick={() => setActiveFilter(filter.label)}
-                className={`px-4 py-2 rounded-full text-xs font-bold whitespace-nowrap transition-all duration-200 border cursor-pointer ${
-                  isSelected 
-                    ? "bg-primary-600 text-white border-primary-600 shadow-sm scale-[1.02]"
-                    : "border-border text-ink-muted bg-surface hover:bg-surface-alt hover:text-primary-600"
-                } active:scale-[0.98]`}
+                className={`min-h-10 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition-colors ${
+                  isSelected
+                    ? "border-ink-strong bg-ink-strong text-surface"
+                    : "border-border-strong bg-surface text-ink hover:border-primary-400"
+                }`}
               >
                 {filter.label}
               </button>
@@ -127,10 +128,10 @@ export default function FeaturedCars({ initialCars }: { initialCars?: ApiCar[] }
 
         {/* Interactive listing grid with stagger reveals and skeleton system */}
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3 xl:grid-cols-4">
             {skeletonCards.map((_, i) => (
-              <div key={i} className="bg-surface rounded-2xl border border-border/50 overflow-hidden animate-pulse shadow-xs">
-                <div className="aspect-video bg-surface-alt" />
+              <div key={i} className="w-[80%] shrink-0 snap-start sm:w-auto bg-surface rounded-2xl border border-border/50 overflow-hidden animate-pulse shadow-xs">
+                <div className="aspect-[4/3] bg-surface-alt" />
                 <div className="p-5 space-y-3">
                   <div className="h-5 bg-surface-alt rounded w-3/4" />
                   <div className="h-3.5 bg-surface-alt rounded w-1/2" />
@@ -165,24 +166,36 @@ export default function FeaturedCars({ initialCars }: { initialCars?: ApiCar[] }
             </div>
             <h3 className="text-base font-bold text-ink">No cars match this filter</h3>
             <p className="text-xs text-ink-muted mt-1">
-              Try selecting a different filter pill above or browse the complete directory.
+              Pick another filter above, or see every car on KarBik.
             </p>
             <Link href="/cars" className="mt-4 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-xl text-xs font-bold transition-all active:scale-[0.98]">
-              Browse All Cars
+              See all cars
             </Link>
           </div>
         ) : (
           <motion.div 
             variants={containerVariants}
-            initial="hidden"
+            initial={false}
             animate="show"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+            className="-mx-4 flex snap-x snap-mandatory scroll-px-4 gap-3 overflow-x-auto px-4 pb-2 scrollbar-hide sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 sm:pb-0 lg:grid-cols-3 xl:grid-cols-4"
           >
             {cars.map((car) => (
-              <motion.div key={car.id} variants={itemVariants}>
+              <motion.div key={car.id} variants={itemVariants} className="w-[80%] shrink-0 snap-start sm:w-auto">
                 <CarCard car={car} />
               </motion.div>
             ))}
+            {/* Phones: the rail ends in a way out instead of a dead stop */}
+            <Link
+              href={activeHref}
+              className="flex w-[60%] shrink-0 snap-start flex-col items-center justify-center gap-3 rounded-2xl border border-dashed border-border-strong bg-surface p-6 text-center sm:hidden"
+            >
+              <span className="flex h-12 w-12 items-center justify-center rounded-full bg-primary-50 text-primary-700">
+                <ChevronRight className="h-6 w-6" aria-hidden />
+              </span>
+              <span className="text-base font-bold text-ink-strong">
+                {activeFilter === "All" ? "See all cars" : `See all ${activeFilter} cars`}
+              </span>
+            </Link>
           </motion.div>
         )}
       </div>

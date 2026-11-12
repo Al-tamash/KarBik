@@ -96,7 +96,8 @@
   --color-accent-400: #FB923C;
   --color-accent-500: #F97316;   /* ← main CTA color */
   --color-accent-600: #EA580C;
-  --color-accent-700: #C2410C;
+  --color-accent-700: #C2410C;   /* ← primary action fill (white text 5.2:1) */
+  --color-accent-800: #9A3412;
 
   /* ─── Success (Green) ─── available, verified, passed */
   --color-success-50:  #F0FDF4;
@@ -291,6 +292,10 @@
   .btn-accent {
     @apply bg-accent-500 text-neutral-900 hover:bg-accent-400
            active:bg-accent-600 shadow-sm hover:shadow-md;
+  }
+  /* The ONE primary action per view (search, show cars). Deep orange so white text passes AA. */
+  .btn-cta {
+    @apply bg-accent-700 text-white hover:bg-accent-800 active:bg-accent-800 shadow-sm;
   }
   .btn-outline {
     @apply border border-border-strong text-ink bg-surface

@@ -16,10 +16,11 @@
 import { useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { LayoutDashboard, LogOut, Car, Menu, X, Star, Search, ShieldAlert } from "lucide-react";
+import { LayoutDashboard, LogOut, Car, Menu, X, Store, Search, ShieldAlert, MapPin, HelpCircle, Heart } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAppSession, authClient } from "@/lib/auth-client";
 import ThemeToggle from "@/components/ThemeToggle";
+import { useWishlist } from "@/lib/wishlist";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -28,6 +29,9 @@ export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [showSearch, setShowSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const wishlist = useWishlist();
+  const savedCount = wishlist.ready ? wishlist.count : 0;
+  const savedLabel = savedCount > 0 ? `Wishlist, ${savedCount} saved ${savedCount === 1 ? "car" : "cars"}` : "Wishlist";
 
   // Check if a given path matches the current URL
   const isActive = (path: string) => pathname === path;
@@ -52,30 +56,50 @@ export default function Navbar() {
 
   // Navigation links shown to everyone
   const navLinks = [
-    { name: "Browse Cars", href: "/cars", icon: Car },
-    { name: "Pricing", href: "/pricing", icon: Star },
+    { name: "Buy car", href: "/cars", icon: Car },
+    { name: "How it works", href: "/how-it-works", icon: HelpCircle },
+    { name: "For dealers", href: "/pricing", icon: Store },
   ];
 
   return (
-    <header className="sticky top-0 z-50 bg-surface border-b border-border shadow-sm">
-      <div className="mx-auto flex max-w-7xl items-center justify-between px-4 sm:px-6 h-16">
+    <header className="sticky top-0 z-50 bg-surface border-b border-border">
+      <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 sm:px-6 h-16">
 
-        {/* ─── Logo ─── */}
-        <Link href="/" className="flex items-center gap-2 py-2 text-xl font-extrabold tracking-tight text-ink-strong group">
-          <Car className="h-6 w-6 text-primary-600 group-hover:scale-110 transition-transform duration-300" />
-          <span>Kar<span className="text-primary-600">Bik</span></span>
-        </Link>
+        {/* ─── Logo + city ─── */}
+        <div className="flex items-center gap-3 shrink-0">
+          <Link href="/" className="flex items-center gap-1.5 py-2 font-display text-2xl font-bold tracking-tight text-ink-strong">
+            <Car className="h-6 w-6 text-primary-600" aria-hidden />
+            <span>Kar<span className="text-primary-600">Bik</span></span>
+          </Link>
+          <span className="hidden sm:inline-flex md:hidden xl:inline-flex items-center gap-1 rounded-full border border-border-strong px-3 py-1.5 text-sm font-semibold text-ink">
+            <MapPin className="h-3.5 w-3.5 text-primary-600" aria-hidden />
+            Hyderabad
+          </span>
+        </div>
 
-        {/* ─── Desktop Nav Links (center) ─── */}
-        <nav className="hidden md:flex items-center gap-8">
+        {/* ─── Inline search (desktop) ─── */}
+        <form onSubmit={handleSearchSubmit} role="search" className="relative hidden lg:block flex-1 max-w-md mx-6">
+          <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-muted" aria-hidden />
+          <input
+            type="search"
+            aria-label="Search cars"
+            placeholder="Search Creta, Swift, Nexon…"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full rounded-full border border-border-strong bg-surface-alt py-2.5 pl-11 pr-4 text-sm text-ink-strong placeholder:text-ink-subtle focus:border-primary-500 focus:bg-surface focus:outline-none focus:ring-2 focus:ring-primary-100"
+          />
+        </form>
+
+        {/* ─── Desktop Nav Links ─── */}
+        <nav className="hidden md:flex items-center gap-6">
           {navLinks.map((link) => (
             <Link
               key={link.name}
               href={link.href}
-              className={`text-sm font-medium transition-colors ${
+              className={`text-sm font-semibold whitespace-nowrap transition-colors ${
                 isActive(link.href)
-                  ? "text-primary-600 font-semibold"
-                  : "text-ink-muted hover:text-primary-600"
+                  ? "text-primary-700"
+                  : "text-ink hover:text-primary-700"
               }`}
             >
               {link.name}
@@ -86,10 +110,10 @@ export default function Navbar() {
           {session?.user?.role === "dealer" && (
             <Link
               href="/dashboard/new"
-              className={`text-sm font-medium transition-colors ${
+              className={`text-sm font-semibold whitespace-nowrap transition-colors ${
                 pathname === "/dashboard/new"
-                  ? "text-primary-600 font-semibold"
-                  : "text-ink-muted hover:text-primary-600"
+                  ? "text-primary-700"
+                  : "text-ink hover:text-primary-700"
               }`}
             >
               Sell Car
@@ -103,11 +127,35 @@ export default function Navbar() {
           {/* Quick Search Button */}
           <button
             onClick={() => setShowSearch(true)}
-            className="inline-flex items-center justify-center h-11 w-11 lg:h-9 lg:w-9 text-ink-subtle hover:text-primary-600 hover:bg-surface-alt rounded-full transition-all duration-200 cursor-pointer"
-            title="Search vehicles"
+            className="inline-flex lg:hidden items-center justify-center h-11 w-11 text-ink hover:text-primary-700 hover:bg-surface-alt rounded-full transition-colors cursor-pointer"
+            aria-label="Search cars"
+            title="Search cars"
           >
             <Search className="h-5 w-5 shrink-0" />
           </button>
+
+          {/* ─── Wishlist (desktop; phones get a row in the menu) ─── */}
+          <Link
+            href="/wishlist"
+            aria-label={savedLabel}
+            title={savedLabel}
+            aria-current={isActive("/wishlist") ? "page" : undefined}
+            className={`relative hidden md:inline-flex items-center justify-center h-11 w-11 rounded-full transition-colors ${
+              isActive("/wishlist")
+                ? "bg-primary-50 text-primary-700"
+                : "text-ink hover:text-primary-700 hover:bg-surface-alt"
+            }`}
+          >
+            <Heart className="h-5 w-5 shrink-0" aria-hidden />
+            {savedCount > 0 && (
+              <span
+                aria-hidden
+                className="absolute right-0.5 top-0.5 flex h-5 min-w-5 items-center justify-center rounded-full bg-ink-strong px-1 text-xs font-bold leading-none text-surface tabular-nums ring-2 ring-surface"
+              >
+                {savedCount > 9 ? "9+" : savedCount}
+              </span>
+            )}
+          </Link>
 
           {/* ─── Colour theme (all breakpoints) ─── */}
           <ThemeToggle />
@@ -151,13 +199,13 @@ export default function Navbar() {
               <>
                 <Link
                   href="/login"
-                  className="text-sm font-medium text-ink-muted hover:text-ink-strong transition-colors"
+                  className="text-sm font-semibold text-ink hover:text-primary-700 transition-colors"
                 >
                   Login
                 </Link>
                 <Link
                   href="/register"
-                  className="rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-800 transition-colors shadow-sm"
+                  className="rounded-full bg-primary-600 px-5 py-2 text-sm font-semibold text-white hover:bg-primary-700 transition-colors"
                 >
                   Register
                 </Link>
@@ -202,6 +250,26 @@ export default function Navbar() {
                   {link.name}
                 </Link>
               ))}
+
+              <Link
+                href="/wishlist"
+                onClick={() => setIsOpen(false)}
+                aria-current={isActive("/wishlist") ? "page" : undefined}
+                className={`flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-colors ${
+                  isActive("/wishlist")
+                    ? "bg-primary-50 text-primary-600"
+                    : "text-ink hover:bg-surface-alt"
+                }`}
+              >
+                <Heart className="h-5 w-5" aria-hidden />
+                Wishlist
+                {savedCount > 0 && (
+                  <span className="ml-auto inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-ink-strong px-2 text-xs font-bold text-surface tabular-nums">
+                    {savedCount}
+                    <span className="sr-only"> saved {savedCount === 1 ? "car" : "cars"}</span>
+                  </span>
+                )}
+              </Link>
 
               <div className="h-px bg-border my-2" />
 

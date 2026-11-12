@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Mail, Phone, MapPin, ShieldCheck, Heart, Car } from "lucide-react";
+import { Mail, Phone, MapPin, ShieldCheck, Car } from "lucide-react";
 
 /**
  * Footer Component — Reusable premium footer
@@ -124,10 +124,6 @@ export default function Footer() {
             <Link href="/privacy" className="hover:text-neutral-300 transition-colors">Privacy Policy</Link>
             <Link href="/terms" className="hover:text-neutral-300 transition-colors">Terms of Service</Link>
             <Link href="/about" className="hover:text-neutral-300 transition-colors">About</Link>
-          </div>
-          {/* Change text-neutral-600 to text-neutral-400 for high-contrast signature row */}
-          <div className="text-neutral-400 flex items-center gap-1">
-            Crafted with <Heart className="h-3 w-3 text-danger-500 fill-danger-500 inline" /> for premium Indian dealerships.
           </div>
         </div>
 
