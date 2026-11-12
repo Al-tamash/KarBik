@@ -107,3 +107,10 @@ npm run seed:plans   # upsert Free/Starter/Pro plans
 - Guards: call `requireUser()` / `requireDealer()` inside route handlers; wrap handlers with `apiHandler()`.
 - User IDs are Better Auth strings; entity PKs are UUIDs.
 - Embedded/nested documents are JSONB columns; stable enums are `pgEnum`s.
+
+## Frontend design
+
+Before you redesign, restyle or build any page's UI, read `docs/design/redesign-playbook.md`.
+It covers the steps (impeccable skill, competitor benchmark in the browser, live-data
+check, verification, finish review) and which pages are already done. The visual
+system lives in `client/DESIGN.md`; the product truth rules are in `client/PRODUCT.md`.
