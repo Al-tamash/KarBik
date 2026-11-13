@@ -2,7 +2,7 @@ import { and, eq, gt } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { boosts, cars } from "@/lib/db/schema";
 import { razorpay } from "@/lib/razorpay-server";
-import { ApiError, apiHandler, requireDealer } from "@/lib/guards";
+import { ApiError, apiHandler, assertPaymentsOpen, requireDealer } from "@/lib/guards";
 import { BOOST_PLANS, type BoostType } from "@/lib/boosts";
 import {
   CREDIT_BOOST_DAYS,
@@ -99,6 +99,9 @@ export async function POST(
         planName: plan.label,
       });
     }
+
+    // Past this point the boost is paid through Razorpay. The credit path above is not.
+    assertPaymentsOpen();
 
     const order = await razorpay.orders.create({
       amount: plan.amount,

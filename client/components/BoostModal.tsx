@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { X, Zap } from "lucide-react";
 import type { ApiCar } from "@/lib/api-types";
+import { PAYMENTS_ENABLED } from "@/lib/flags";
 
 
 
@@ -200,13 +201,19 @@ export default function BoostModal({ car, user, onClose, onBoostSuccess }: {
           </button>
         )}
 
-        <button
-          onClick={handleBoostPayment}
-          disabled={loading}
-          className="w-full rounded-xl bg-linear-to-r from-accent-500 to-accent-400 py-3.5 text-sm font-bold text-neutral-900 hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-accent-500/20"
-        >
-          {loading ? "Processing..." : `Pay ₹${tiers.find(t => t.id === selectedTier)?.price} to Boost`}
-        </button>
+        {PAYMENTS_ENABLED ? (
+          <button
+            onClick={handleBoostPayment}
+            disabled={loading}
+            className="w-full rounded-xl bg-linear-to-r from-accent-500 to-accent-400 py-3.5 text-sm font-bold text-neutral-900 hover:opacity-90 transition-opacity disabled:opacity-70 disabled:cursor-not-allowed shadow-md shadow-accent-500/20"
+          >
+            {loading ? "Processing..." : `Pay ₹${tiers.find(t => t.id === selectedTier)?.price} to Boost`}
+          </button>
+        ) : (
+          <p role="status" className="rounded-xl bg-surface-alt px-4 py-3 text-sm text-ink-muted">
+            Paid boosts are not open yet. Message KarBik support and we will tell you when they start.
+          </p>
+        )}
       </div>
     </div>
   );

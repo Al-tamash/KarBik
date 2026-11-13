@@ -9,6 +9,20 @@
 export const SHOW_DEALER_REVIEWS = false;
 
 /**
+ * Online payments (dealer plans and paid boosts) are OFF unless NEXT_PUBLIC_PAYMENTS_ENABLED is
+ * exactly "true". The real Razorpay account does not exist yet and the keys in use are test
+ * keys: with them a valid test-card signature would activate a paid plan for nothing. While
+ * off, the payment routes answer 503 and the dashboard says paid plans open soon. Boosts that
+ * spend a plan credit do not use Razorpay and are not affected.
+ * Turn on (Vercel env, then redeploy) only after live keys are set and one real payment worked.
+ * NEXT_PUBLIC_ so the browser reads the same value; it is inlined at build time.
+ */
+export const PAYMENTS_ENABLED = process.env.NEXT_PUBLIC_PAYMENTS_ENABLED === "true";
+
+export const PAYMENTS_CLOSED_MESSAGE =
+  "Online payments are not open yet. Message KarBik support and we will tell you when paid plans start.";
+
+/**
  * The dealer banner photo on a storefront and in its share card. Off for now: the banners in
  * the database are not the dealers' own showrooms. One is a photo of another business with its
  * name on the signboard, the other two are Unsplash stock images. Showing them tells a buyer

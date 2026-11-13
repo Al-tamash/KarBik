@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { boosts } from "@/lib/db/schema";
-import { apiHandler, requireDealer } from "@/lib/guards";
+import { apiHandler, assertPaymentsOpen, requireDealer } from "@/lib/guards";
 import { BOOST_PLANS } from "@/lib/boosts";
 import { isValidRazorpaySignature } from "@/lib/razorpay-signature";
 
@@ -11,6 +11,7 @@ import { isValidRazorpaySignature } from "@/lib/razorpay-signature";
 // so replaying a valid signature can never extend or restart a boost.
 export async function POST(request: Request) {
   return apiHandler(async () => {
+    assertPaymentsOpen();
     const user = await requireDealer();
     const body =
       (await request.json()) as Record<"razorpay_order_id" | "razorpay_payment_id" | "razorpay_signature", string | undefined>;

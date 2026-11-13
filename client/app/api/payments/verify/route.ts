@@ -1,7 +1,7 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { payments, plans, subscriptions } from "@/lib/db/schema";
-import { apiHandler, requireDealer } from "@/lib/guards";
+import { apiHandler, assertPaymentsOpen, requireDealer } from "@/lib/guards";
 import { isValidRazorpaySignature } from "@/lib/razorpay-signature";
 
 // A paid payment whose subscription is still missing after this long is treated
@@ -67,6 +67,7 @@ async function respond(subscription: SubscriptionRow, planId: string, message: s
 // once, so replaying a valid signature never buys extra months.
 export async function POST(request: Request) {
   return apiHandler(async () => {
+    assertPaymentsOpen();
     const user = await requireDealer();
     const body =
       (await request.json()) as Record<"razorpay_order_id" | "razorpay_payment_id" | "razorpay_signature", string | undefined>;

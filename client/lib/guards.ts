@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { subscriptions, plans } from "@/lib/db/schema";
 import { and, eq, gt } from "drizzle-orm";
 import type { PlanFeatures } from "@autobazaar/shared";
+import { PAYMENTS_CLOSED_MESSAGE, PAYMENTS_ENABLED } from "@/lib/flags";
 
 export class ApiError extends Error {
   status: number;
@@ -12,6 +13,11 @@ export class ApiError extends Error {
     super(message);
     this.status = status;
   }
+}
+
+/** Call first in every route that creates or settles a Razorpay payment (see lib/flags.ts). */
+export function assertPaymentsOpen(): void {
+  if (!PAYMENTS_ENABLED) throw new ApiError(503, PAYMENTS_CLOSED_MESSAGE);
 }
 
 export async function getSessionUser() {

@@ -2,11 +2,12 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { payments, plans } from "@/lib/db/schema";
 import { razorpay } from "@/lib/razorpay-server";
-import { apiHandler, requireDealer } from "@/lib/guards";
+import { apiHandler, assertPaymentsOpen, requireDealer } from "@/lib/guards";
 
 // POST /api/payments/create-order — step 1: create Razorpay order
 export async function POST(request: Request) {
   return apiHandler(async () => {
+    assertPaymentsOpen();
     const user = await requireDealer();
     const body = (await request.json()) as { planId?: string };
     const planId = body.planId;

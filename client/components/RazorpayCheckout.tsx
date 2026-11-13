@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import type { ApiPlan } from "@/lib/api-types";
+import { PAYMENTS_ENABLED } from "@/lib/flags";
 
 /**
  * RazorpayCheckout — Handles the Razorpay payment popup
@@ -138,6 +140,15 @@ export default function RazorpayCheckout({ plan, user, isRecommended, onSuccess 
   const buttonClass = isRecommended
     ? "btn btn-md btn-accent btn-full py-3 rounded-xl tracking-wider uppercase font-bold text-xs"
     : "btn btn-md btn-primary btn-full py-3 rounded-xl tracking-wider uppercase font-bold text-xs";
+
+  // Payments are off until a real Razorpay account exists (lib/flags.ts).
+  if (!PAYMENTS_ENABLED) {
+    return (
+      <Link href="/contact" className="btn btn-md btn-outline btn-full py-3 rounded-xl text-center">
+        Paid plans open soon. Message support
+      </Link>
+    );
+  }
 
   return (
     <button

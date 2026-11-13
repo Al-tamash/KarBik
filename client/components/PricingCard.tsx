@@ -15,6 +15,7 @@ import { motion, type Variants } from "framer-motion";
 import { Check, X, Sparkles } from "lucide-react";
 import RazorpayCheckout from "./RazorpayCheckout";
 import type { ApiPlan } from "@/lib/api-types";
+import { PAYMENTS_ENABLED } from "@/lib/flags";
 
 // Animated entry variant matching our PricingContent orchestration
 const cardVariants: Variants = {
@@ -174,7 +175,9 @@ export default function PricingCard({
           <div className="w-full py-3 rounded-xl border border-border bg-surface-alt/50 text-center text-xs font-semibold uppercase tracking-wider text-ink-subtle">
             Default Plan
           </div>
-        ) : user ? (
+        ) : user || !PAYMENTS_ENABLED ? (
+          // While payments are off RazorpayCheckout renders the "paid plans open soon" link,
+          // for signed-out visitors too (a login would lead nowhere).
           <RazorpayCheckout
             plan={plan}
             user={user}
