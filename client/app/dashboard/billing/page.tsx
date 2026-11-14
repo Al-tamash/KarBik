@@ -1,235 +1,255 @@
 "use client";
-import type { ApiPlan, ApiSubscription } from "@/lib/api-types";
 
 /**
- * Billing Dashboard — Shows the dealer's subscription status
+ * Plan and billing for the signed-in dealer. Shows only what is recorded: the plan and its
+ * expiry, cars listed against the plan limit, how many of them buyers can see, boost credits
+ * left. There is no payment history or invoice list yet, so none is promised. Each block says
+ * so when its own data did not load, instead of showing a plausible default. Dealers only;
+ * buyers go to the dashboard and signed-out visitors to login.
  *
- * What this page shows:
- * 1. Current plan name + badge
- * 2. Expiry date with days remaining
- * 3. Usage bar (X of Y listings used)
- * 4. Payment history table
- * 5. "Upgrade Plan" button → links to /pricing
- *
- * Only accessible to logged-in dealers.
- * Buyers are redirected to the main dashboard.
+ * The plan limit counts every car that is not archived (live or waiting for approval), as
+ * POST /api/cars does. KYC only decides how many of them buyers can see (lib/limits.ts).
  */
-import { useEffect, useState } from "react";
+
+import React, { Suspense, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { authClient, useAppSession } from "@/lib/auth-client";
-import { Sparkles, Check, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 
+import { useAppSession } from "@/lib/auth-client";
+import { PAYMENTS_ENABLED } from "@/lib/flags";
+import { UNVERIFIED_LIVE_LISTING_QUOTA } from "@/lib/limits";
+import type { ApiMyPlanResponse } from "@/lib/api-types";
 
+type Credits = { total: number; used: number; remaining: number };
+type MyCar = { id: string; pendingApproval?: boolean };
 
-import { Suspense } from "react";
+function Loading() {
+  return (
+    <div className="flex min-h-[60vh] items-center justify-center bg-surface">
+      <p role="status" className="text-sm text-ink-muted">
+        Loading your plan…
+      </p>
+    </div>
+  );
+}
+
+function formatDate(iso: string): string {
+  return new Date(iso).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" });
+}
+
+function Section({ id, title, children }: { id: string; title: string; children: React.ReactNode }) {
+  return (
+    <section aria-labelledby={id} className="mt-8 border-t border-border pt-6">
+      <h2 id={id} className="font-display text-xl font-bold text-ink-strong sm:text-2xl">
+        {title}
+      </h2>
+      <div className="mt-2 space-y-2 text-base">{children}</div>
+    </section>
+  );
+}
+
+const NOT_LOADED = (
+  <p role="alert" className="max-w-2xl text-base text-ink-muted">
+    This did not load. Refresh the page.
+  </p>
+);
 
 function BillingContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const { data: session, isPending } = useAppSession();
 
-  const [planData, setPlanData] = useState<{ plan: ApiPlan | null; subscription: ApiSubscription | null; isFreeTier: boolean } | null>(null);
-  const [listingCount, setListingCount] = useState(0);
+  const [planData, setPlanData] = useState<ApiMyPlanResponse | null>(null);
+  // null means "did not load", which is shown as such and never as zero.
+  const [cars, setCars] = useState<MyCar[] | null>(null);
+  const [verified, setVerified] = useState<boolean | null>(null);
+  const [credits, setCredits] = useState<Credits | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showSuccess, setShowSuccess] = useState(false);
+  const [failed, setFailed] = useState(false);
+  // Read once when the data arrives, so the render stays pure.
+  const [loadedAt, setLoadedAt] = useState(0);
 
-  // Show success toast if redirected from payment
+  const isDealer = session?.user?.role === "dealer";
+
   useEffect(() => {
-    if (searchParams.get("success") === "true") {
-       
-      setShowSuccess(true);
-      // Auto-hide after 5 seconds
-      const timer = setTimeout(() => setShowSuccess(false), 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [searchParams]);
+    if (isPending) return;
+    if (!session) router.push("/login?next=/dashboard/billing");
+    else if (!isDealer) router.push("/dashboard");
+  }, [isPending, session, isDealer, router]);
 
-  // Redirect non-dealers
   useEffect(() => {
-    if (!isPending && !session) {
-      router.push("/login");
-    } else if (!isPending && session?.user?.role !== "dealer") {
-      router.push("/dashboard");
+    if (!isDealer) return;
+    let cancelled = false;
+    async function load() {
+      try {
+        const opts = { credentials: "include" as const };
+        const [planRes, carsRes, profileRes, creditsRes] = await Promise.all([
+          fetch("/api/subscriptions/my-plan", opts),
+          fetch("/api/cars/mine", opts),
+          fetch("/api/dealers/profile", opts),
+          fetch("/api/boosts/credits", opts),
+        ]);
+        if (!planRes.ok) throw new Error("plan");
+        const plan = (await planRes.json()) as ApiMyPlanResponse;
+        const mine = carsRes.ok ? ((await carsRes.json()) as unknown) : null;
+        const profile = profileRes.ok ? ((await profileRes.json()) as { isVerified?: boolean }) : null;
+        const credit = creditsRes.ok ? ((await creditsRes.json()) as Credits) : null;
+        if (cancelled) return;
+        setPlanData(plan);
+        setCars(Array.isArray(mine) ? (mine as MyCar[]) : null);
+        setVerified(profile ? Boolean(profile.isVerified) : null);
+        setCredits(credit);
+        setLoadedAt(Date.now());
+      } catch {
+        if (!cancelled) setFailed(true);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     }
-  }, [isPending, session, router]);
+    void load();
+    return () => {
+      cancelled = true;
+    };
+  }, [isDealer]);
 
-  // Fetch subscription + listing count
-  useEffect(() => {
-    if (session?.user?.role === "dealer") {
-      // eslint-disable-next-line react-hooks/immutability
-      fetchBillingData();
-    }
-  }, [session]);
+  if (isPending || !session || !isDealer || loading) return <Loading />;
 
-  async function fetchBillingData() {
-    try {
-      // Fetch both in parallel for faster loading
-      const [planRes, carsRes] = await Promise.all([
-        fetch(`/api/subscriptions/my-plan`, { credentials: "include" }),
-        fetch(`/api/cars/mine`, { credentials: "include" }),
-      ]);
+  const plan = planData?.plan ?? null;
+  const subscription = planData?.subscription ?? null;
+  const isFree = planData?.isFreeTier ?? true;
 
-      const planInfo = await planRes.json();
-      const cars = await carsRes.json();
+  const planLimit = plan ? plan.listingLimit : 5;
+  const unlimited = planLimit >= 9999;
+  const listed = cars ? cars.length : 0;
+  const waiting = cars ? cars.filter((c) => c.pendingApproval).length : 0;
+  const shown = listed - waiting;
+  const atLimit = !unlimited && listed >= planLimit;
+  const percent = unlimited ? 0 : Math.min(100, Math.round((listed / Math.max(1, planLimit)) * 100));
 
-      setPlanData(planInfo);
-      setListingCount(Array.isArray(cars) ? cars.length : 0);
-    } catch (err) {
-      console.error("Failed to fetch billing data:", err);
-    }
-    setLoading(false);
-  }
+  const daysLeft = subscription
+    ? Math.max(0, Math.ceil((new Date(subscription.endDate).getTime() - loadedAt) / 86_400_000))
+    : null;
 
-  // Calculate days remaining until subscription expires
-  function getDaysRemaining(endDate: string | null | undefined): number | null {
-    if (!endDate) return null;
-    // eslint-disable-next-line react-hooks/purity
-    const diff = new Date(endDate).getTime() - Date.now();
-    return Math.max(0, Math.ceil(diff / (1000 * 60 * 60 * 24)));
-  }
-
-  if (isPending || loading || !session) {
-    return (
-      <div className="flex min-h-[calc(100vh-57px)] items-center justify-center bg-surface-alt">
-        <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
-          <p className="text-sm font-medium text-ink-muted">Loading billing...</p>
-        </div>
-      </div>
-    );
-  }
-
-  const plan = planData?.plan;
-  const subscription = planData?.subscription;
-  const isFreeTier = planData?.isFreeTier;
-   
-  const daysLeft = subscription ? getDaysRemaining(subscription.endDate) : null;
-  const listingLimit = (plan?.listingLimit ?? 0) >= 9999 ? "Unlimited" : plan?.listingLimit || 5;
-  const usagePercent = listingLimit === "Unlimited" ? 0 : Math.round((listingCount / (plan?.listingLimit ?? 1)) * 100);
+  const priceLine = isFree || !plan ? "No charge" : `₹${(plan.priceMonthly / 100).toLocaleString("en-IN")} + GST a month`;
 
   return (
-    <div className="min-h-[calc(100vh-57px)] bg-surface-alt">
-      <div className="mx-auto max-w-3xl px-4 py-8 sm:px-6">
+    <div className="bg-surface">
+      <div className="mx-auto max-w-3xl px-4 pb-16 pt-6 sm:px-6 sm:pt-10">
+        <Link
+          href="/dashboard"
+          className="inline-flex h-11 items-center gap-1.5 text-sm font-semibold text-ink-muted hover:text-ink"
+        >
+          <ArrowLeft className="h-4 w-4" aria-hidden />
+          Dashboard
+        </Link>
 
-        {/* Success Toast */}
-        {showSuccess && (
-          <div className="mb-6 rounded-xl border border-success-200 bg-success-50 px-5 py-4 flex items-center gap-3 animate-fade-in">
-            {/* Styled vector sparkles instead of cheap unstyled celebration emoji */}
-            <Sparkles className="w-5 h-5 text-success-600 shrink-0" />
-            <div>
-              <p className="text-sm font-bold text-success-800">Subscription activated!</p>
-              <p className="text-xs text-success-700">Your plan has been upgraded successfully.</p>
-            </div>
-          </div>
+        <h1 className="mt-2 font-display text-4xl font-bold tracking-tight text-ink-strong sm:text-5xl">
+          Plan and billing
+        </h1>
+
+        {searchParams.get("success") === "true" && !isFree && (
+          <p role="status" className="mt-4 text-base text-ink">
+            Your plan is active.
+          </p>
         )}
 
-        {/* Page Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <p className="text-sm font-medium text-ink-muted mb-1">Billing & Subscription</p>
-            <h1 className="text-2xl font-display font-bold text-ink-strong">Your Plan</h1>
-          </div>
-          <Link
-            href="/pricing"
-            className="rounded-lg bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-700 hover:shadow-md transition-all"
-          >
-            {isFreeTier ? "Upgrade Plan" : "Change Plan"}
-          </Link>
-        </div>
+        {failed ? (
+          <p role="alert" className="mt-6 text-base text-danger-700">
+            Your plan did not load. Refresh the page, or{" "}
+            <Link href="/contact" className="font-semibold underline underline-offset-2">
+              message KarBik support
+            </Link>
+            .
+          </p>
+        ) : (
+          <>
+            <Section id="plan-heading" title={`${plan?.name ?? "Free"} plan`}>
+              <p className="text-ink-muted tabular-nums">{priceLine}</p>
+              {subscription && daysLeft !== null && (
+                <p className="text-ink tabular-nums">
+                  Active until {formatDate(subscription.endDate)} · {daysLeft} {daysLeft === 1 ? "day" : "days"} left.
+                  Nothing renews by itself.
+                </p>
+              )}
+            </Section>
 
-        {/* Current Plan Card */}
-        <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8 shadow-sm mb-6">
-          <div className="flex items-start justify-between mb-6">
-            <div>
-              <div className="flex items-center gap-3 mb-1">
-                <h2 className="text-xl font-bold text-ink-strong">{plan?.name || "Free"} Plan</h2>
-                {!isFreeTier && plan?.name && (
-                  <span className="text-xs font-bold text-primary-700 bg-primary-50 px-2.5 py-1 rounded-full">
-                    {plan.name} Dealer
-                  </span>
+            <Section id="cars-heading" title="Your cars">
+              {cars === null ? (
+                NOT_LOADED
+              ) : (
+                <>
+                  <p className="text-ink tabular-nums">
+                    {unlimited ? `${listed} cars listed` : `${listed} of ${planLimit} cars listed`}
+                    {atLimit ? ". You have reached your limit." : ""}
+                  </p>
+                  {!unlimited && (
+                    <div
+                      role="meter"
+                      aria-label="Cars listed against your plan limit"
+                      aria-valuemin={0}
+                      aria-valuemax={planLimit}
+                      aria-valuenow={Math.min(listed, planLimit)}
+                      aria-valuetext={`${listed} of ${planLimit} cars listed`}
+                      className="h-2 w-full max-w-md overflow-hidden rounded-full bg-border"
+                    >
+                      <div className="h-full rounded-full bg-primary-600" style={{ width: `${percent}%` }} />
+                    </div>
+                  )}
+                  <p className="text-ink-muted tabular-nums">
+                    {shown} shown to buyers
+                    {waiting > 0 ? `, ${waiting} waiting for KarBik approval` : ""}.
+                  </p>
+                  {verified === false && (
+                    <p className="max-w-2xl text-ink-muted">
+                      KarBik has not verified your KYC documents yet. Until it does, at most{" "}
+                      {UNVERIFIED_LIVE_LISTING_QUOTA} cars are shown to buyers and the rest wait for approval. A plan does
+                      not buy verification.
+                    </p>
+                  )}
+                  {verified === null && (
+                    <p className="max-w-2xl text-ink-muted">Your KYC status did not load. Refresh the page.</p>
+                  )}
+                </>
+              )}
+            </Section>
+
+            <Section id="boost-heading" title="Boosts">
+              {credits === null ? (
+                NOT_LOADED
+              ) : (
+                <p className="max-w-2xl text-ink tabular-nums">
+                  {credits.total > 0
+                    ? `${credits.remaining} of ${credits.total} plan boosts left${
+                        subscription ? ` until ${formatDate(subscription.endDate)}` : ""
+                      } (3 days each).`
+                    : "Your plan has no boost credits."}
+                </p>
+              )}
+            </Section>
+
+            <Section id="pay-heading" title="Payments">
+              <p className="max-w-2xl text-ink">
+                {PAYMENTS_ENABLED
+                  ? "Each payment gives 30 days of the plan."
+                  : "Online payments open soon. To start a paid plan, message KarBik support."}
+              </p>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 pt-2">
+                <Link href="/pricing" className="btn btn-outline btn-md">
+                  See plans
+                </Link>
+                {!PAYMENTS_ENABLED && (
+                  <Link
+                    href="/contact"
+                    className="inline-flex min-h-11 items-center font-semibold text-primary-600 underline underline-offset-2"
+                  >
+                    Message support
+                  </Link>
                 )}
               </div>
-              <p className="text-sm text-ink-muted">
-                {isFreeTier
-                  ? "You're on the free tier. Upgrade for more listings and features."
-                  : `${plan?.priceLabel} — each payment gives 30 days, no auto-renewal`}
-              </p>
-            </div>
-            {!isFreeTier && (
-              <div className="text-right">
-                <p className="text-2xl font-extrabold text-ink-strong">
-                  {daysLeft}<span className="text-sm font-normal text-ink-muted ml-1">days left</span>
-                </p>
-                <p className="text-xs text-ink-muted">
-                  Expires {subscription && new Date(subscription.endDate).toLocaleDateString("en-IN", {
-                    day: "numeric", month: "short", year: "numeric",
-                  })}
-                </p>
-              </div>
-            )}
-          </div>
-
-          {/* Usage Bar */}
-          <div className="rounded-xl bg-surface-alt p-5">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-ink-muted">
-                Listing Usage
-              </p>
-              <p className="text-sm font-bold text-ink-strong">
-                {listingCount} / {listingLimit}
-              </p>
-            </div>
-            {listingLimit !== "Unlimited" && (
-              <div className="h-2.5 w-full rounded-full bg-border overflow-hidden">
-                <div
-                  className={`h-full rounded-full transition-all duration-500 ${
-                    usagePercent >= 90 ? "bg-danger-500" : usagePercent >= 70 ? "bg-warning-500" : "bg-primary-600"
-                  }`}
-                  style={{ width: `${Math.min(usagePercent, 100)}%` }}
-                />
-              </div>
-            )}
-            {listingLimit === "Unlimited" && (
-              <p className="text-xs text-ink-muted mt-1">Unlimited listings with your Pro plan</p>
-            )}
-          </div>
-        </div>
-
-        {/* Plan Features */}
-        <div className="rounded-2xl border border-border bg-surface p-6 sm:p-8 shadow-sm mb-6">
-          <h3 className="text-sm font-bold text-ink-strong mb-4">Plan Features</h3>
-          <div className="grid grid-cols-2 gap-3">
-            {[
-              { label: "Dealer Dashboard", active: plan?.features?.dashboard },
-              { label: `${plan?.boostsPerMonth || 0} × 3-day boosts/month`, active: (plan?.boostsPerMonth || 0) > 0 },
-              { label: `${plan?.name || "Plan"} dealer badge`, active: !isFreeTier },
-            ].map((feat, i) => (
-              <div
-                key={i}
-                className={`flex items-center gap-2 rounded-lg px-3 py-2.5 text-sm ${
-                  feat.active
-                    ? "bg-success-50 text-success-800 font-medium"
-                    : "bg-surface-alt text-ink-muted line-through"
-                }`}
-              >
-                {feat.active ? (
-                  <Check className="h-3.5 w-3.5" aria-hidden />
-                ) : (
-                  <X className="h-3.5 w-3.5" aria-hidden />
-                )}
-                {feat.label}
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Back to Dashboard */}
-        <div className="text-center">
-          <Link href="/dashboard" className="text-sm font-medium text-primary-600 hover:text-primary-700 hover:underline">
-            ← Back to Dashboard
-          </Link>
-        </div>
+            </Section>
+          </>
+        )}
       </div>
     </div>
   );
@@ -237,14 +257,7 @@ function BillingContent() {
 
 export default function BillingPage() {
   return (
-    <Suspense fallback={
-      <div className="flex min-h-[calc(100vh-57px)] items-center justify-center bg-surface-alt">
-        <div className="flex items-center gap-2">
-          <div className="h-2.5 w-2.5 rounded-full bg-primary-600 animate-pulse" />
-          <p className="text-sm font-medium text-ink-muted">Loading billing...</p>
-        </div>
-      </div>
-    }>
+    <Suspense fallback={<Loading />}>
       <BillingContent />
     </Suspense>
   );

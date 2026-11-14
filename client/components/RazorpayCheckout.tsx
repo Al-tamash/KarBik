@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import Link from "next/link";
 import type { ApiPlan } from "@/lib/api-types";
 import { PAYMENTS_ENABLED } from "@/lib/flags";
@@ -23,12 +24,14 @@ import { PAYMENTS_ENABLED } from "@/lib/flags";
 
 
 
-export default function RazorpayCheckout({ plan, user, isRecommended, onSuccess }: {
+export default function RazorpayCheckout({ plan, user, onSuccess }: {
   plan: ApiPlan;
   user?: { role?: string; name?: string; email?: string } | null;
-  isRecommended?: boolean;
   onSuccess?: (result?: unknown) => void;
 }) {
+  // One order at a time: a second click while the first is being created would open a second order.
+  const [paying, setPaying] = useState(false);
+
   /**
    * handlePayment — Orchestrates the entire payment flow
    *
@@ -38,6 +41,8 @@ export default function RazorpayCheckout({ plan, user, isRecommended, onSuccess 
    * Step 3: Verify payment on our server
    */
   async function handlePayment() {
+    if (paying) return;
+    setPaying(true);
     try {
       // ── Step 1: Create a Razorpay order on our backend ──
       // We send the plan.id, and the server fetches the real price from DB
@@ -133,18 +138,15 @@ export default function RazorpayCheckout({ plan, user, isRecommended, onSuccess 
     } catch (error) {
       console.error("Payment error:", error);
       alert("Something went wrong. Please try again.");
+    } finally {
+      setPaying(false);
     }
   }
-
-  // Assign proper button styles based on plan status (Recommended Starter gets Accent Orange, others get Primary Indigo)
-  const buttonClass = isRecommended
-    ? "btn btn-md btn-accent btn-full py-3 rounded-xl tracking-wider uppercase font-bold text-xs"
-    : "btn btn-md btn-primary btn-full py-3 rounded-xl tracking-wider uppercase font-bold text-xs";
 
   // Payments are off until a real Razorpay account exists (lib/flags.ts).
   if (!PAYMENTS_ENABLED) {
     return (
-      <Link href="/contact" className="btn btn-md btn-outline btn-full py-3 rounded-xl text-center">
+      <Link href="/contact" className="btn btn-md btn-outline btn-full whitespace-normal rounded-xl py-3 text-center">
         Paid plans open soon. Message support
       </Link>
     );
@@ -152,10 +154,12 @@ export default function RazorpayCheckout({ plan, user, isRecommended, onSuccess 
 
   return (
     <button
+      type="button"
       onClick={handlePayment}
-      className={buttonClass}
+      disabled={paying}
+      className="btn btn-md btn-primary btn-full cursor-pointer disabled:opacity-60"
     >
-      Subscribe to {plan.name}
+      {paying ? "Opening payment…" : `Subscribe to ${plan.name}`}
     </button>
   );
 }

@@ -10,14 +10,17 @@ export default function InfoPage({
   title,
   intro,
   children,
+  wide = false,
 }: {
   title: string;
   intro: React.ReactNode;
   children: React.ReactNode;
+  /** Three-column content (the dealer plans) needs more than the reading measure. */
+  wide?: boolean;
 }) {
   return (
     <div className="bg-surface">
-      <div className="mx-auto max-w-3xl px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14">
+      <div className={`mx-auto px-4 pb-16 pt-10 sm:px-6 sm:pb-20 sm:pt-14 ${wide ? "max-w-5xl" : "max-w-3xl"}`}>
         <h1 className="font-display text-4xl font-bold tracking-tight text-ink-strong sm:text-5xl">{title}</h1>
         <p className="mt-3 max-w-2xl text-base leading-relaxed text-ink-muted sm:text-lg">{intro}</p>
         {children}

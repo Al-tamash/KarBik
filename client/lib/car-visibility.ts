@@ -11,5 +11,6 @@ export const publiclyVisible = and(
   eq(cars.pendingApproval, false)
 );
 
-/** Unverified dealers may have this many live listings before approval is needed. */
-export const UNVERIFIED_LIVE_LISTING_QUOTA = 2;
+// The number lives in lib/limits.ts so client components can read it without importing the
+// database schema; it is re-exported here for the server code that already imports it.
+export { UNVERIFIED_LIVE_LISTING_QUOTA } from "@/lib/limits";
