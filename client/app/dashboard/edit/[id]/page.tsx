@@ -14,7 +14,9 @@ import { Sparkles, AlertTriangle, ShieldCheck } from "lucide-react";
 import Image from "next/image";
 import cloudinaryLoader from "@/lib/cloudinary-loader";
 import { compressImage, compressImages } from "@/lib/image-compress";
-import { updateCarSchema } from "@autobazaar/shared";
+import { updateCarSchema, findContactDetails, CONTACT_DETAILS_MESSAGE } from "@autobazaar/shared";
+import CarChecksFields, { type AccidentChoice } from "@/components/dealer/CarChecksFields";
+import { VEHICLE_LOOKUP_ENABLED } from "@/lib/flags";
 import type { CloudFile } from "@autobazaar/shared";
 import type { VehicleDetails } from "@/lib/vahan";
 
@@ -26,8 +28,12 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
   const { data: session, isPending } = useAppSession();
   const [form, setForm] = useState({
     title: "", brand: "", year: "", price: "", description: "",
-    registrationNumber: "", rcVerified: false,
+    registrationNumber: "",
+    insuranceValid: "", serviceHistory: false,
   });
+  // Existing cars cannot tell "no accident" from "never answered" (the column defaults to false),
+  // so the question starts empty here and is only sent when the dealer answers it.
+  const [accident, setAccident] = useState<AccidentChoice>("");
   const [existingImages, setExistingImages] = useState<CloudFile[]>([]);
   const [files, setFiles] = useState<FileList | null>(null);
   const [inspectionDoc, setInspectionDoc] = useState<File | null>(null);
@@ -155,7 +161,6 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
       title: `${rtoData.year} ${rtoData.brand} ${rtoData.model}${rtoData.variant ? ' ' + rtoData.variant : ''}`,
       year: rtoData.year.toString(),
       registrationNumber: rtoData.registrationNumber,
-      rcVerified: true, // Auto-sets RC verified to true since it came from RTO
     }));
   }
 
@@ -171,7 +176,8 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
         }
         const car = (await res.json()) as {
           title: string; brand: string; year: number; price: number;
-          description?: string; registrationNumber?: string; rcVerified?: boolean;
+          description?: string; registrationNumber?: string;
+          insuranceValid?: string; serviceHistory?: boolean;
           images?: CloudFile[]; isInspected?: boolean;
         };
         setForm({
@@ -181,7 +187,8 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
           price: String(car.price),
           description: car.description || "",
           registrationNumber: car.registrationNumber || "",
-          rcVerified: car.rcVerified || false,
+          insuranceValid: car.insuranceValid || "",
+          serviceHistory: car.serviceHistory || false,
         });
         setExistingImages(car.images || []);
         setIsInspected(car.isInspected || false);
@@ -217,7 +224,10 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
     formData.append("price", form.price);
     formData.append("description", form.description);
     formData.append("registrationNumber", form.registrationNumber);
-    formData.append("rcVerified", form.rcVerified ? "true" : "false");
+    formData.append("insuranceValid", form.insuranceValid);
+    formData.append("serviceHistory", form.serviceHistory ? "true" : "false");
+    // Only when the dealer answered; otherwise the stored value is left alone.
+    if (accident) formData.append("accidentHistory", accident === "reported" ? "true" : "false");
 
     // Only append images if user selected new ones (otherwise keep existing)
     // Compress in the browser: Vercel rejects request bodies over ~4.5 MB.
@@ -347,7 +357,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
 
           <div>
             <div className="flex items-center justify-between mb-1.5">
-              <label className="block text-sm font-semibold text-ink-strong">Description</label>
+              <label htmlFor="edit-description" className="block text-sm font-semibold text-ink-strong">Description</label>
               <button
                 type="button"
                 onClick={generateAIDescription}
@@ -370,7 +380,18 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
               onChange={(e) => setForm({ ...form, description: e.target.value })}
               className="w-full rounded-lg border border-border px-3 py-2.5 text-sm text-ink-strong focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
               rows={4}
+              id="edit-description"
+              aria-describedby="description-hint"
             />
+            <p id="description-hint" className="mt-1.5 text-xs text-ink-muted">
+              Facts about the car only. Do not write a phone number, email, link, or the name of a workshop, showroom or
+              area: buyers reach you through KarBik support.
+            </p>
+            {findContactDetails(form.description) && (
+              <p role="alert" className="mt-1 text-xs font-semibold text-danger-700">
+                {CONTACT_DETAILS_MESSAGE}
+              </p>
+            )}
           </div>
 
           {/* Current images preview */}
@@ -398,13 +419,17 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
 
           <div>
             <label className="block text-sm font-semibold text-ink-strong mb-1.5">
-              Replace Images <span className="text-ink-muted font-normal">(optional — select new to replace all)</span>
+              Replace photos <span className="text-ink-muted font-normal">(optional)</span>
             </label>
             <input
               type="file" accept="image/*" multiple
               onChange={(e) => setFiles(e.target.files)}
               className="w-full text-sm text-ink-muted file:mr-3 file:rounded-lg file:border-0 file:bg-primary-600 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-white hover:file:bg-primary-700 file:cursor-pointer transition-all"
             />
+            <p className="mt-1.5 text-xs text-ink-muted">
+              Choosing new photos removes all the current ones. The first photo is the cover on every card: a plain photo
+              of the car, no text, logos or collages.
+            </p>
           </div>
 
           <div className="pt-4 border-t border-border space-y-4">
@@ -423,6 +448,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
                   onChange={(e) => setForm({ ...form, registrationNumber: e.target.value })}
                   className="flex-1 rounded-lg border border-border px-3 py-2 text-sm text-ink-strong uppercase focus:border-primary-500 focus:outline-none focus:ring-2 focus:ring-primary-100"
                 />
+                {VEHICLE_LOOKUP_ENABLED && (
                 <button
                   type="button"
                   onClick={verifyRtoDetails}
@@ -431,6 +457,7 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
                 >
                   {rtoLoading ? "Checking..." : "Verify RTO"}
                 </button>
+                )}
               </div>
 
               {/* RTO Verification error feedback */}
@@ -492,19 +519,20 @@ export default function EditListingPage({ params }: { params: Promise<{ id: stri
               )}
             </div>
 
-            {/* Checkbox for RC status */}
-            <div className="flex items-start gap-3 py-1">
-              <input
-                type="checkbox"
-                id="rcVerified"
-                checked={form.rcVerified}
-                onChange={(e) => setForm({ ...form, rcVerified: e.target.checked })}
-                className="mt-0.5 w-4 h-4 accent-primary-600 cursor-pointer"
-              />
-              <label htmlFor="rcVerified" className="text-sm font-semibold text-ink cursor-pointer">
-                RC transfer is ready (the &quot;RTO Verified&quot; badge is added by KarBik after review)
-              </label>
-            </div>
+            <CarChecksFields
+              accident={accident}
+              onAccident={setAccident}
+              serviceHistory={form.serviceHistory}
+              onServiceHistory={value => setForm({ ...form, serviceHistory: value })}
+              insuranceValid={form.insuranceValid}
+              onInsuranceValid={value => setForm({ ...form, insuranceValid: value })}
+            />
+            {!accident && (
+              <p className="text-xs text-ink-muted">
+                The accident answer on this listing is not confirmed. Choose one to confirm it; leave it to keep what is
+                stored.
+              </p>
+            )}
 
             {/* Existing Inspection fields */}
             <div className="flex items-center gap-4 py-1">

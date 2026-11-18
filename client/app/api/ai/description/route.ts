@@ -20,24 +20,25 @@ export async function POST(request: Request) {
       );
     }
 
+    // The model writes only from the details the dealer entered. The earlier prompt asked for a
+    // "highly persuasive, SEO-optimized" text with a default condition of "Good", which is where
+    // invented condition claims and workshop or area names came from.
     const prompt = `
-      Write a highly persuasive, professional, and SEO-optimized sales description for a used car listing.
+      Write a short, plain description for a used car listing in India.
 
-      Car Details:
+      Use ONLY these details:
       - Brand: ${String(brand)}
       - Model: ${String(model)}
       - Year: ${String(year)}
-      - Mileage: ${body.mileage ? String(body.mileage) : "Not specified"} km
-      - Condition: ${body.condition ? String(body.condition) : "Good"}
-      - Fuel Type: ${body.fuelType ? String(body.fuelType) : "Not specified"}
-      - Transmission: ${body.transmission ? String(body.transmission) : "Not specified"}
+      - Mileage: ${body.mileage ? String(body.mileage) + " km" : "not given"}
+      - Fuel type: ${body.fuelType ? String(body.fuelType) : "not given"}
+      - Transmission: ${body.transmission ? String(body.transmission) : "not given"}
 
-      Instructions:
-      1. Write 2-3 engaging paragraphs focusing on reliability, performance, and value.
-      2. Keep the tone professional, trustworthy, and exciting.
-      3. Highlight the condition if it's "Excellent" or "Like New".
-      4. DO NOT use markdown formatting like asterisks (**) or hashes (#). Return plain text with paragraph breaks.
-      5. Keep it under 150 words.
+      Rules:
+      1. Two short paragraphs, under 80 words in total. Plain text only: no markdown, no emojis.
+      2. State only the details above. Do not claim anything else: no condition, accident or service history, number of owners, insurance, warranty or price.
+      3. No sales words or superlatives (best, excellent, perfect, flagship, premium, certified, unbeatable, reliable).
+      4. Do not mention a dealer, showroom, workshop, service centre, area, city, phone number, email or link.
     `;
 
     try {

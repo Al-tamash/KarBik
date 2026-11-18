@@ -44,13 +44,42 @@ const MONTHS: Record<string, number> = {
   jan: 0, feb: 1, mar: 2, apr: 3, may: 4, jun: 5, jul: 6, aug: 7, sep: 8, oct: 9, nov: 10, dec: 11,
 };
 
-/** "Comprehensive till Aug 2026" → true when that month has already ended. */
+const MONTH_NAMES = [
+  "January", "February", "March", "April", "May", "June",
+  "July", "August", "September", "October", "November", "December",
+];
+
+/** The first "Mon YYYY" in insurance text ("Comprehensive till Aug 2026", "March 2026"), or null. */
+function parseInsuranceMonth(text: string): { year: number; month: number } | null {
+  for (const m of String(text ?? "").matchAll(/\b([A-Za-z]{3})[a-z]*\.?\s+(\d{4})\b/g)) {
+    const month = MONTHS[m[1].toLowerCase()];
+    if (month !== undefined) return { year: Number(m[2]), month };
+  }
+  return null;
+}
+
+/**
+ * A month ("2026-03") as the text stored on the car: "Valid till March 2026". "" stays "".
+ * The policy type is not claimed.
+ */
+export function insuranceFromMonth(value: string): string {
+  const m = /^(\d{4})-(0[1-9]|1[0-2])$/.exec(value);
+  if (!m) return "";
+  return `Valid till ${MONTH_NAMES[Number(m[2]) - 1]} ${m[1]}`;
+}
+
+/** The "YYYY-MM" for stored insurance text ("Comprehensive till Aug 2026" or "March 2026"), or "". */
+export function monthFromInsurance(text: string): string {
+  const parsed = parseInsuranceMonth(text);
+  if (!parsed) return "";
+  return `${parsed.year}-${String(parsed.month + 1).padStart(2, "0")}`;
+}
+
+/** "Valid till Aug 2026" or "Aug 2026" → true when that month has already ended. */
 export function insuranceHasLapsed(text: string, now: Date = new Date()): boolean {
-  const m = text.match(/till\s+([A-Za-z]{3})[a-z]*\s+(\d{4})/i);
-  if (!m) return false;
-  const month = MONTHS[m[1].toLowerCase()];
-  if (month === undefined) return false;
-  const endOfMonth = new Date(Number(m[2]), month + 1, 0, 23, 59, 59);
+  const parsed = parseInsuranceMonth(text);
+  if (!parsed) return false;
+  const endOfMonth = new Date(parsed.year, parsed.month + 1, 0, 23, 59, 59);
   return endOfMonth < now;
 }
 

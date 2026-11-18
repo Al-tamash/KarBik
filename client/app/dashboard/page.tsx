@@ -63,11 +63,8 @@ export default function DashboardPage() {
   const [verificationDoc, setVerificationDoc] = useState<File | null>(null);
   const [uploadingDoc, setUploadingDoc] = useState(false);
   const [profileSlug, setProfileSlug] = useState("");
-  const [profileAbout, setProfileAbout] = useState("");
   const [profilePhone, setProfilePhone] = useState("");
-  const [profileAddress, setProfileAddress] = useState("");
   const [profileCity, setProfileCity] = useState("");
-  const [profileSocial, setProfileSocial] = useState({ whatsapp: "", instagram: "", facebook: "" });
   const [bannerFile, setBannerFile] = useState<File | null>(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [slugStatus, setSlugStatus] = useState("");
@@ -112,15 +109,8 @@ export default function DashboardPage() {
         setDealerProfile(data);
         if (data.businessName) setBusinessName(data.businessName);
         if (data.slug) setProfileSlug(data.slug);
-        if (data.about) setProfileAbout(data.about);
         if (data.phone) setProfilePhone(data.phone);
-        if (data.address) setProfileAddress(data.address);
         if (data.city) setProfileCity(data.city);
-        if (data.socialLinks) setProfileSocial({
-          whatsapp: data.socialLinks.whatsapp || "",
-          instagram: data.socialLinks.instagram || "",
-          facebook: data.socialLinks.facebook || "",
-        });
       }
     } catch (err) { console.error("Error fetching dealer profile:", err); }
   }
@@ -143,7 +133,8 @@ export default function DashboardPage() {
         addToast("Document received. You will be marked Verified once KarBik reviews it.", "success");
         fetchDealerProfile();
       } else {
-        addToast("Failed to submit verification.", "error");
+        const data = (await res.json().catch(() => ({}))) as { message?: string; error?: string };
+        addToast(data.message || data.error || "Failed to submit verification.", "error");
       }
     } catch (err) {
       addToast("Network error. Please try again.", "error");
@@ -157,11 +148,8 @@ export default function DashboardPage() {
     try {
       const formData = new FormData();
       if (profileSlug) formData.append("slug", profileSlug);
-      formData.append("about", profileAbout);
       formData.append("phone", profilePhone);
-      formData.append("address", profileAddress);
       formData.append("city", profileCity);
-      formData.append("socialLinks", JSON.stringify(profileSocial));
       if (bannerFile) formData.append("bannerImage", await compressImage(bannerFile));
 
       const res = await fetch(`/api/dealers/profile`, {
@@ -172,7 +160,7 @@ export default function DashboardPage() {
 
       const data = (await res.json()) as { message?: string };
       if (res.ok) {
-        addToast("Micro-website updated.", "success");
+        addToast("Your KarBik page is saved.", "success");
         fetchDealerProfile();
       } else {
         addToast(data.message || "Failed to save profile.", "error");
@@ -654,16 +642,10 @@ export default function DashboardPage() {
                 onVerificationSubmit={handleVerificationSubmit}
                 profileSlug={profileSlug}
                 onProfileSlugChange={(slug) => { void checkSlug(slug); }}
-                profileAbout={profileAbout}
-                onProfileAboutChange={setProfileAbout}
                 profilePhone={profilePhone}
                 onProfilePhoneChange={setProfilePhone}
-                profileAddress={profileAddress}
-                onProfileAddressChange={setProfileAddress}
                 profileCity={profileCity}
                 onProfileCityChange={setProfileCity}
-                profileSocial={profileSocial}
-                onProfileSocialChange={(platform, value) => setProfileSocial({ ...profileSocial, [platform]: value })}
                 bannerFile={bannerFile}
                 onBannerFileChange={(file) => setBannerFile(file)}
                 savingProfile={savingProfile}

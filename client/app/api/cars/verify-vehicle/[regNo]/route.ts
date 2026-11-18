@@ -1,4 +1,5 @@
-import { apiHandler, requireDealer } from "@/lib/guards";
+import { ApiError, apiHandler, requireDealer } from "@/lib/guards";
+import { VEHICLE_LOOKUP_ENABLED } from "@/lib/flags";
 import {
   fetchVehicleDetails,
   isValidRegistrationNumber,
@@ -10,6 +11,8 @@ export async function GET(
   { params }: { params: Promise<{ regNo: string }> }
 ) {
   return apiHandler(async () => {
+    // The lookup is a mock (lib/vahan.ts): it stays off until a real provider replaces it.
+    if (!VEHICLE_LOOKUP_ENABLED) throw new ApiError(503, "Vehicle lookup is not available yet.");
     await requireDealer();
     const { regNo } = await params;
 

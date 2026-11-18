@@ -29,3 +29,12 @@ export const PAYMENTS_CLOSED_MESSAGE =
  * something false. Set to true once each dealer's banner is a photo of their own showroom.
  */
 export const SHOW_DEALER_BANNER = false;
+
+/**
+ * The "Verify RTO" lookup on the car forms. It is OFF: lib/vahan.ts is a mock that invents a make,
+ * model, year, fuel, colour, insurance and owner for ANY well-formed plate, and the form showed it
+ * under a green "RTO Verified" badge and could auto-fill the listing from it. Turn it on only when
+ * a real provider replaces the mock (and drop the owner name from what it returns).
+ * NEXT_PUBLIC_ so the form and the route read the same value.
+ */
+export const VEHICLE_LOOKUP_ENABLED = process.env.NEXT_PUBLIC_VEHICLE_LOOKUP_ENABLED === "true";

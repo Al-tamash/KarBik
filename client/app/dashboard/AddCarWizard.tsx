@@ -12,7 +12,9 @@ import {
   ChevronRight, ChevronLeft, ImageOff, Video, Link2,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { createCarSchema } from "@autobazaar/shared";
+import { createCarSchema, findContactDetails, CONTACT_DETAILS_MESSAGE } from "@autobazaar/shared";
+import CarChecksFields, { type AccidentChoice } from "@/components/dealer/CarChecksFields";
+import { VEHICLE_LOOKUP_ENABLED } from "@/lib/flags";
 import type { CloudFile } from "@autobazaar/shared";
 import type { VehicleDetails } from "@/lib/vahan";
 
@@ -93,8 +95,8 @@ const STEPS = [
   { id: 4, label: "Review" },
 ];
 
-const REQUIRED_STEP_1 = ["brand", "model", "bodyType", "year", "color", "city"];
-const REQUIRED_STEP_3 = ["price", "mileage", "fuelType", "transmission", "owners"];
+const REQUIRED_STEP_1 = ["brand", "model", "bodyType", "year", "color", "city", "title", "variant"];
+const REQUIRED_STEP_3 = ["price", "mileage", "fuelType", "transmission", "owners", "description"];
 
 type WizardFeatures = { comfort: string[]; safety: string[]; interior: string[]; exterior: string[] };
 
@@ -102,7 +104,7 @@ type WizardFormData = {
   title: string; brand: string; model: string; variant: string; bodyType: string;
   year: string; color: string; mileage: string; fuelType: string; transmission: string;
   owners: string; city: string; price: string; registrationNumber: string;
-  insuranceValid: string; rcVerified: boolean; accidentHistory: boolean;
+  insuranceValid: string; accident: AccidentChoice;
   serviceHistory: boolean; description: string;
   engineCC: string; power: string; groundClearance: string; certifiedMileage: string;
   features: WizardFeatures;
@@ -125,7 +127,7 @@ export default function AddCarWizard() {
     title: "", brand: "", model: "", variant: "", bodyType: "",
     year: "", color: "", mileage: "", fuelType: "", transmission: "",
     owners: "", city: "", price: "", registrationNumber: "",
-    insuranceValid: "", rcVerified: false, accidentHistory: false,
+    insuranceValid: "", accident: "",
     serviceHistory: false, description: "",
     // Pre-populated mechanical details & equipment categories (Phase 13)
     engineCC: "", power: "", groundClearance: "", certifiedMileage: "",
@@ -156,6 +158,7 @@ export default function AddCarWizard() {
     const step1Schema = createCarSchema.pick({
       brand: true,
       model: true,
+      variant: true,
       bodyType: true,
       year: true,
       color: true,
@@ -187,14 +190,19 @@ export default function AddCarWizard() {
       mileage: true,
       fuelType: true,
       transmission: true,
-      owners: true
+      owners: true,
+      description: true
     });
     const result = step3Schema.safeParse(formData);
+    const errors: Record<string, string> = {};
     if (!result.success) {
-      const errors: Record<string, string> = {};
       result.error.issues.forEach(issue => {
         errors[String(issue.path[0])] = issue.message;
       });
+    }
+    // No default: an unanswered accident question is not "no accident".
+    if (!formData.accident) errors.accident = "Choose one";
+    if (Object.keys(errors).length > 0) {
       setStepErrors(prev => ({ ...prev, 3: errors }));
       return false;
     }
@@ -422,8 +430,6 @@ export default function AddCarWizard() {
       transmission: rtoData.transmission.toLowerCase(),
       owners: rtoData.owners,
       color: rtoData.color,
-      insuranceValid: rtoData.insuranceValid,
-      rcVerified: true,
     }));
   }
 
@@ -442,6 +448,9 @@ export default function AddCarWizard() {
         }
       });
       setStepErrors(prev => ({ ...prev, 1: step1Errors, 3: step3Errors }));
+      // Take the dealer to the first step that has an error instead of leaving them on Review.
+      if (Object.keys(step1Errors).length > 0) setCurrentStep(1);
+      else if (Object.keys(step3Errors).length > 0) setCurrentStep(3);
       addToast("Please correct the validation errors on the form.", "error");
       return;
     }
@@ -453,7 +462,10 @@ export default function AddCarWizard() {
         // Correctly serialize the nested features object as a JSON string
         if (key === "features") {
           submitData.append(key, JSON.stringify(formData[key]));
-        } else if (key === "rcVerified" || key === "accidentHistory" || key === "serviceHistory") {
+        } else if (key === "accident") {
+          // true only for "An accident was reported"
+          submitData.append("accidentHistory", formData.accident === "reported" ? "true" : "false");
+        } else if (key === "serviceHistory") {
           submitData.append(key, formData[key] ? "true" : "false");
         } else {
           submitData.append(key, String(formData[key]));
@@ -818,6 +830,11 @@ function Step1BasicInfo({ formData, setFormData, isCustom, setIsCustom, errors }
               )}
             </div>
           )}
+          {(findContactDetails(formData.variant) || errors.variant) && (
+            <p role="alert" className="error-text">
+              {findContactDetails(formData.variant) ? CONTACT_DETAILS_MESSAGE : errors.variant}
+            </p>
+          )}
         </div>
 
         {/* Body Type */}
@@ -903,7 +920,7 @@ function Step2Media({ uploadedImages, isDragging, setIsDragging, uploadingImages
     <div className="space-y-6">
       <div className="card p-6">
         <h2 className="text-lg font-bold text-ink-strong mb-2">Upload Vehicle Media</h2>
-        <p className="text-sm text-ink-muted mb-6">High-quality photos increase lead generation by up to 40%.</p>
+        <p className="text-sm text-ink-muted mb-6">The first photo is the cover on every card: a plain photo of the car itself. No text, logos, showroom boards or collages.</p>
 
         {/* Drop zone */}
         <div
@@ -1240,17 +1257,6 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
             {errors.owners && <p className="error-text">{errors.owners}</p>}
           </div>
 
-          {/* Insurance */}
-          <div>
-            <label className="label">Insurance Valid Till</label>
-            <input
-              type="text"
-              className="input"
-              placeholder="e.g. March 2026"
-              value={formData.insuranceValid}
-              onChange={e => setFormData({ ...formData, insuranceValid: e.target.value })}
-            />
-          </div>
         </div>
       </div>
 
@@ -1274,6 +1280,7 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
               value={formData.registrationNumber}
               onChange={e => setFormData({ ...formData, registrationNumber: e.target.value })}
             />
+            {VEHICLE_LOOKUP_ENABLED && (
             <button
               type="button"
               onClick={onVerifyRto}
@@ -1282,6 +1289,7 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
             >
               {rtoLoading ? "Checking..." : "Verify RTO"}
             </button>
+            )}
           </div>
           {rtoError && <p className="error-text mt-1.5">{rtoError}</p>}
 
@@ -1318,35 +1326,16 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
           )}
         </div>
 
-        {/* Checkboxes */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <label className="flex items-start gap-3 py-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-0.5 w-4 h-4 accent-primary-600 cursor-pointer"
-              checked={formData.rcVerified}
-              onChange={e => setFormData({ ...formData, rcVerified: e.target.checked })}
-            />
-            <span className="text-sm text-ink">RC transfer is ready <span className="text-ink-muted">(the &quot;RTO Verified&quot; badge is added by KarBik after review)</span></span>
-          </label>
-          <label className="flex items-start gap-3 py-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-0.5 w-4 h-4 accent-primary-600 cursor-pointer"
-              checked={formData.accidentHistory}
-              onChange={e => setFormData({ ...formData, accidentHistory: e.target.checked })}
-            />
-            <span className="text-sm text-ink">No accident history</span>
-          </label>
-          <label className="flex items-start gap-3 py-2 cursor-pointer">
-            <input
-              type="checkbox"
-              className="mt-0.5 w-4 h-4 accent-primary-600 cursor-pointer"
-              checked={formData.serviceHistory}
-              onChange={e => setFormData({ ...formData, serviceHistory: e.target.checked })}
-            />
-            <span className="text-sm text-ink">Service records available</span>
-          </label>
+        <div className="mt-6 border-t border-border pt-6">
+          <CarChecksFields
+            accident={formData.accident}
+            onAccident={value => setFormData({ ...formData, accident: value })}
+            serviceHistory={formData.serviceHistory}
+            onServiceHistory={value => setFormData({ ...formData, serviceHistory: value })}
+            insuranceValid={formData.insuranceValid}
+            onInsuranceValid={value => setFormData({ ...formData, insuranceValid: value })}
+            accidentError={errors.accident}
+          />
         </div>
       </div>
 
@@ -1369,7 +1358,17 @@ function Step3Pricing({ formData, setFormData, aiLoading, suggestedPriceRange, r
           placeholder="Low mileage, excellent condition, single owner..."
           value={formData.description}
           onChange={e => setFormData({ ...formData, description: e.target.value })}
+          aria-describedby="description-hint"
         />
+        <p id="description-hint" className="helper-text">
+          Facts about the car only. Do not write a phone number, email, link, or the name of a workshop, showroom or area:
+          buyers reach you through KarBik support.
+        </p>
+        {(findContactDetails(formData.description) || errors.description) && (
+          <p role="alert" className="error-text">
+            {findContactDetails(formData.description) ? CONTACT_DETAILS_MESSAGE : errors.description}
+          </p>
+        )}
       </div>
     </div>
   );
@@ -1414,11 +1413,13 @@ function Step4Review({ formData, uploadedImages, videoUrl, onGoToStep, onSubmit,
         { label: "Fuel Type", value: formData.fuelType },
         { label: "Transmission", value: formData.transmission },
         { label: "Owners", value: formData.owners },
+        { label: "Accident history", value: formData.accident === "reported" ? "An accident was reported" : formData.accident === "none" ? "No accident reported" : "—" },
+        { label: "Service records", value: formData.serviceHistory ? "Available" : "Not provided" },
         { label: "Insurance", value: formData.insuranceValid || "—" },
         { label: "Engine CC", value: formData.engineCC ? `${formData.engineCC} cc` : "—" },
         { label: "Max Power", value: formData.power || "—" },
         { label: "Ground Clearance", value: formData.groundClearance || "—" },
-        { label: "Certified Mileage", value: formData.certifiedMileage || "—" },
+        { label: "ARAI mileage", value: formData.certifiedMileage || "—" },
         { 
           label: "Populated Features", 
           value: formData.features 

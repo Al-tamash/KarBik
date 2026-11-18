@@ -7,6 +7,7 @@ import {
   uploadDealerFile,
 } from "@/lib/cloudinary-server";
 import { parseFormData, validateFiles } from "@/lib/form";
+import { CONTACT_DETAILS_MESSAGE, findContactDetails } from "@autobazaar/shared";
 
 // POST /api/trust/verify — dealer submits verification document
 export async function POST(request: Request) {
@@ -30,7 +31,13 @@ export async function POST(request: Request) {
     const updates: Record<string, unknown> = {};
 
     if (body.businessName) {
-      updates.businessName = body.businessName;
+      const businessName = body.businessName.trim().slice(0, 120);
+      // The name is shown on the dealer's page; a phone number, email or link in it would let
+      // a buyer skip KarBik.
+      if (findContactDetails(businessName)) {
+        return Response.json({ message: `Business name: ${CONTACT_DETAILS_MESSAGE}` }, { status: 400 });
+      }
+      updates.businessName = businessName;
     }
 
     // A document upload only SUBMITS the dealer for review. The "Verified"
