@@ -1,16 +1,18 @@
 "use client";
 
-import { useState } from "react";
+/**
+ * Buyer leads for KarBik support. Every lead waits here until support has spoken to the buyer
+ * and does "Verify and forward" (PRODUCT.md: buyers never contact a dealer directly). Built for a
+ * phone: one list, a Call and a WhatsApp link on every lead, and a sheet that cannot be
+ * confirmed without saying you spoke to the buyer. The note is the support person's own words;
+ * the dealer sees it, so nothing is pre-filled for them.
+ */
+
+import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import {
-  MessageSquare,
-  Search,
-  Phone,
-  Mail,
-  Car,
-  Building2,
-  Calendar,
-} from "lucide-react";
+import { MessageCircle, Phone, Search } from "lucide-react";
+
+import AdminSheet from "@/components/admin/AdminSheet";
 
 export interface AdminInquiry {
   id: string;
@@ -34,291 +36,310 @@ export interface AdminInquiry {
   dealerBusinessName: string | null;
 }
 
-interface AdminInquiriesTabProps {
-  inquiries: AdminInquiry[];
-  loading: boolean;
-  onRefresh?: () => void;
+type Filter = "needs" | "forwarded" | "all";
+type LeadState = "needs" | "sample" | "forwarded" | "verified";
+
+/** The one place that decides what state a lead is in. */
+export function leadState(inq: AdminInquiry): LeadState {
+  if (!inq.isVerifiedByAdmin) return inq.dealerIsSample ? "sample" : "needs";
+  return inq.adminHold ? "verified" : "forwarded";
+}
+
+const STATE_LABEL: Record<LeadState, string> = {
+  needs: "Needs a call",
+  sample: "Sample dealer, not forwarded",
+  forwarded: "Forwarded to the dealer",
+  verified: "Verified, not forwarded",
+};
+
+/** A 10-digit Indian mobile number from what the buyer typed, or "" when it is not one. */
+function indianMobile(phone: string): string {
+  const digits = phone.replace(/\D/g, "");
+  const ten = digits.length === 12 && digits.startsWith("91") ? digits.slice(2) : digits;
+  return /^[6-9]\d{9}$/.test(ten) ? ten : "";
+}
+
+function formatWhen(iso: string): string {
+  return new Date(iso).toLocaleString("en-IN", { day: "numeric", month: "short", hour: "numeric", minute: "2-digit" });
 }
 
 export default function AdminInquiriesTab({
-  inquiries: initialInquiries,
+  inquiries,
   loading,
   onRefresh,
-}: AdminInquiriesTabProps) {
-  const [inquiriesList, setInquiriesList] = useState<AdminInquiry[]>(initialInquiries);
+}: {
+  inquiries: AdminInquiry[];
+  loading: boolean;
+  onRefresh?: () => void;
+}) {
+  const [filter, setFilter] = useState<Filter>("needs");
   const [search, setSearch] = useState("");
-  const [verifyingId, setVerifyingId] = useState<string | null>(null);
-  const [notesInput, setNotesInput] = useState("");
-  const [savingVerification, setSavingVerification] = useState(false);
+  // Changes the admin just made, shown at once; the next refresh makes them permanent.
+  const [patches, setPatches] = useState<Record<string, Partial<AdminInquiry>>>({});
 
-  // Sync props to state
-  useState(() => {
-    setInquiriesList(initialInquiries);
-  });
+  const [active, setActive] = useState<AdminInquiry | null>(null);
+  const [note, setNote] = useState("");
+  const [spoke, setSpoke] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState("");
 
-  const filteredInquiries = inquiriesList.filter((inq) => {
-    const term = search.toLowerCase();
-    return (
-      inq.name.toLowerCase().includes(term) ||
-      inq.phone.toLowerCase().includes(term) ||
-      (inq.buyerEmail && inq.buyerEmail.toLowerCase().includes(term)) ||
-      (inq.carTitle && inq.carTitle.toLowerCase().includes(term)) ||
-      (inq.dealerBusinessName && inq.dealerBusinessName.toLowerCase().includes(term))
-    );
-  });
+  // A patch only bridges the gap until the refreshed row says the same thing.
+  const list = useMemo(
+    () => inquiries.map((i) => (patches[i.id] && !i.isVerifiedByAdmin ? { ...i, ...patches[i.id] } : i)),
+    [inquiries, patches],
+  );
 
-  async function handleVerifySubmit(inquiryId: string) {
-    setSavingVerification(true);
+  const counts = useMemo(() => {
+    const c = { needs: 0, forwarded: 0, all: list.length };
+    for (const i of list) {
+      const s = leadState(i);
+      if (s === "needs") c.needs += 1;
+      if (s === "forwarded") c.forwarded += 1;
+    }
+    return c;
+  }, [list]);
+
+  const visible = useMemo(() => {
+    const term = search.trim().toLowerCase();
+    return list.filter((inq) => {
+      const s = leadState(inq);
+      if (filter === "needs" && s !== "needs") return false;
+      if (filter === "forwarded" && s !== "forwarded") return false;
+      if (!term) return true;
+      return [inq.name, inq.phone, inq.buyerEmail, inq.carTitle, inq.dealerBusinessName]
+        .filter(Boolean)
+        .some((v) => String(v).toLowerCase().includes(term));
+    });
+  }, [list, filter, search]);
+
+  function open(inq: AdminInquiry) {
+    setActive(inq);
+    setNote("");
+    setSpoke(false);
+    setError("");
+  }
+
+  async function submit() {
+    if (!active || !spoke) return;
+    setSaving(true);
+    setError("");
     try {
-      const res = await fetch(`/api/admin/inquiries/${inquiryId}/verify`, {
+      const res = await fetch(`/api/admin/inquiries/${active.id}/verify`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         credentials: "include",
-        body: JSON.stringify({ isVerified: true, adminNotes: notesInput }),
+        body: JSON.stringify({ isVerified: true, adminNotes: note.trim(), spokeToBuyer: true }),
       });
-      if (res.ok) {
-        const result = (await res.json().catch(() => ({}))) as { forwarded?: boolean };
-        setInquiriesList((prev) =>
-          prev.map((item) =>
-            item.id === inquiryId
-              ? {
-                  ...item,
-                  isVerifiedByAdmin: true,
-                  adminHold: result.forwarded ? false : item.adminHold,
-                  adminNotes: notesInput,
-                  verifiedAt: new Date().toISOString(),
-                }
-              : item
-          )
-        );
-        setVerifyingId(null);
-        setNotesInput("");
-        if (onRefresh) onRefresh();
+      const data = (await res.json().catch(() => ({}))) as { forwarded?: boolean; message?: string; error?: string };
+      if (!res.ok) {
+        setError(data.error || data.message || "Could not save. Try again.");
+        return;
       }
-    } catch (err) {
-      console.error("Failed to verify inquiry:", err);
+      setPatches((prev) => ({
+        ...prev,
+        [active.id]: {
+          isVerifiedByAdmin: true,
+          adminHold: data.forwarded ? false : active.adminHold,
+          adminNotes: note.trim(),
+          verifiedAt: new Date().toISOString(),
+        },
+      }));
+      setActive(null);
+      onRefresh?.();
+    } catch {
+      setError("Network problem. Try again.");
     } finally {
-      setSavingVerification(false);
+      setSaving(false);
     }
   }
 
+  const FILTERS: { key: Filter; label: string; n: number }[] = [
+    { key: "needs", label: "Needs a call", n: counts.needs },
+    { key: "forwarded", label: "Forwarded", n: counts.forwarded },
+    { key: "all", label: "All", n: counts.all },
+  ];
+
   return (
-    <div className="space-y-6">
-      {/* Search Bar */}
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4 bg-surface p-4 rounded-2xl border border-border">
-        <div className="relative flex-1">
-          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-subtle" />
+    <div>
+      <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+        <div role="group" aria-label="Filter leads" className="-mx-4 flex gap-2 overflow-x-auto px-4 scrollbar-hide sm:mx-0 sm:px-0">
+          {FILTERS.map((f) => (
+            <button
+              key={f.key}
+              type="button"
+              aria-pressed={filter === f.key}
+              onClick={() => setFilter(f.key)}
+              className={`h-11 shrink-0 cursor-pointer whitespace-nowrap rounded-full px-4 text-sm font-semibold tabular-nums ${
+                filter === f.key ? "bg-ink-strong text-surface" : "border border-border text-ink hover:bg-surface-alt"
+              }`}
+            >
+              {f.label} {f.n}
+            </button>
+          ))}
+        </div>
+        <div className="relative md:w-72">
+          <label htmlFor="lead-search" className="sr-only">
+            Search leads
+          </label>
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-ink-subtle" aria-hidden />
           <input
-            type="text"
-            placeholder="Search leads by customer, phone, car, or dealer..."
+            id="lead-search"
+            type="search"
+            placeholder="Name, phone, car or dealer"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full pl-10 pr-4 py-2 bg-surface-alt/60 border border-border rounded-xl text-sm text-ink placeholder:text-ink-subtle focus:outline-none focus:border-primary-500 transition-colors"
+            className="input pl-9"
           />
-        </div>
-        <div className="text-xs font-semibold text-ink-muted select-none flex items-center gap-3">
-          <span>Total Inquiries: <strong className="text-ink">{inquiriesList.length}</strong></span>
         </div>
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-20 bg-surface rounded-2xl border border-border">
-          <div className="h-7 w-7 rounded-full border-2 border-primary-600 border-t-transparent animate-spin" />
-        </div>
-      ) : filteredInquiries.length === 0 ? (
-        <div className="text-center py-16 bg-surface rounded-2xl border border-border">
-          <MessageSquare className="h-10 w-10 text-ink-subtle mx-auto mb-3" />
-          <p className="text-sm font-semibold text-ink-strong">No customer inquiries found</p>
-        </div>
+        <p role="status" className="py-10 text-sm text-ink-muted">
+          Loading leads…
+        </p>
+      ) : visible.length === 0 ? (
+        <p className="py-10 text-base text-ink-muted">
+          {filter === "needs" && !search ? "No lead is waiting for a call." : "No leads match."}
+        </p>
       ) : (
-        <div className="bg-surface rounded-2xl border border-border overflow-hidden shadow-xs">
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-sm border-collapse">
-              <thead>
-                <tr className="border-b border-border bg-surface-alt/40 text-xs font-bold text-ink-subtle uppercase tracking-wider select-none">
-                  <th className="py-3 px-4">Customer Contact</th>
-                  <th className="py-3 px-4">Car of Interest</th>
-                  <th className="py-3 px-4">Destination Showroom</th>
-                  <th className="py-3 px-4 text-center">Status</th>
-                  <th className="py-3 px-4 text-center">Concierge Verification</th>
-                  <th className="py-3 px-4 text-right">Inquiry Date</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border">
-                {filteredInquiries.map((inq) => {
-                  const dateFormatted = new Date(inq.createdAt).toLocaleDateString("en-IN", {
-                    month: "short",
-                    day: "numeric",
-                    year: "numeric",
-                  });
+        <ul className="mt-4 divide-y divide-border border-y border-border">
+          {visible.map((inq) => {
+            const state = leadState(inq);
+            const ten = indianMobile(inq.phone);
+            return (
+              <li key={inq.id} className="py-4">
+                <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                  <span className="text-base font-bold text-ink-strong">{inq.name}</span>
+                  {inq.leadSource && inq.leadSource !== "car_detail" && (
+                    <span className="rounded-md border border-border px-1.5 py-0.5 text-xs font-semibold text-ink-muted">
+                      {inq.leadSource.replace(/_/g, " ")}
+                    </span>
+                  )}
+                  <span className="text-sm text-ink-muted tabular-nums">{formatWhen(inq.createdAt)}</span>
+                </div>
 
-                  return (
-                    <tr key={inq.id} className="hover:bg-surface-alt/40 transition-colors">
-                      {/* Customer */}
-                      <td className="py-3.5 px-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <span className="font-bold text-ink-strong block">
-                              {inq.name}
-                            </span>
-                            {inq.leadSource && inq.leadSource !== "car_detail" && (
-                              <span className="px-1.5 py-0.2 rounded text-xs font-bold uppercase bg-surface-alt text-ink-subtle border border-border">
-                                {inq.leadSource.replace(/_/g, " ")}
-                              </span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-2 text-xs text-ink-muted mt-0.5">
-                            <span className="inline-flex items-center gap-1 font-medium text-ink">
-                              <Phone className="h-3 w-3 text-primary-600" /> {inq.phone}
-                            </span>
-                            {inq.buyerEmail && (
-                              <span className="inline-flex items-center gap-1">
-                                <Mail className="h-3 w-3" /> {inq.buyerEmail}
-                              </span>
-                            )}
-                          </div>
-                          {inq.message && (
-                            <p className="text-xs text-ink-subtle line-clamp-1 italic mt-1">
-                              &ldquo;{inq.message}&rdquo;
-                            </p>
-                          )}
-                        </div>
-                      </td>
+                <p className="mt-1 text-sm text-ink">
+                  {inq.carId ? (
+                    <Link
+                      href={`/cars/${inq.carId}`}
+                      target="_blank"
+                      className="font-semibold text-primary-600 underline underline-offset-2"
+                    >
+                      {inq.carTitle || "View the car"}
+                    </Link>
+                  ) : (
+                    <span>About the showroom</span>
+                  )}
+                  <span className="text-ink-muted"> · Dealer: {inq.dealerBusinessName || "not set"}</span>
+                </p>
 
-                      {/* Car */}
-                      <td className="py-3.5 px-4">
-                        {inq.carId ? (
-                          <Link
-                            href={`/cars/${inq.carId}`}
-                            target="_blank"
-                            className="font-semibold text-xs text-primary-600 hover:text-primary-700 inline-flex items-center gap-1"
-                          >
-                            <Car className="h-3.5 w-3.5 shrink-0" />
-                            {inq.carTitle || "View Listing"}
-                          </Link>
-                        ) : (
-                          <span className="text-xs text-ink-muted italic">General Showroom Inquiry</span>
-                        )}
-                      </td>
+                {inq.message && <p className="mt-1 text-sm text-ink-muted">&ldquo;{inq.message}&rdquo;</p>}
 
-                      {/* Dealer */}
-                      <td className="py-3.5 px-4">
-                        <span className="text-xs font-semibold text-ink inline-flex items-center gap-1.5">
-                          <Building2 className="h-3.5 w-3.5 text-ink-subtle" />
-                          {inq.dealerBusinessName || "Independent Dealer"}
-                        </span>
-                      </td>
+                <p className="mt-2 text-sm font-semibold text-ink">
+                  {STATE_LABEL[state]}
+                  {state === "needs" && inq.adminHold && (
+                    <span className="font-normal text-ink-muted"> · the dealer cannot see it yet</span>
+                  )}
+                </p>
+                {inq.isVerifiedByAdmin && inq.adminNotes && (
+                  <p className="mt-1 text-sm text-ink-muted">Your note: {inq.adminNotes}</p>
+                )}
 
-                      {/* Status */}
-                      <td className="py-3.5 px-4 text-center">
-                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-primary-50 text-primary-700 border border-primary-200">
-                          {inq.status}
-                        </span>
-                      </td>
-
-                      {/* Concierge Verification */}
-                      <td className="py-3.5 px-4 text-center">
-                        {inq.isVerifiedByAdmin ? (
-                          <div className="inline-flex flex-col items-center">
-                            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-bold bg-success-50 text-success-700 border border-success-200">
-                              ✓ Concierge Verified
-                            </span>
-                            {inq.adminNotes && (
-                              <span className="text-xs text-ink-subtle mt-0.5 max-w-[130px] truncate" title={inq.adminNotes}>
-                                {inq.adminNotes}
-                              </span>
-                            )}
-                          </div>
-                        ) : (
-                          <div className="inline-flex flex-col items-center gap-1">
-                            <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-warning-50 text-warning-700 border border-warning-200">
-                              Pending Call
-                            </span>
-                            {inq.dealerIsSample ? (
-                              <span className="text-xs text-ink-muted">Sample listing: not forwarded to any dealer</span>
-                            ) : inq.adminHold ? (
-                              <span className="text-xs text-ink-muted">Held: the dealer cannot see it yet</span>
-                            ) : null}
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setVerifyingId(inq.id);
-                                setNotesInput(inq.adminNotes || "Buyer requirement & budget verified on phone call.");
-                              }}
-                              className="text-xs font-bold text-primary-600 hover:text-primary-700 hover:underline cursor-pointer"
-                            >
-                              Verify & Forward →
-                            </button>
-                          </div>
-                        )}
-                      </td>
-
-                      {/* Date */}
-                      <td className="py-3.5 px-4 text-right">
-                        <span className="text-xs text-ink-muted inline-flex items-center gap-1">
-                          <Calendar className="h-3 w-3" /> {dateFormatted}
-                        </span>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {ten === "" && <p className="w-full text-sm text-ink">Phone: {inq.phone || "not given"}</p>}
+                  {ten !== "" && (
+                    <>
+                      <a href={`tel:+91${ten}`} className="btn btn-outline btn-md">
+                        <Phone className="h-4 w-4" aria-hidden />
+                        Call {ten}
+                      </a>
+                      <a
+                        href={`https://wa.me/91${ten}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="btn btn-outline btn-md"
+                      >
+                        <MessageCircle className="h-4 w-4" aria-hidden />
+                        WhatsApp
+                      </a>
+                    </>
+                  )}
+                  {state === "needs" || state === "sample" ? (
+                    <button type="button" onClick={() => open(inq)} className="btn btn-primary btn-md cursor-pointer">
+                      Verify and forward
+                    </button>
+                  ) : null}
+                </div>
+              </li>
+            );
+          })}
+        </ul>
       )}
 
-      {/* Concierge Verification Modal */}
-      {verifyingId && (
-        <div
-          className="fixed inset-0 z-90 bg-black/60 backdrop-blur-xs flex items-center justify-center px-4"
-          onClick={() => setVerifyingId(null)}
-        >
-          <div
-            className="w-full max-w-md bg-surface rounded-2xl shadow-xl overflow-hidden border border-border p-6 space-y-4"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div>
-              <h3 className="text-base font-bold text-ink-strong">
-                Verify & Forward Lead to Dealer
-              </h3>
-              <p className="text-xs text-ink-muted mt-0.5">
-                Confirm you spoke to the buyer and validated their intent. This marks the lead as high-priority in the dealer&apos;s CRM.
-              </p>
-            </div>
+      {!loading && list.length >= 100 && (
+        <p className="mt-3 text-sm text-ink-muted">
+          Every lead that needs a call is listed. Of the handled ones, the latest 100 are shown.
+        </p>
+      )}
 
-            <div>
-              <label className="label text-xs">Concierge Verification Note for Dealer</label>
-              <textarea
-                rows={3}
-                value={notesInput}
-                onChange={(e) => setNotesInput(e.target.value)}
-                placeholder="e.g. Spoke with customer. Budget 4.5L confirmed, interested in weekend test drive."
-                className="input text-xs resize-none"
-              />
-            </div>
+      <AdminSheet
+        open={Boolean(active)}
+        onClose={() => setActive(null)}
+        title="Verify and forward"
+        description={
+          active?.dealerIsSample
+            ? "This dealer is a sample. The lead is marked verified but is not sent to anyone."
+            : active?.adminHold
+              ? "The dealer sees this lead and your note, and gets an alert."
+              : "The dealer already has this lead. Verifying adds your note and the verified mark."
+        }
+      >
+        <div className="space-y-4">
+          <div>
+            <label htmlFor="verify-note" className="label">
+              Note for the dealer (optional)
+            </label>
+            <textarea
+              id="verify-note"
+              rows={3}
+              value={note}
+              onChange={(e) => setNote(e.target.value)}
+              placeholder="What the buyer told you, in your words"
+              className="input resize-none"
+            />
+          </div>
 
-            <div className="flex items-center justify-end gap-3 pt-2">
-              <button
-                type="button"
-                onClick={() => setVerifyingId(null)}
-                className="btn btn-outline btn-sm text-xs"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={savingVerification}
-                onClick={() => handleVerifySubmit(verifyingId)}
-                className="btn btn-primary btn-sm text-xs font-bold"
-              >
-                {savingVerification ? "Saving..." : "Confirm & Mark Verified"}
-              </button>
-            </div>
+          <label className="flex min-h-11 items-start gap-3 text-sm text-ink">
+            <input
+              type="checkbox"
+              checked={spoke}
+              onChange={(e) => setSpoke(e.target.checked)}
+              className="mt-0.5 h-5 w-5 shrink-0 accent-primary-600"
+            />
+            <span>I spoke to the buyer on the phone and they want this car.</span>
+          </label>
+
+          {error && (
+            <p role="alert" className="error-text">
+              {error}
+            </p>
+          )}
+
+          <div className="flex gap-3">
+            <button type="button" onClick={() => setActive(null)} className="btn btn-outline btn-md flex-1">
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={() => void submit()}
+              disabled={!spoke || saving}
+              className="btn btn-primary btn-md flex-1 cursor-pointer disabled:opacity-60"
+            >
+              {saving ? "Saving…" : "Verify and forward"}
+            </button>
           </div>
         </div>
-      )}
+      </AdminSheet>
     </div>
   );
 }
-

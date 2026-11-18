@@ -35,6 +35,17 @@ export async function GET() {
         carsCount: sql<number>`(
           SELECT count(*)::int FROM cars WHERE cars.dealer = ${dealerProfiles.user}
         )`,
+        // The plan the dealer is on right now (null = Free), for the plan action in the admin.
+        planName: sql<string | null>`(
+          SELECT p."name" FROM subscriptions s JOIN plans p ON p.id = s."plan"
+          WHERE s."dealer" = ${dealerProfiles.user} AND s."status" = 'active' AND s."endDate" > now()
+          ORDER BY s."endDate" DESC LIMIT 1
+        )`,
+        planEndsAt: sql<string | null>`(
+          SELECT s."endDate" FROM subscriptions s
+          WHERE s."dealer" = ${dealerProfiles.user} AND s."status" = 'active' AND s."endDate" > now()
+          ORDER BY s."endDate" DESC LIMIT 1
+        )`,
       })
       .from(dealerProfiles)
       .leftJoin(user, eq(dealerProfiles.user, user.id))

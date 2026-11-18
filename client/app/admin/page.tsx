@@ -5,22 +5,14 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useAppSession } from "@/lib/auth-client";
 import { useToast } from "@/components/ToastProvider";
-import {
-  ShieldAlert,
-  Building2,
-  Car,
-  MessageSquare,
-  Users,
-  CheckCircle2,
-  RefreshCw,
-  Lock,
-  ArrowRight,
-  Landmark,
-} from "lucide-react";
+import { RefreshCw } from "lucide-react";
 import AdminDealersTab, { type AdminDealer } from "./AdminDealersTab";
+import AdminActivityTab, { type AuditEntry } from "./AdminActivityTab";
 import AdminCarsTab, { type AdminCar } from "./AdminCarsTab";
-import AdminInquiriesTab, { type AdminInquiry } from "./AdminInquiriesTab";
+import AdminInquiriesTab, { leadState, type AdminInquiry } from "./AdminInquiriesTab";
 import AdminLoansTab, { type AdminLoanLead } from "./AdminLoansTab";
+
+type TabKey = "inquiries" | "dealers" | "cars" | "loans" | "activity";
 
 interface AdminStats {
   totalDealers: number;
@@ -37,12 +29,15 @@ export default function AdminPage() {
   const { data: session, isPending } = useAppSession();
   const { addToast } = useToast();
 
-  const [activeTab, setActiveTab] = useState<"dealers" | "cars" | "inquiries" | "loans">("dealers");
+  const [activeTab, setActiveTab] = useState<TabKey>("inquiries");
   const [stats, setStats] = useState<AdminStats | null>(null);
   const [dealers, setDealers] = useState<AdminDealer[]>([]);
   const [cars, setCars] = useState<AdminCar[]>([]);
   const [inquiries, setInquiries] = useState<AdminInquiry[]>([]);
   const [loans, setLoans] = useState<AdminLoanLead[]>([]);
+  const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [auditReady, setAuditReady] = useState<boolean | null>(null);
+  const [loadingAudit, setLoadingAudit] = useState(false);
 
   const [loadingStats, setLoadingStats] = useState(true);
   const [loadingDealers, setLoadingDealers] = useState(false);
@@ -125,6 +120,22 @@ export default function AdminPage() {
     }
   }, []);
 
+  const fetchAudit = useCallback(async () => {
+    try {
+      setLoadingAudit(true);
+      const res = await fetch("/api/admin/audit", { credentials: "include" });
+      if (res.ok) {
+        const data = (await res.json()) as { ready?: boolean; entries?: AuditEntry[] };
+        setAuditReady(Boolean(data.ready));
+        setAudit(data.entries || []);
+      }
+    } catch (err) {
+      console.error("Failed to load the audit log:", err);
+    } finally {
+      setLoadingAudit(false);
+    }
+  }, []);
+
   useEffect(() => {
     if (session?.user?.role === "admin") {
       void fetchStats();
@@ -132,8 +143,9 @@ export default function AdminPage() {
       void fetchCars();
       void fetchInquiries();
       void fetchLoans();
+      void fetchAudit();
     }
-  }, [session, fetchStats, fetchDealers, fetchCars, fetchInquiries, fetchLoans]);
+  }, [session, fetchStats, fetchDealers, fetchCars, fetchInquiries, fetchLoans, fetchAudit]);
 
   // Dealer Verification toggle
   const handleToggleDealerVerify = async (dealerId: string, currentVerified: boolean) => {
@@ -152,11 +164,11 @@ export default function AdminPage() {
         );
         void fetchStats();
         addToast(
-          data.dealer.isVerified ? "Dealership successfully verified!" : "Verification revoked.",
+          data.dealer.isVerified ? "Dealer verified." : "Verification removed.",
           "success"
         );
       } else {
-        addToast("Failed to update dealer verification.", "error");
+        addToast("Could not update the dealer. Try again.", "error");
       }
     } catch {
       addToast("Network error updating verification.", "error");
@@ -185,7 +197,7 @@ export default function AdminPage() {
         if (currentBoosted && nowBoosted) {
           addToast("Admin feature removed. The car stays featured by the dealer's paid boost.", "success");
         } else {
-          addToast(nowBoosted ? "Car promoted to Featured!" : "Feature boost removed.", "success");
+          addToast(nowBoosted ? "Car is now Featured." : "Featured removed.", "success");
         }
       } else {
         addToast("Failed to update car boost.", "error");
@@ -206,7 +218,7 @@ export default function AdminPage() {
       });
       if (res.ok) {
         setCars((prev) => prev.map((c) => (c.id === carId ? { ...c, pendingApproval: false } : c)));
-        addToast("Listing approved and now public.", "success");
+        addToast("Listing approved. It is now on the site.", "success");
       } else {
         addToast("Failed to approve listing.", "error");
       }
@@ -229,7 +241,7 @@ export default function AdminPage() {
         setCars((prev) =>
           prev.map((c) => (c.id === carId ? { ...c, rcVerified: !currentVerified } : c))
         );
-        addToast(!currentVerified ? "Vehicle RC verified!" : "RC verification status removed.", "success");
+        addToast(!currentVerified ? "RC Verified on." : "RC Verified off.", "success");
       }
     } catch {
       addToast("Failed to update RC status.", "error");
@@ -247,7 +259,7 @@ export default function AdminPage() {
       if (res.ok) {
         setCars((prev) => prev.filter((c) => c.id !== carId));
         void fetchStats();
-        addToast("Vehicle listing permanently removed.", "success");
+        addToast("Listing removed from the site. Its lead history is kept.", "success");
       } else {
         addToast("Failed to delete car listing.", "error");
       }
@@ -256,233 +268,151 @@ export default function AdminPage() {
     }
   };
 
+  const selectTab = (key: TabKey) => {
+    setActiveTab(key);
+    // The log changes with every admin action, so it is read fresh when its tab is opened.
+    if (key === "activity") void fetchAudit();
+  };
+
+  const refreshAll = () => {
+    void fetchStats();
+    if (activeTab === "dealers") void fetchDealers();
+    if (activeTab === "cars") void fetchCars();
+    if (activeTab === "inquiries") void fetchInquiries();
+    if (activeTab === "loans") void fetchLoans();
+    if (activeTab === "activity") void fetchAudit();
+    addToast("Refreshed.", "success");
+  };
+
   // ─── Auth Protection Gate ───
   if (isPending) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-bg">
-        <div className="flex flex-col items-center gap-3">
-          <div className="h-8 w-8 rounded-full border-2 border-primary-600 border-t-transparent animate-spin" />
-          <p className="text-xs font-semibold text-ink-muted">Checking administrator access...</p>
-        </div>
+      <div className="flex min-h-[60vh] items-center justify-center bg-surface">
+        <p role="status" className="text-sm text-ink-muted">
+          Checking your access…
+        </p>
       </div>
     );
   }
 
   if (!session || session.user.role !== "admin") {
     return (
-      <div className="min-h-[75vh] flex items-center justify-center bg-bg px-4 py-12">
-        <div className="max-w-md w-full bg-surface rounded-3xl border border-border p-8 text-center shadow-lg">
-          <div className="h-16 w-16 rounded-2xl bg-danger-50 text-danger-600 border border-danger-100 flex items-center justify-center mx-auto mb-5">
-            <Lock className="h-8 w-8" />
-          </div>
-          <h1 className="text-2xl font-black text-ink-strong tracking-tight">Super Admin Restricted</h1>
-          <p className="text-sm text-ink-muted mt-2 leading-relaxed">
-            This portal is strictly reserved for KarBik platform administrators to manage dealers, verify legal papers, and oversee marketplace inventory.
-          </p>
-
-          <div className="mt-6 pt-6 border-t border-border space-y-3">
-            <Link
-              href="/login"
-              className="w-full inline-flex items-center justify-center gap-2 py-3 px-5 rounded-xl bg-primary-600 text-white font-bold text-sm hover:bg-primary-700 transition-colors shadow-sm"
-            >
-              Sign In as Admin <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
+      <div className="flex min-h-[60vh] items-center justify-center bg-surface px-4">
+        <div className="max-w-md text-center">
+          <h1 className="font-display text-3xl font-bold tracking-tight text-ink-strong">Admins only</h1>
+          <p className="mt-2 text-base text-ink-muted">This page is for KarBik administrators.</p>
+          <Link href="/login?next=/admin" className="btn btn-primary btn-md mt-6">
+            Sign in
+          </Link>
         </div>
       </div>
     );
   }
 
+  const needsCall = inquiries.filter((i) => leadState(i) === "needs").length;
+
+  const TABS: { key: TabKey; label: string; count: number | null }[] = [
+    { key: "inquiries", label: "Leads", count: needsCall },
+    { key: "dealers", label: "Dealers", count: dealers.length },
+    { key: "cars", label: "Cars", count: cars.length },
+    { key: "loans", label: "Loan leads", count: loans.length },
+    { key: "activity", label: "Activity", count: null },
+  ];
+
+  const stat = (n: number | undefined) => (loadingStats ? "…" : (n ?? 0));
+
   return (
-    <div className="min-h-screen bg-bg antialiased pb-20">
-      {/* Top Header */}
-      <header className="border-b border-border bg-surface sticky top-0 z-20 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-primary-600 text-white flex items-center justify-center shadow-sm">
-              <ShieldAlert className="h-5 w-5" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2">
-                <h1 className="text-xl sm:text-2xl font-black font-display text-ink-strong tracking-tight">
-                  Super Admin Portal
-                </h1>
-                <span className="px-2 py-0.5 rounded-full text-xs font-extrabold uppercase tracking-wider bg-primary-50 text-primary-700 border border-primary-200">
-                  Hyderabad HQ
-                </span>
-              </div>
-              <p className="text-xs text-ink-muted mt-0.5">
-                Marketplace control center • Signed in as <strong className="text-ink">{session.user.email}</strong>
-              </p>
-            </div>
+    <div className="min-h-screen bg-surface pb-20">
+      <div className="mx-auto max-w-5xl px-4 pt-6 sm:px-6 sm:pt-10">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <h1 className="font-display text-4xl font-bold tracking-tight text-ink-strong sm:text-5xl">Admin</h1>
+            <p className="mt-1 text-sm text-ink-muted">Signed in as {session.user.email}</p>
           </div>
-
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1">
             <button
-              onClick={() => {
-                void fetchStats();
-                if (activeTab === "dealers") void fetchDealers();
-                if (activeTab === "cars") void fetchCars();
-                if (activeTab === "inquiries") void fetchInquiries();
-                if (activeTab === "loans") void fetchLoans();
-                addToast("Refreshed platform data.", "success");
-              }}
-              className="p-2 rounded-xl border border-border text-ink-muted hover:text-ink hover:bg-surface-alt transition-colors"
-              title="Refresh data"
+              type="button"
+              onClick={refreshAll}
+              aria-label="Refresh"
+              className="flex h-11 w-11 cursor-pointer items-center justify-center rounded-full text-ink-muted hover:bg-surface-alt"
             >
-              <RefreshCw className="h-4 w-4" />
+              <RefreshCw className="h-5 w-5" aria-hidden />
             </button>
-
             <Link
               href="/cars"
               target="_blank"
-              className="text-xs font-bold text-primary-600 hover:text-primary-700 hover:underline px-2 py-1"
+              className="inline-flex min-h-11 items-center whitespace-nowrap px-2 text-sm font-semibold text-primary-600 underline underline-offset-2"
             >
-              View Public Marketplace →
+              Public site
             </Link>
           </div>
         </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-        {/* Metric Cards Row */}
-        <section className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
-          {/* Card 1: Dealerships */}
-          <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-ink-subtle">Dealerships</span>
-              <span className="p-2 rounded-xl bg-primary-50 text-primary-600">
-                <Building2 className="h-4 w-4" />
-              </span>
-            </div>
-            <p className="text-2xl sm:text-3xl font-black text-ink-strong mt-3 font-display">
-              {loadingStats ? "..." : stats?.totalDealers ?? 0}
-            </p>
-            <p className="text-xs text-ink-muted mt-1 flex items-center gap-1 font-semibold">
-              <CheckCircle2 className="h-3.5 w-3.5 text-success-600" />
-              {stats?.verifiedDealers ?? 0} verified showrooms
-            </p>
-          </div>
+        <p className="mt-4 text-sm text-ink-muted tabular-nums">
+          {needsCall} {needsCall === 1 ? "lead needs" : "leads need"} a call · {stat(stats?.totalDealers)} dealers (
+          {stat(stats?.verifiedDealers)} verified) · {stat(stats?.totalCars)} cars · {stat(stats?.totalUsers)} accounts
+        </p>
 
-          {/* Card 2: Inventory */}
-          <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-ink-subtle">Hyderabad Cars</span>
-              <span className="p-2 rounded-xl bg-success-50 text-success-600">
-                <Car className="h-4 w-4" />
-              </span>
-            </div>
-            <p className="text-2xl sm:text-3xl font-black text-ink-strong mt-3 font-display">
-              {loadingStats ? "..." : stats?.totalCars ?? 0}
-            </p>
-            <p className="text-xs text-ink-muted mt-1 font-semibold">
-              {loadingStats ? "..." : stats?.rcVerifiedCars ?? 0} with RC checked
-            </p>
-          </div>
-
-          {/* Card 3: Inquiries */}
-          <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-ink-subtle">Buyer Leads</span>
-              <span className="p-2 rounded-xl bg-accent-50 text-accent-600">
-                <MessageSquare className="h-4 w-4" />
-              </span>
-            </div>
-            <p className="text-2xl sm:text-3xl font-black text-ink-strong mt-3 font-display">
-              {loadingStats ? "..." : stats?.totalInquiries ?? 0}
-            </p>
-            <p className="text-xs text-ink-muted mt-1 font-semibold">
-              Inquiries dispatched to dealers
-            </p>
-          </div>
-
-          {/* Card 4: Total Users */}
-          <div className="p-5 rounded-2xl bg-surface border border-border shadow-xs">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-bold uppercase tracking-wider text-ink-subtle">Accounts</span>
-              <span className="p-2 rounded-xl bg-surface-alt text-ink">
-                <Users className="h-4 w-4" />
-              </span>
-            </div>
-            <p className="text-2xl sm:text-3xl font-black text-ink-strong mt-3 font-display">
-              {loadingStats ? "..." : stats?.totalUsers ?? 0}
-            </p>
-            <p className="text-xs text-ink-muted mt-1 font-semibold">
-              Buyers & verified dealers
-            </p>
-          </div>
-        </section>
-
-        {/* Tab Navigation */}
-        <section className="space-y-6">
-          <div className="flex items-center gap-2 border-b border-border pb-px overflow-x-auto select-none">
+        <div
+          role="tablist"
+          aria-label="Admin sections"
+          className="-mx-4 mt-6 flex overflow-x-auto border-b border-border px-4 scrollbar-hide sm:mx-0 sm:gap-1 sm:px-0"
+          onKeyDown={(e) => {
+            const keys = TABS.map((t) => t.key);
+            const i = keys.indexOf(activeTab);
+            let next = -1;
+            if (e.key === "ArrowRight") next = (i + 1) % keys.length;
+            else if (e.key === "ArrowLeft") next = (i - 1 + keys.length) % keys.length;
+            else if (e.key === "Home") next = 0;
+            else if (e.key === "End") next = keys.length - 1;
+            if (next < 0) return;
+            e.preventDefault();
+            selectTab(keys[next]);
+            document.getElementById(`tab-${keys[next]}`)?.focus();
+          }}
+        >
+          {TABS.map((t) => (
             <button
-              onClick={() => setActiveTab("dealers")}
-              className={`flex items-center gap-2 px-5 py-3 border-b-2 font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
-                activeTab === "dealers"
-                  ? "border-primary-600 text-primary-600 bg-primary-50/30 rounded-t-xl"
+              key={t.key}
+              id={`tab-${t.key}`}
+              role="tab"
+              type="button"
+              aria-selected={activeTab === t.key}
+              aria-controls={activeTab === t.key ? `panel-${t.key}` : undefined}
+              tabIndex={activeTab === t.key ? 0 : -1}
+              onClick={() => selectTab(t.key)}
+              className={`-mb-px h-12 shrink-0 cursor-pointer whitespace-nowrap border-b-2 px-3 text-sm font-semibold tabular-nums sm:px-4 ${
+                activeTab === t.key
+                  ? "border-primary-600 text-ink-strong"
                   : "border-transparent text-ink-muted hover:text-ink"
               }`}
             >
-              <Building2 className="h-4 w-4" />
-              Dealerships Directory
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-surface-alt text-ink border border-border">
-                {dealers.length}
-              </span>
+              {t.label}
+              {t.count !== null ? ` ${t.count}` : ""}
             </button>
+          ))}
+        </div>
 
-            <button
-              onClick={() => setActiveTab("cars")}
-              className={`flex items-center gap-2 px-5 py-3 border-b-2 font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
-                activeTab === "cars"
-                  ? "border-primary-600 text-primary-600 bg-primary-50/30 rounded-t-xl"
-                  : "border-transparent text-ink-muted hover:text-ink"
-              }`}
-            >
-              <Car className="h-4 w-4" />
-              Inventory Moderation
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-surface-alt text-ink border border-border">
-                {cars.length}
-              </span>
-            </button>
+        <div
+          id={`panel-${activeTab}`}
+          role="tabpanel"
+          tabIndex={-1}
+          aria-labelledby={`tab-${activeTab}`}
+          className="mt-5 outline-none"
+        >
+          {activeTab === "inquiries" && (
+            <AdminInquiriesTab inquiries={inquiries} loading={loadingInquiries} onRefresh={fetchInquiries} />
+          )}
 
-            <button
-              onClick={() => setActiveTab("inquiries")}
-              className={`flex items-center gap-2 px-5 py-3 border-b-2 font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
-                activeTab === "inquiries"
-                  ? "border-primary-600 text-primary-600 bg-primary-50/30 rounded-t-xl"
-                  : "border-transparent text-ink-muted hover:text-ink"
-              }`}
-            >
-              <MessageSquare className="h-4 w-4" />
-              Buyer Inquiries & Leads
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-surface-alt text-ink border border-border">
-                {inquiries.length}
-              </span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab("loans")}
-              className={`flex items-center gap-2 px-5 py-3 border-b-2 font-bold text-sm transition-all whitespace-nowrap cursor-pointer ${
-                activeTab === "loans"
-                  ? "border-primary-600 text-primary-600 bg-primary-50/30 rounded-t-xl"
-                  : "border-transparent text-ink-muted hover:text-ink"
-              }`}
-            >
-              <Landmark className="h-4 w-4" />
-              Car Finance & Loan Leads
-              <span className="px-2 py-0.5 rounded-full text-xs font-bold bg-success-50 text-success-700 border border-success-200">
-                {loans.length}
-              </span>
-            </button>
-          </div>
-
-          {/* Active Tab View */}
           {activeTab === "dealers" && (
             <AdminDealersTab
               dealers={dealers}
               loading={loadingDealers}
               onToggleVerify={handleToggleDealerVerify}
+              onChanged={() => {
+                void fetchDealers();
+                void fetchAudit();
+              }}
             />
           )}
 
@@ -497,24 +427,11 @@ export default function AdminPage() {
             />
           )}
 
-          {activeTab === "inquiries" && (
-            <AdminInquiriesTab
-              inquiries={inquiries}
-              loading={loadingInquiries}
-              onRefresh={fetchInquiries}
-            />
-          )}
+          {activeTab === "loans" && <AdminLoansTab loans={loans} loading={loadingLoans} onRefresh={fetchLoans} />}
 
-          {activeTab === "loans" && (
-            <AdminLoansTab
-              loans={loans}
-              loading={loadingLoans}
-              onRefresh={fetchLoans}
-            />
-          )}
-        </section>
-      </main>
+          {activeTab === "activity" && <AdminActivityTab entries={audit} ready={auditReady} loading={loadingAudit} />}
+        </div>
+      </div>
     </div>
   );
 }
-

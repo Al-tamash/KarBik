@@ -1,9 +1,10 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cars, dealerProfiles, inquiries } from "@/lib/db/schema";
 import { apiHandler, requireAdmin } from "@/lib/guards";
 import { notifyDealerOfLead } from "@/lib/lead-notify";
 import { recordLeadEvent } from "@/lib/lead-events";
+import { recordAdminAction } from "@/lib/audit";
 
 /**
  * PATCH /api/admin/inquiries/[id]/verify
@@ -19,12 +20,22 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return apiHandler(async () => {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const { id } = await params;
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
-    const adminNotes = typeof body.adminNotes === "string" ? body.adminNotes : "";
+    // The dealer sees this note, so it is capped.
+    const adminNotes = typeof body.adminNotes === "string" ? body.adminNotes.trim().slice(0, 1000) : "";
     const isVerified = typeof body.isVerified === "boolean" ? body.isVerified : true;
+
+    // The one rule the screen enforces with a tick must hold on the server too: a lead is only
+    // verified (and forwarded) when the admin says they spoke to the buyer.
+    if (isVerified && body.spokeToBuyer !== true) {
+      return Response.json(
+        { message: "Confirm that you spoke to the buyer before verifying the lead." },
+        { status: 400 }
+      );
+    }
 
     const [existing] = await db
       .select()
@@ -57,8 +68,32 @@ export async function PATCH(
         adminHold: releaseNow ? false : existing.adminHold,
         updatedAt: new Date(),
       })
-      .where(eq(inquiries.id, id))
+      // Releasing is conditional on the lead still being held, so two clicks or two admins
+      // cannot both forward it and alert the dealer twice.
+      .where(releaseNow ? and(eq(inquiries.id, id), eq(inquiries.adminHold, true)) : eq(inquiries.id, id))
       .returning();
+
+    if (!updated) {
+      const [current] = await db.select().from(inquiries).where(eq(inquiries.id, id)).limit(1);
+      return { inquiry: current, forwarded: false, message: "This lead was just forwarded by someone else." };
+    }
+
+    // The record comes before the alert, so a failed alert cannot leave a forwarded lead unrecorded.
+    await recordAdminAction(
+      { id: admin.id, email: admin.email },
+      {
+        action: releaseNow ? "lead.forward" : isVerified ? "lead.verify" : "lead.unverify",
+        targetType: "lead",
+        targetId: id,
+        summary: releaseNow
+          ? `Verified and forwarded the lead from ${existing.name} to the dealer`
+          : isVerified
+            ? `Verified the lead from ${existing.name} (not forwarded)`
+            : `Removed verification from the lead from ${existing.name}`,
+        note: adminNotes,
+        metadata: isVerified ? { spokeToBuyer: true } : {},
+      }
+    );
 
     if (releaseNow) {
       const [car] = existing.car

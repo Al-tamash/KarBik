@@ -4,6 +4,7 @@ import { hashPassword } from "better-auth/crypto";
 import { db } from "@/lib/db";
 import { account, dealerProfiles, session, user } from "@/lib/db/schema";
 import { ApiError, apiHandler, requireAdmin } from "@/lib/guards";
+import { recordAdminAction } from "@/lib/audit";
 
 // No 0/O/1/l/I: the password is read out or typed from a message.
 const ALPHABET = "abcdefghjkmnpqrstuvwxyzABCDEFGHJKMNPQRSTUVWXYZ23456789";
@@ -31,7 +32,7 @@ export async function POST(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return apiHandler(async () => {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const { id } = await params;
 
     const [profile] = await db
@@ -81,6 +82,17 @@ export async function POST(
 
     // Whoever held the old password is signed out.
     await db.delete(session).where(eq(session.userId, dealerUser.id));
+
+    // The password itself is never written to the log.
+    await recordAdminAction(
+      { id: admin.id, email: admin.email },
+      {
+        action: existing ? "dealer.login_reset" : "dealer.login_create",
+        targetType: "dealer",
+        targetId: id,
+        summary: `${existing ? "Reset" : "Created"} the login of ${dealerUser.email}`,
+      }
+    );
 
     return Response.json(
       { email: dealerUser.email, temporaryPassword, created: !existing },

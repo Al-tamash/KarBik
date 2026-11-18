@@ -86,7 +86,7 @@ export default function AdminCarsTab({
   };
 
   const handleDelete = async (carId: string) => {
-    if (!window.confirm("Are you sure you want to permanently delete this vehicle listing?")) {
+    if (!window.confirm("Remove this listing from the site? Its lead history is kept.")) {
       return;
     }
     setOperatingId(carId);

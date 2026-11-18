@@ -2,6 +2,7 @@ import { eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cars, dealerProfiles } from "@/lib/db/schema";
 import { apiHandler, requireAdmin, ApiError } from "@/lib/guards";
+import { recordAdminAction } from "@/lib/audit";
 
 /**
  * PATCH /api/admin/dealers/[id]/verify
@@ -14,7 +15,7 @@ export async function PATCH(
 ) {
   return apiHandler(async () => {
     // 1. Guard check
-    await requireAdmin();
+    const admin = await requireAdmin();
 
     // 2. Next.js 16 async params resolution
     const { id: dealerId } = await params;
@@ -51,6 +52,16 @@ export async function PATCH(
         .set({ pendingApproval: false, updatedAt: new Date() })
         .where(eq(cars.dealer, updated.user));
     }
+
+    await recordAdminAction(
+      { id: admin.id, email: admin.email },
+      {
+        action: nextVerified ? "dealer.verify" : "dealer.unverify",
+        targetType: "dealer",
+        targetId: dealerId,
+        summary: `${nextVerified ? "Verified" : "Removed verification from"} ${updated.businessName || "a dealer"}`,
+      }
+    );
 
     return {
       success: true,

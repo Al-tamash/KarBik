@@ -2,6 +2,7 @@ import { and, eq, gt, isNull } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { cars, boosts } from "@/lib/db/schema";
 import { apiHandler, requireAdmin, ApiError } from "@/lib/guards";
+import { recordAdminAction } from "@/lib/audit";
 
 /**
  * PATCH /api/admin/cars/[id]
@@ -15,13 +16,13 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return apiHandler(async () => {
-    await requireAdmin();
+    const admin = await requireAdmin();
 
     const { id: carId } = await params;
     if (!carId) throw new ApiError(400, "Car ID is required");
 
     const [existing] = await db
-      .select({ id: cars.id, dealer: cars.dealer })
+      .select({ id: cars.id, dealer: cars.dealer, title: cars.title })
       .from(cars)
       .where(eq(cars.id, carId))
       .limit(1);
@@ -112,6 +113,24 @@ export async function PATCH(
       )
       .limit(1);
 
+    const changes: string[] = [];
+    if (typeof body.rcVerified === "boolean") changes.push(body.rcVerified ? "RC Verified on" : "RC Verified off");
+    if (typeof body.isInspected === "boolean") changes.push(body.isInspected ? "Inspected on" : "Inspected off");
+    if (body.approved === true) changes.push("approved for the site");
+    if (typeof body.isBoosted === "boolean") changes.push(body.isBoosted ? "Featured by admin" : "admin Featured removed");
+    if (changes.length > 0) {
+      await recordAdminAction(
+        { id: admin.id, email: admin.email },
+        {
+          action: "car.update",
+          targetType: "car",
+          targetId: carId,
+          summary: `${existing.title}: ${changes.join(", ")}`,
+          metadata: { changes },
+        }
+      );
+    }
+
     return {
       success: true,
       isBoosted: Boolean(stillBoosted),
@@ -125,7 +144,7 @@ export async function DELETE(
   { params }: { params: Promise<{ id: string }> }
 ) {
   return apiHandler(async () => {
-    await requireAdmin();
+    const admin = await requireAdmin();
 
     const { id: carId } = await params;
     if (!carId) throw new ApiError(400, "Car ID is required");
@@ -135,10 +154,20 @@ export async function DELETE(
     const [deleted] = await db
       .update(cars)
       .set({ archivedAt: new Date(), updatedAt: new Date() })
-      .where(eq(cars.id, carId))
+      .where(and(eq(cars.id, carId), isNull(cars.archivedAt)))
       .returning();
 
-    if (!deleted) throw new ApiError(404, "Car not found");
+    if (!deleted) throw new ApiError(404, "Car not found or already removed");
+
+    await recordAdminAction(
+      { id: admin.id, email: admin.email },
+      {
+        action: "car.remove",
+        targetType: "car",
+        targetId: carId,
+        summary: `Removed from the site: ${deleted.title}`,
+      }
+    );
 
     return {
       success: true,

@@ -2,6 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { loanLeads, cars, user } from "@/lib/db/schema";
 import { apiHandler, requireAdmin } from "@/lib/guards";
+import { recordAdminAction } from "@/lib/audit";
 
 /**
  * GET /api/admin/loans
@@ -46,11 +47,11 @@ export async function GET() {
  */
 export async function PATCH(request: Request) {
   return apiHandler(async () => {
-    await requireAdmin();
+    const admin = await requireAdmin();
     const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
 
     const id = typeof body.id === "string" ? body.id : "";
-    const status = typeof body.status === "string" ? body.status : "in_process";
+    const status = typeof body.status === "string" && body.status ? body.status : null;
     const notes = typeof body.notes === "string" ? body.notes : "";
 
     if (!id) {
@@ -60,7 +61,7 @@ export async function PATCH(request: Request) {
     const [updated] = await db
       .update(loanLeads)
       .set({
-        status,
+        ...(status ? { status } : {}),
         notes,
         updatedAt: new Date(),
       })
@@ -70,6 +71,17 @@ export async function PATCH(request: Request) {
     if (!updated) {
       return Response.json({ message: "Loan application not found" }, { status: 404 });
     }
+
+    await recordAdminAction(
+      { id: admin.id, email: admin.email },
+      {
+        action: "loan.update",
+        targetType: "loan",
+        targetId: id,
+        summary: status ? `Loan lead status set to ${status}` : "Loan lead note updated",
+        note: notes,
+      }
+    );
 
     return { loan: updated, message: "Loan lead updated successfully" };
   });

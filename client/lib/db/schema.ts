@@ -476,6 +476,36 @@ export const leadEvents = pgTable(
   ]
 );
 
+/**
+ * What an admin did, to whom, and why. Written by every admin mutation (lib/audit.ts).
+ * `actor` is the admin's user id kept as plain text with no foreign key on purpose: the log
+ * must outlive the account, and an admin's email is copied into `actorEmail` for the same reason.
+ */
+export const adminAuditLog = pgTable(
+  "admin_audit_log",
+  {
+    id: uuid("id").primaryKey().defaultRandom(),
+    actor: text("actor").notNull(),
+    actorEmail: text("actorEmail").notNull().default(""),
+    action: varchar("action", { length: 60 }).notNull(),
+    targetType: varchar("targetType", { length: 30 }).notNull(),
+    targetId: text("targetId").notNull().default(""),
+    summary: text("summary").notNull().default(""),
+    note: text("note").notNull().default(""),
+    metadata: jsonb("metadata")
+      .$type<Record<string, unknown>>()
+      .notNull()
+      .default({}),
+    createdAt: timestamp("createdAt", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (table) => [
+    index("admin_audit_created_idx").on(table.createdAt.desc()),
+    index("admin_audit_target_idx").on(table.targetType, table.targetId, table.createdAt),
+  ]
+);
+
 export const wishlists = pgTable(
   "wishlists",
   {
